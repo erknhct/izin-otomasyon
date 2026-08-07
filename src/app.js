@@ -1328,18 +1328,10 @@ function renderReports() {
     typeFilterSelect.addEventListener('change', renderReports);
   }
 
-  const exportBtn = document.getElementById('btn-export-reports-csv');
-  if (exportBtn && !exportBtn.dataset.hasListener) {
-    exportBtn.dataset.hasListener = "true";
-    exportBtn.addEventListener('click', exportReportsCsv);
-  }
-
-  const printBtn = document.getElementById('btn-print-reports');
-  if (printBtn && !printBtn.dataset.hasListener) {
-    printBtn.dataset.hasListener = "true";
-    printBtn.addEventListener('click', () => {
-      window.print();
-    });
+  const exportPdfBtn = document.getElementById('btn-export-reports-pdf');
+  if (exportPdfBtn && !exportPdfBtn.dataset.hasListener) {
+    exportPdfBtn.dataset.hasListener = "true";
+    exportPdfBtn.addEventListener('click', exportReportsPdf);
   }
 
   const searchQuery = (searchInput?.value || '').toLowerCase();
@@ -1627,13 +1619,17 @@ function openPersonHistoryModal(personId) {
   openModal(`📊 ${person.name} - İzin & Rapor Geçmişi Detayı`, modalHtml);
 }
 
-function exportReportsCsv() {
+function exportReportsPdf() {
   const personnelList = getPersonnelList();
   const allRecords = getLeaveRecords();
 
-  let csvContent = "\uFEFFSicil No,Adı Soyadı,Unvanı,Birim,Rapor Sayısı,Toplam Rapor Günü,Yıllık İzin Sayısı,Toplam Yıllık İzin Günü,Diğer İzin Sayısı,Diğer İzin Günü,Genel İzin Gün Toplamı\n";
+  let totalRaporDays = 0;
+  let totalYillikDays = 0;
+  let totalOtherDays = 0;
+  let totalAllDays = 0;
+  let totalRaporCount = 0;
 
-  personnelList.forEach(p => {
+  const rowsHtml = personnelList.map((p, idx) => {
     const pRecords = allRecords.filter(r => r.personnelId === p.id);
     let rCount = 0, rDays = 0, yCount = 0, yDays = 0, oCount = 0, oDays = 0;
 
@@ -1642,28 +1638,154 @@ function exportReportsCsv() {
       const name = (r.leaveTypeName || '').toLowerCase();
       const days = parseInt(r.days || 0, 10);
 
-      if (code === 'rapor' || name.includes('rapor')) {
+      if (code === 'rapor' || name.includes('rapor') || name.includes('sağlık')) {
         rCount++; rDays += days;
-      } else if (code === 'yillik' || name.includes('yıllık')) {
+      } else if (code === 'yillik' || name.includes('yıllık') || name.includes('yillik')) {
         yCount++; yDays += days;
       } else {
         oCount++; oDays += days;
       }
     });
 
-    const totalDays = rDays + yDays + oDays;
-    csvContent += `"${p.sicil}","${p.name}","${p.title}","${p.birim}",${rCount},${rDays},${yCount},${yDays},${oCount},${oDays},${totalDays}\n`;
-  });
+    const pTotalDays = rDays + yDays + oDays;
+    totalRaporCount += rCount;
+    totalRaporDays += rDays;
+    totalYillikDays += yDays;
+    totalOtherDays += oDays;
+    totalAllDays += pTotalDays;
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", `Personel_Izin_ve_Rapor_Analiz_Raporu_${new Date().toISOString().split('T')[0]}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  showToast('📊 Personel İzin & Rapor Analiz Raporu Excel/CSV olarak indirildi.', 'success');
+    return `
+      <tr>
+        <td style="text-align: center;">${idx + 1}</td>
+        <td>${p.sicil}</td>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.title}</td>
+        <td>${p.birim}</td>
+        <td style="text-align: center; ${rDays > 0 ? 'color: #dc2626; font-weight: bold;' : ''}">${rCount > 0 ? `${rCount} Kez (${rDays} Gün)` : '-'}</td>
+        <td style="text-align: center;">${yCount > 0 ? `${yCount} Kez (${yDays} Gün)` : '-'}</td>
+        <td style="text-align: center;">${oCount > 0 ? `${oCount} Kez (${oDays} Gün)` : '-'}</td>
+        <td style="text-align: center; font-weight: bold;">${pTotalDays} Gün</td>
+      </tr>
+    `;
+  }).join('');
+
+  const todayStr = formatDateTR(new Date().toISOString().split('T')[0]);
+
+  const pdfHtml = `
+    <!DOCTYPE html>
+    <html lang="tr">
+    <head>
+      <meta charset="UTF-8">
+      <title>ANKARA ADLİYESİ BİLGİ İŞLEM MÜDÜRLÜĞÜ - DETAYLI İZİN & RAPOR ANALİZ RAPORU</title>
+      <style>
+        @page { size: A4 landscape; margin: 15mm; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; margin: 0; padding: 20px; font-size: 11pt; background: #fff; }
+        .header-table { width: 100%; margin-bottom: 20px; border-bottom: 2px solid #be123c; padding-bottom: 15px; }
+        .logo-img { width: 80px; height: 80px; }
+        .title-area { text-align: center; }
+        .title-main { font-size: 14pt; font-weight: 800; color: #be123c; margin: 0; letter-spacing: 0.5px; }
+        .title-sub { font-size: 12pt; font-weight: 700; color: #0f172a; margin: 4px 0 0 0; }
+        .title-date { font-size: 9.5pt; color: #64748b; margin-top: 5px; }
+        
+        .kpi-container { display: flex; gap: 15px; margin-bottom: 20px; justify-content: space-between; }
+        .kpi-box { flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc; text-align: center; }
+        .kpi-val { font-size: 14pt; font-weight: 800; color: #0f172a; }
+        .kpi-lbl { font-size: 8pt; color: #475569; font-weight: 600; text-transform: uppercase; margin-top: 3px; }
+        
+        .report-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 9.5pt; }
+        .report-table th { background: #0f172a; color: #ffffff; padding: 8px 6px; text-align: left; font-weight: 700; border: 1px solid #0f172a; }
+        .report-table td { padding: 7px 6px; border: 1px solid #cbd5e1; }
+        .report-table tr:nth-child(even) { background: #f8fafc; }
+        .report-table tfoot td { background: #f1f5f9; font-weight: 800; border-top: 2px solid #0f172a; }
+
+        .signature-area { width: 100%; margin-top: 30px; page-break-inside: avoid; }
+        .signature-box { float: right; width: 250px; text-align: center; }
+        .signature-title { font-weight: 700; font-size: 10pt; color: #0f172a; }
+        .signature-name { font-weight: 800; font-size: 11pt; color: #be123c; margin-top: 6px; }
+      </style>
+    </head>
+    <body>
+      <table class="header-table">
+        <tr>
+          <td width="100"><img src="/logo.png" class="logo-img" /></td>
+          <td class="title-area">
+            <h1 class="title-main">ANKARA ADLİYESİ BİLGİ İŞLEM MÜDÜRLÜĞÜ</h1>
+            <h2 class="title-sub">PERSONEL İZİN & SAĞLIK RAPORU DETAYLI ANALİZ RAPORU</h2>
+            <div class="title-date">Rapor Tarihi: ${todayStr} | Toplam Personel Sayısı: ${personnelList.length}</div>
+          </td>
+          <td width="100" style="text-align: right; font-size: 9pt; color: #64748b;">
+            T.C.<br>ANKARA ADLİYESİ
+          </td>
+        </tr>
+      </table>
+
+      <div class="kpi-container">
+        <div class="kpi-box" style="border-left: 4px solid #ef4444;">
+          <div class="kpi-val" style="color: #dc2626;">${totalRaporDays} Gün</div>
+          <div class="kpi-lbl">Toplam Sıhhi İzin / Rapor (${totalRaporCount} Kez)</div>
+        </div>
+        <div class="kpi-box" style="border-left: 4px solid #4f46e5;">
+          <div class="kpi-val">${totalYillikDays} Gün</div>
+          <div class="kpi-lbl">Toplam Kullanılan Yıllık İzin</div>
+        </div>
+        <div class="kpi-box" style="border-left: 4px solid #f59e0b;">
+          <div class="kpi-val">${totalOtherDays} Gün</div>
+          <div class="kpi-lbl">Diğer Mazeret İzinleri</div>
+        </div>
+        <div class="kpi-box" style="border-left: 4px solid #10b981;">
+          <div class="kpi-val">${totalAllDays} Gün</div>
+          <div class="kpi-lbl">Genel İzin & Rapor Gün Toplamı</div>
+        </div>
+      </div>
+
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th width="30" style="text-align: center;">No</th>
+            <th width="70">Sicil No</th>
+            <th>Adı Soyadı</th>
+            <th>Unvanı</th>
+            <th>Birim</th>
+            <th width="120" style="text-align: center;">Rapor Kullanımı</th>
+            <th width="120" style="text-align: center;">Yıllık İzin</th>
+            <th width="110" style="text-align: center;">Diğer İzinler</th>
+            <th width="90" style="text-align: center;">Genel Gün</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" style="text-align: right;">TOPLAM KURUMSAL KULLANIM:</td>
+            <td style="text-align: center; color: #dc2626;">${totalRaporDays} Gün</td>
+            <td style="text-align: center;">${totalYillikDays} Gün</td>
+            <td style="text-align: center;">${totalOtherDays} Gün</td>
+            <td style="text-align: center; color: #be123c; font-size: 11pt;">${totalAllDays} Gün</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="signature-area">
+        <div class="signature-box">
+          <div class="signature-title">Ankara Adliyesi Bilgi İşlem Müdürlüğü</div>
+          <div style="font-size: 9.5pt; color: #475569; margin-top: 2px;">Bilgi İşlem Müdürü</div>
+          <div class="signature-name">Erkan HACAT</div>
+        </div>
+      </div>
+
+      <script>
+        window.onload = function() {
+          window.print();
+        };
+      </script>
+    </body>
+    </html>
+  `;
+
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(pdfHtml);
+  printWindow.document.close();
 }
 
 // Helper
