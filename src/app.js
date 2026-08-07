@@ -1,4 +1,4 @@
-import { downloadUdfFile, buildUdfXml, formatDateTR } from './udfGenerator.js';
+import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, formatDateTR } from './udfGenerator.js';
 import {
   getPersonnelList, savePersonnelList,
   getLeaveTypes, saveLeaveTypes,
@@ -282,13 +282,11 @@ function setupWizardForm() {
     groupAliciOzel.style.display = aliciMakamSelect.value === 'ozel' ? 'flex' : 'none';
   });
 
-  // XML Preview Button
+  // UDF Formatted Document Preview Button
   document.getElementById('btn-preview-xml')?.addEventListener('click', () => {
     const payload = getWizardPayload();
-    const xmlText = buildUdfXml(payload);
-    openModal('UDF XML Önizleme', `
-      <pre style="background: rgba(0,0,0,0.5); padding: 1rem; border-radius: 8px; max-height: 400px; overflow: auto; font-size: 0.85rem; color: #a7f3d0; white-space: pre-wrap;">${escapeHtml(xmlText)}</pre>
-    `);
+    const previewHtml = generateDocumentPreviewHtml(payload);
+    openModal('📄 UDF EVRAK ÖNİZLEME', previewHtml);
   });
 
   // Form Submit (Generate UDF)

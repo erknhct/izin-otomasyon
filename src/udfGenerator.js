@@ -34,6 +34,103 @@ export function formatDateTR(dateStr) {
 }
 
 /**
+ * Generates clean HTML document preview for modal view
+ */
+export function generateDocumentPreviewHtml(payload) {
+  const {
+    docType,
+    personnelName,
+    sicilNo,
+    unvan,
+    birim = 'Bilgi İşlem Müdürlüğü',
+    tarih = formatDateTR(new Date().toISOString().split('T')[0]),
+    izinSuresi = 5,
+    ayrilisTarihi = tarih,
+    baslayisTarihi = tarih,
+    raporKurum = 'Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi',
+    ilgiEvrak = '',
+    aliciMakam = 'komisyon',
+    aliciMakamOzel = '',
+    imzalayanAd = 'Dr. Arif Naci SUCUOĞLU',
+    imzalayanUnvan = 'Cumhuriyet Başsavcı Vekili',
+    ekBelge = 'Rapor (1 Sayfa)',
+    donusNotu = 'hafta sonunu müteakip'
+  } = payload;
+
+  const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
+
+  let destTitleLines = [];
+  let closingSentence = "Bilgilerinize arz olunur.";
+
+  if (aliciMakam === 'komisyon') {
+    destTitleLines = [
+      "ANKARA ADLÎ YARGI",
+      "İLK DERECE MAHKEMESİ",
+      "ADALET KOMİSYONU BAŞKANLIĞI'NA"
+    ];
+    closingSentence = "Bilgilerinize arz olunur.";
+  } else if (aliciMakam === 'bakanlik') {
+    destTitleLines = [
+      "ANKARA CUMHURİYET BAŞSAVCILIĞI",
+      "Bakanlık Muhabere Bürosu'na"
+    ];
+    closingSentence = "Gereğini arz ederim.";
+  } else {
+    destTitleLines = aliciMakamOzel.split('\n').filter(l => l.trim());
+    if (destTitleLines.length === 0) {
+      destTitleLines = ["ANKARA ADLÎ YARGI", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
+    }
+  }
+
+  let bodyParagraph = "";
+  let subjectStr = "";
+
+  if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
+    subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
+    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${subjectStr.toLowerCase()}nden ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+  } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
+    subjectStr = "Göreve Başlama";
+    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük izinini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${donusNotu} ${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+  } else if (docType.includes('rapor_ayrilis')) {
+    subjectStr = `${personnelName}-Rapor İşlemi`;
+    bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+  } else if (docType.includes('rapor_baslayis')) {
+    subjectStr = `${personnelName} Göreve Başlama`;
+    bodyParagraph = `İlgi sayılı yazımız ile ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} (${sicilNo}) ${personnelName} ${donusNotu} ${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+  }
+
+  const isBaslayis = docType.includes('baslayis');
+  const isRaporAyrilis = docType.includes('rapor_ayrilis');
+
+  return `
+    <div style="background: #ffffff; color: #1e293b; padding: 2.5rem; border-radius: 12px; font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.6; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid #cbd5e1;">
+      <div style="margin-bottom: 2rem;"><strong>Konu :</strong> ${subjectStr}</div>
+      
+      <div style="text-align: center; font-weight: normal; margin: 2.5rem 0 2rem 0; font-size: 13pt; line-height: 1.4;">
+        ${destTitleLines.join('<br>')}
+      </div>
+
+      ${isBaslayis && ilgiEvrak && ilgiEvrak.trim() ? `<div style="margin-bottom: 1.5rem;"><strong>İlgi     :</strong> ${ilgiEvrak.trim()}</div>` : ''}
+
+      <div style="text-indent: 1.25cm; text-align: justify; margin-bottom: 1rem;">
+        ${bodyParagraph}
+      </div>
+
+      <div style="text-indent: 1.25cm; margin-bottom: 3.5rem;">
+        ${closingSentence}
+      </div>
+
+      <div style="text-align: right; margin-right: 1.5rem; line-height: 1.3;">
+        <strong>${imzalayanAd}</strong><br>
+        <span>${imzalayanUnvan}</span>
+      </div>
+
+      ${isRaporAyrilis ? `<div style="margin-top: 2rem; font-size: 11pt;"><strong>Ek      :</strong> ${ekBelge}</div>` : ''}
+    </div>
+  `;
+}
+
+/**
  * Builds UYAP compliant content.xml with 1.25 cm (35.4375 pt) first line indents
  */
 export function buildUdfXml(payload) {
