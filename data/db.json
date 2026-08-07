@@ -406,9 +406,11 @@
       "id": "yillik",
       "name": "Yıllık İzin",
       "code": "yillik",
-      "subjectText": "Yıllık İzin",
+      "subjectText": "{personel} - Yıllık İzin",
       "ayrilisPhrase": "yıllık izninden",
-      "baslayisPhrase": "yıllık iznini"
+      "baslayisPhrase": "yıllık iznini",
+      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) {ayrilisPhrase} {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük {baslayisPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     },
     {
       "id": "rapor",
@@ -416,7 +418,9 @@
       "code": "rapor",
       "subjectText": "Rapor İşlemi",
       "ayrilisPhrase": "ekte gönderilen",
-      "baslayisPhrase": " "
+      "baslayisPhrase": " ",
+      "ayrilisTemplate": "{birim}müzde {unvan} olarak görev yapan {personel} ({sicil}) {ayrilisPhrase} {gun} günlük istirahat raporuyla {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "baslayisTemplate": "İlgi sayılı yazımız ile {baslayisPhrase} {gun} günlük istirahat raporuyla görevinden ayrılışınıTEST bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     },
     {
       "id": "mazeret",

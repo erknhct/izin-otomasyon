@@ -33,6 +33,16 @@ export function formatDateTR(dateStr) {
   return dateStr;
 }
 
+export function interpolateTemplate(templateStr, variables) {
+  if (!templateStr) return '';
+  let result = templateStr;
+  Object.keys(variables).forEach(key => {
+    const val = variables[key] !== undefined && variables[key] !== null ? variables[key] : '';
+    result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), val);
+  });
+  return result;
+}
+
 /**
  * Helper to dynamically generate Subject and Body Text components based on leave type config
  */
@@ -46,12 +56,14 @@ export function getDocumentTextComponents(payload) {
     izinSuresi = 5,
     ayrilisTarihi = '',
     baslayisTarihi = '',
-    raporKurum = 'Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi',
+    ilgiEvrak = '',
     donusNotu = '',
     leaveTypeName = 'İzin',
     subjectText = '',
     ayrilisPhrase = '',
-    baslayisPhrase = ''
+    baslayisPhrase = '',
+    ayrilisTemplate = '',
+    baslayisTemplate = ''
   } = payload;
 
   const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
@@ -59,30 +71,45 @@ export function getDocumentTextComponents(payload) {
   const isBaslayis = docType.includes('baslayis');
   const isRapor = docType.includes('rapor');
 
+  const variables = {
+    birim,
+    unvan,
+    personel: personnelName,
+    sicil: sicilNo,
+    gun: gunMetni,
+    ayrilisTarihi: formatDateTR(ayrilisTarihi),
+    baslayisTarihi: formatDateTR(baslayisTarihi),
+    donusNotu: notuPart,
+    ilgiEvrak: ilgiEvrak ? ilgiEvrak.trim() : '',
+    ayrilisPhrase: ayrilisPhrase || (isRapor ? 'ekte gönderilen' : `${leaveTypeName.toLowerCase()}nden`),
+    baslayisPhrase: baslayisPhrase || (isRapor ? 'ekte gönderilen' : `${leaveTypeName.toLowerCase()}ni`)
+  };
+
+  let rawSubject = "";
   let subjectStr = "";
   let bodyParagraph = "";
 
-  if (isRapor) {
-    const effSubject = subjectText || (isBaslayis ? "Göreve Başlama" : `${personnelName}-Rapor İşlemi`);
-    subjectStr = effSubject;
-
-    if (!isBaslayis) {
-      const effAyrilis = ayrilisPhrase || "ekte gönderilen";
-      bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${effAyrilis} ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+  if (isBaslayis) {
+    rawSubject = subjectText || "Göreve Başlama";
+    if (baslayisTemplate && baslayisTemplate.trim()) {
+      bodyParagraph = interpolateTemplate(baslayisTemplate, variables);
+    } else if (isRapor) {
+      bodyParagraph = `İlgi sayılı yazımız ile ${variables.baslayisPhrase} ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
     } else {
-      const effBaslayis = baslayisPhrase || "ekte gönderilen";
-      bodyParagraph = `İlgi sayılı yazımız ile ${effBaslayis} ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+      bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük ${variables.baslayisPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
     }
-  } else if (!isBaslayis) {
-    const effSubject = subjectText || leaveTypeName;
-    const effPhrase = ayrilisPhrase || `${leaveTypeName.toLowerCase()}nden`;
-    subjectStr = effSubject;
-    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${effPhrase} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
   } else {
-    const effPhrase = baslayisPhrase || `${leaveTypeName.toLowerCase()}ni`;
-    subjectStr = "Göreve Başlama";
-    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük ${effPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+    rawSubject = subjectText || (isRapor ? "{personel}-Rapor İşlemi" : leaveTypeName);
+    if (ayrilisTemplate && ayrilisTemplate.trim()) {
+      bodyParagraph = interpolateTemplate(ayrilisTemplate, variables);
+    } else if (isRapor) {
+      bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${variables.ayrilisPhrase} ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+    } else {
+      bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${variables.ayrilisPhrase} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+    }
   }
+
+  subjectStr = interpolateTemplate(rawSubject, variables);
 
   return { subjectStr, bodyParagraph };
 }
@@ -127,7 +154,7 @@ export function generateDocumentPreviewHtml(payload) {
     ];
     closingSentence = "Gereğini arz ederim.";
   } else {
-    destTitleLines = aliciMakamOzel.split('\n').filter(l => l.trim());
+    destTitleLines = (aliciMakamOzel || '').split('\n').filter(l => l.trim());
     if (destTitleLines.length === 0) {
       destTitleLines = ["ANKARA ADLÎ YARGI", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
     }

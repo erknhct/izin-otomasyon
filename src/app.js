@@ -348,87 +348,103 @@ function setupWizardForm() {
 
   // UDF Formatted Document Preview Button
   document.getElementById('btn-preview-xml')?.addEventListener('click', () => {
-    const payload = getWizardPayload();
-    const previewHtml = generateDocumentPreviewHtml(payload);
-    openModal('📄 ÖNİZLEME', previewHtml);
+    try {
+      const payload = getWizardPayload();
+      const previewHtml = generateDocumentPreviewHtml(payload);
+      openModal('📄 ÖNİZLEME', previewHtml);
 
-    document.getElementById('btn-modal-download-udf')?.addEventListener('click', async () => {
-      const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
-      await downloadUdfFile(payload, filename);
-      showToast(`${filename} UDF olarak indirildi!`, 'success');
-    });
+      document.getElementById('btn-modal-download-udf')?.addEventListener('click', async () => {
+        const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
+        await downloadUdfFile(payload, filename);
+        showToast(`${filename} UDF olarak indirildi!`, 'success');
+      });
+    } catch (err) {
+      console.error('Önizleme hatası:', err);
+      showToast('Önizleme oluşturulurken hata: ' + err.message, 'danger');
+    }
   });
 
   // Form Submit (Generate UDF)
   document.getElementById('form-udf-wizard').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const payload = getWizardPayload();
-    const isBaslayis = payload.actionType === 'baslayis';
+    try {
+      const payload = getWizardPayload();
+      const isBaslayis = payload.actionType === 'baslayis';
 
-    // Duplicate/Overlap Leave Check for the same personnel
-    if (!isBaslayis) {
-      const expReturn = calculateExpectedReturn(payload.ayrilisTarihi, payload.izinSuresi);
-      const conflict = checkLeaveConflict(payload.personnelId, payload.ayrilisTarihi, expReturn);
-      
-      if (conflict) {
-        showToast(`⚠️ ${payload.personnelName} için ${formatDateTR(conflict.ayrilisDate)} - ${formatDateTR(conflict.expectedReturnDate)} tarihleri arasında zaten aktif (${conflict.leaveTypeName}) kaydı mevcuttur! Aynı personel için çakışan tarihte 2. bir izin kaydı oluşturulamaz.`, 'danger');
-        return;
+      // Duplicate/Overlap Leave Check for the same personnel
+      if (!isBaslayis) {
+        const expReturn = calculateExpectedReturn(payload.ayrilisTarihi, payload.izinSuresi);
+        const conflict = checkLeaveConflict(payload.personnelId, payload.ayrilisTarihi, expReturn);
+        
+        if (conflict) {
+          showToast(`⚠️ ${payload.personnelName} için ${formatDateTR(conflict.ayrilisDate)} - ${formatDateTR(conflict.expectedReturnDate)} tarihleri arasında zaten aktif (${conflict.leaveTypeName}) kaydı mevcuttur! Aynı personel için çakışan tarihte 2. bir izin kaydı oluşturulamaz.`, 'danger');
+          return;
+        }
       }
+      
+      const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
+      await downloadUdfFile(payload, filename);
+      showToast(`${filename} UDF olarak oluşturuldu ve indirildi!`, 'success');
+
+      // Store record in leave tracking database
+      const leaveTypes = getLeaveTypes();
+      const ltObj = leaveTypes.find(l => l.code === payload.leaveType) || { name: 'İzin' };
+
+      if (!isBaslayis) {
+        const expReturn = calculateExpectedReturn(payload.ayrilisTarihi, payload.izinSuresi);
+        addLeaveRecord({
+          id: 'rec-' + Date.now(),
+          personnelId: payload.personnelId,
+          personnelName: payload.personnelName,
+          sicil: payload.sicilNo,
+          unvan: payload.unvan,
+          leaveType: payload.leaveType,
+          leaveTypeName: ltObj.name,
+          days: payload.izinSuresi,
+          ayrilisDate: payload.ayrilisTarihi,
+          expectedReturnDate: expReturn,
+          raporKurum: payload.raporKurum,
+          aliciMakam: payload.aliciMakam,
+          status: 'ayrilis_yapildi',
+          baslayisEvrakNo: null,
+          baslayisDate: null
+        });
+      } else if (payload.linkedRecordId) {
+        updateLeaveRecord(payload.linkedRecordId, {
+          status: 'baslayis_yapildi',
+          baslayisDate: payload.baslayisTarihi
+        });
+        delete document.getElementById('form-udf-wizard').dataset.linkedRecordId;
+      }
+
+      renderDashboard();
+    } catch (err) {
+      console.error('UDF oluşturma hatası:', err);
+      showToast('Hata: ' + err.message, 'danger');
     }
-    
-    const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
-    await downloadUdfFile(payload, filename);
-    showToast(`${filename} UDF olarak oluşturuldu ve indirildi!`, 'success');
-
-    // Store record in leave tracking database
-    const leaveTypes = getLeaveTypes();
-    const ltObj = leaveTypes.find(l => l.code === payload.leaveType) || { name: 'İzin' };
-
-    if (!isBaslayis) {
-      const expReturn = calculateExpectedReturn(payload.ayrilisTarihi, payload.izinSuresi);
-      addLeaveRecord({
-        id: 'rec-' + Date.now(),
-        personnelId: payload.personnelId,
-        personnelName: payload.personnelName,
-        sicil: payload.sicilNo,
-        unvan: payload.unvan,
-        leaveType: payload.leaveType,
-        leaveTypeName: ltObj.name,
-        days: payload.izinSuresi,
-        ayrilisDate: payload.ayrilisTarihi,
-        expectedReturnDate: expReturn,
-        raporKurum: payload.raporKurum,
-        aliciMakam: payload.aliciMakam,
-        status: 'ayrilis_yapildi',
-        baslayisEvrakNo: null,
-        baslayisDate: null
-      });
-    } else if (payload.linkedRecordId) {
-      updateLeaveRecord(payload.linkedRecordId, {
-        status: 'baslayis_yapildi',
-        baslayisDate: payload.baslayisTarihi
-      });
-      delete document.getElementById('form-udf-wizard').dataset.linkedRecordId;
-    }
-
-    renderDashboard();
   });
 }
 
 function getWizardPayload() {
-  const pId = document.getElementById('wiz-personnel-select').value;
-  const person = getPersonnelList().find(p => p.id === pId) || { name: 'Personel', sicil: '0000', title: 'Katip', birim: 'Bilgi İşlem Müdürlüğü' };
+  const pSelect = document.getElementById('wiz-personnel-select');
+  const pId = pSelect ? pSelect.value : '';
+  const personnelList = getPersonnelList();
+  const person = personnelList.find(p => p.id === pId) || personnelList[0] || { id: '0', name: 'Personel', sicil: '0000', title: 'Katip', birim: 'Bilgi İşlem Müdürlüğü' };
 
-  const sId = document.getElementById('wiz-imzalayan').value;
-  const signer = getSignatories().find(s => s.id === sId) || { name: 'Dr. Arif Naci SUCUOĞLU', title: 'Cumhuriyet Başsavcı Vekili' };
+  const sSelect = document.getElementById('wiz-imzalayan');
+  const sId = sSelect ? sSelect.value : '';
+  const signatories = getSignatories();
+  const signer = signatories.find(s => s.id === sId) || signatories[0] || { name: 'Dr. Arif Naci SUCUOĞLU', title: 'Cumhuriyet Başsavcı Vekili' };
 
-  const leaveCode = document.getElementById('wiz-leave-type').value;
+  const leaveCode = document.getElementById('wiz-leave-type')?.value || 'yillik';
   const leaveTypes = getLeaveTypes();
   const ltObj = leaveTypes.find(l => l.code === leaveCode || l.id === leaveCode) || { name: 'İzin' };
 
-  const actionType = document.getElementById('wiz-action-type').value;
-  const izinSuresi = parseInt(document.getElementById('wiz-izin-suresi').value, 10);
-  const ayrilisTarihi = document.getElementById('wiz-ayrilis-tarih').value;
+  const actionType = document.getElementById('wiz-action-type')?.value || 'ayrilis';
+  const izinSuresiInput = document.getElementById('wiz-izin-suresi');
+  const izinSuresi = parseInt(izinSuresiInput?.value || '5', 10);
+  const ayrilisTarihi = document.getElementById('wiz-ayrilis-tarih')?.value || new Date().toISOString().split('T')[0];
+  const baslayisTarihi = document.getElementById('wiz-baslayis-tarih')?.value || ayrilisTarihi;
 
   let docType = `${leaveCode}_${actionType}`;
   const todayStr = new Date().toISOString().split('T')[0];
@@ -441,8 +457,10 @@ function getWizardPayload() {
     subjectText: ltObj.subjectText || '',
     ayrilisPhrase: ltObj.ayrilisPhrase || '',
     baslayisPhrase: ltObj.baslayisPhrase || '',
+    ayrilisTemplate: ltObj.ayrilisTemplate || '',
+    baslayisTemplate: ltObj.baslayisTemplate || '',
     actionType: actionType,
-    personnelId: pId,
+    personnelId: person.id,
     personnelName: person.name,
     sicilNo: person.sicil,
     unvan: person.title,
@@ -450,15 +468,15 @@ function getWizardPayload() {
     tarih: formatDateTR(todayStr),
     izinSuresi: izinSuresi,
     ayrilisTarihi: ayrilisTarihi,
-    baslayisTarihi: document.getElementById('wiz-baslayis-tarih').value,
-    ilgiEvrak: document.getElementById('wiz-ilgi-evrak').value,
-    raporKurum: document.getElementById('wiz-rapor-kurum').value,
-    aliciMakam: document.getElementById('wiz-alici-makam').value,
-    aliciMakamOzel: document.getElementById('wiz-alici-makam-ozel').value,
+    baslayisTarihi: baslayisTarihi,
+    ilgiEvrak: document.getElementById('wiz-ilgi-evrak')?.value || '',
+    raporKurum: document.getElementById('wiz-rapor-kurum')?.value || '',
+    aliciMakam: document.getElementById('wiz-alici-makam')?.value || 'komisyon',
+    aliciMakamOzel: document.getElementById('wiz-alici-makam-ozel')?.value || '',
     imzalayanAd: signer.name,
     imzalayanUnvan: signer.title,
     donusNotu: donusNotu,
-    linkedRecordId: document.getElementById('form-udf-wizard').dataset.linkedRecordId || null
+    linkedRecordId: document.getElementById('form-udf-wizard')?.dataset.linkedRecordId || null
   };
 }
 
@@ -860,7 +878,16 @@ function renderSettings() {
       const lt = getLeaveTypes().find(l => l.id === id);
       if (!lt) return;
 
-      openModal('İzin Türü ve Şablon Düzenle', `
+      const isRapor = lt.code === 'rapor';
+      const defaultAyrilisTpl = isRapor 
+        ? `{birim}müzde {unvan} olarak görev yapan {personel} ({sicil}) {ayrilisPhrase} {gun} günlük istirahat raporuyla {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`
+        : `{birim}müzde görevli {unvan} {personel} ({sicil}) {ayrilisPhrase} {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`;
+
+      const defaultBaslayisTpl = isRapor
+        ? `İlgi sayılı yazımız ile {baslayisPhrase} {gun} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır.`
+        : `İlgi sayılı yazımız ile {gun} günlük {baslayisPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır.`;
+
+      openModal('İzin Türü ve Tam Şablon Düzenle', `
         <form id="form-edit-leavetype" class="form-grid">
           <div class="form-group full-width">
             <label>İzin Türü Adı</label>
@@ -871,13 +898,31 @@ function renderSettings() {
             <input type="text" id="edit-lt-subject" required value="${lt.subjectText || lt.name}" placeholder="Örn: Babalık İzni, Yıllık İzin" />
           </div>
           <div class="form-group">
-            <label>Ayrılış Cümle Eki (UDF Ayrılış İfadesi)</label>
-            <input type="text" id="edit-lt-ayrilis" required value="${lt.ayrilisPhrase || ''}" placeholder="Örn: babalık izninden, evlilik izninden" />
+            <label>Ayrılış Cümle Eki (Kısayol İfadesi)</label>
+            <input type="text" id="edit-lt-ayrilis" value="${lt.ayrilisPhrase || ''}" placeholder="Örn: babalık izninden, evlilik izninden" />
           </div>
           <div class="form-group">
-            <label>Başlayış Cümle Eki (UDF Başlayış İfadesi)</label>
-            <input type="text" id="edit-lt-baslayis" required value="${lt.baslayisPhrase || ''}" placeholder="Örn: babalık iznini, evlilik iznini" />
+            <label>Başlayış Cümle Eki (Kısayol İfadesi)</label>
+            <input type="text" id="edit-lt-baslayis" value="${lt.baslayisPhrase || ''}" placeholder="Örn: babalık iznini, evlilik iznini" />
           </div>
+
+          <div class="form-group full-width" style="margin-top: 0.5rem;">
+            <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-main);">
+              <strong>ℹ️ Kullanılabilecek Şablon Değişkenleri:</strong><br>
+              <code>{birim}</code>, <code>{unvan}</code>, <code>{personel}</code>, <code>{sicil}</code>, <code>{gun}</code>, <code>{ayrilisTarihi}</code>, <code>{baslayisTarihi}</code>, <code>{donusNotu}</code>, <code>{ilgiEvrak}</code>, <code>{ayrilisPhrase}</code>, <code>{baslayisPhrase}</code>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label>İzne Ayrılış Metni (Tam Paragraf Şablonu)</label>
+            <textarea id="edit-lt-ayrilis-tpl" rows="3" style="font-family: monospace; font-size: 0.85rem;">${lt.ayrilisTemplate || defaultAyrilisTpl}</textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label>Göreve Başlayış Metni (Tam Paragraf Şablonu)</label>
+            <textarea id="edit-lt-baslayis-tpl" rows="3" style="font-family: monospace; font-size: 0.85rem;">${lt.baslayisTemplate || defaultBaslayisTpl}</textarea>
+          </div>
+
           <div class="form-group full-width" style="margin-top: 1rem; display: flex; justify-content: flex-end;">
             <button type="submit" class="btn btn-success"><i class="fa-solid fa-save"></i> Güncelle ve Kaydet</button>
           </div>
@@ -894,20 +939,25 @@ function renderSettings() {
             name: document.getElementById('edit-lt-name').value,
             subjectText: document.getElementById('edit-lt-subject').value,
             ayrilisPhrase: document.getElementById('edit-lt-ayrilis').value,
-            baslayisPhrase: document.getElementById('edit-lt-baslayis').value
+            baslayisPhrase: document.getElementById('edit-lt-baslayis').value,
+            ayrilisTemplate: document.getElementById('edit-lt-ayrilis-tpl').value,
+            baslayisTemplate: document.getElementById('edit-lt-baslayis-tpl').value
           };
           saveLeaveTypes(current);
           closeModal();
           renderSettings();
           populateWizardOptions();
-          showToast('İzin türü şablonu güncellendi ve kaydedildi!', 'success');
+          showToast('İzin türü ve tüm şablonlar güncellendi!', 'success');
         }
       });
     });
   });
 
   document.getElementById('btn-add-leavetype')?.addEventListener('click', () => {
-    openModal('Yeni İzin Türü ve Şablon Ekle', `
+    const defaultAyrilisTpl = `{birim}müzde görevli {unvan} {personel} ({sicil}) {ayrilisPhrase} {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`;
+    const defaultBaslayisTpl = `İlgi sayılı yazımız ile {gun} günlük {baslayisPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır.`;
+
+    openModal('Yeni İzin Türü ve Tam Şablon Ekle', `
       <form id="form-add-leavetype" class="form-grid">
         <div class="form-group full-width">
           <label>İzin Türü Adı</label>
@@ -918,13 +968,31 @@ function renderSettings() {
           <input type="text" id="lt-subject" required placeholder="Örn: Babalık İzni" />
         </div>
         <div class="form-group">
-          <label>Ayrılış Cümle Eki (UDF Ayrılış İfadesi)</label>
-          <input type="text" id="lt-ayrilis" required placeholder="Örn: babalık izninden" />
+          <label>Ayrılış Cümle Eki (Kısayol İfadesi)</label>
+          <input type="text" id="lt-ayrilis" placeholder="Örn: babalık izninden" />
         </div>
         <div class="form-group">
-          <label>Başlayış Cümle Eki (UDF Başlayış İfadesi)</label>
-          <input type="text" id="lt-baslayis" required placeholder="Örn: babalık iznini" />
+          <label>Başlayış Cümle Eki (Kısayol İfadesi)</label>
+          <input type="text" id="lt-baslayis" placeholder="Örn: babalık iznini" />
         </div>
+
+        <div class="form-group full-width" style="margin-top: 0.5rem;">
+          <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-main);">
+            <strong>ℹ️ Kullanılabilecek Şablon Değişkenleri:</strong><br>
+            <code>{birim}</code>, <code>{unvan}</code>, <code>{personel}</code>, <code>{sicil}</code>, <code>{gun}</code>, <code>{ayrilisTarihi}</code>, <code>{baslayisTarihi}</code>, <code>{donusNotu}</code>, <code>{ilgiEvrak}</code>, <code>{ayrilisPhrase}</code>, <code>{baslayisPhrase}</code>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label>İzne Ayrılış Metni (Tam Paragraf Şablonu)</label>
+          <textarea id="lt-ayrilis-tpl" rows="3" style="font-family: monospace; font-size: 0.85rem;">${defaultAyrilisTpl}</textarea>
+        </div>
+
+        <div class="form-group full-width">
+          <label>Göreve Başlayış Metni (Tam Paragraf Şablonu)</label>
+          <textarea id="lt-baslayis-tpl" rows="3" style="font-family: monospace; font-size: 0.85rem;">${defaultBaslayisTpl}</textarea>
+        </div>
+
         <div class="form-group full-width" style="margin-top: 1rem; display: flex; justify-content: flex-end;">
           <button type="submit" class="btn btn-success"><i class="fa-solid fa-save"></i> Kaydet</button>
         </div>
@@ -942,13 +1010,15 @@ function renderSettings() {
         code: code || 'izin',
         subjectText: document.getElementById('lt-subject').value || name,
         ayrilisPhrase: document.getElementById('lt-ayrilis').value || `${name.toLowerCase()}nden`,
-        baslayisPhrase: document.getElementById('lt-baslayis').value || `${name.toLowerCase()}ni`
+        baslayisPhrase: document.getElementById('lt-baslayis').value || `${name.toLowerCase()}ni`,
+        ayrilisTemplate: document.getElementById('lt-ayrilis-tpl').value,
+        baslayisTemplate: document.getElementById('lt-baslayis-tpl').value
       });
       saveLeaveTypes(current);
       closeModal();
       renderSettings();
       populateWizardOptions();
-      showToast('Yeni izin türü şablonu eklendi ve kaydedildi.', 'success');
+      showToast('Yeni izin türü ve tam şablonlar kaydedildi.', 'success');
     });
   });
 
