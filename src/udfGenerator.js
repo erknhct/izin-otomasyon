@@ -34,7 +34,7 @@ export function formatDateTR(dateStr) {
 }
 
 /**
- * Generates exact UYAP native CDATA text (Tab-spaced as in UYAP XML files)
+ * Generates Plain Text with exact space padding to match UYAP page centering & right-alignment when pasted
  */
 export function generatePlainUdfText(payload) {
   const {
@@ -64,8 +64,8 @@ export function generatePlainUdfText(payload) {
 
   if (aliciMakam === 'komisyon') {
     destTitleLines = [
-      "ANKARA ADLÎ YARGI ",
-      "İLK DERECE MAHKEMESİ ",
+      "ANKARA ADLÎ YARGI",
+      "İLK DERECE MAHKEMESİ",
       "ADALET KOMİSYONU BAŞKANLIĞI'NA"
     ];
     closingSentence = "Bilgilerinize arz olunur.";
@@ -78,7 +78,7 @@ export function generatePlainUdfText(payload) {
   } else {
     destTitleLines = aliciMakamOzel.split('\n').filter(l => l.trim());
     if (destTitleLines.length === 0) {
-      destTitleLines = ["ANKARA ADLÎ YARGI ", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
+      destTitleLines = ["ANKARA ADLÎ YARGI", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
     }
   }
 
@@ -104,17 +104,35 @@ export function generatePlainUdfText(payload) {
   const isBaslayis = docType.includes('baslayis');
   const isRaporAyrilis = docType.includes('rapor_ayrilis');
 
+  // Page width target for UYAP Editor ~68 chars
+  const UYAP_LINE_WIDTH = 68;
+
   let text = `Konu : ${subjectStr}\n\n\n\n`;
-  text += destTitleLines.join('\n') + '\n\t\n';
+
+  // Center recipient title lines with leading spaces
+  destTitleLines.forEach(l => {
+    const trimmed = l.trim();
+    const padLen = Math.max(0, Math.floor((UYAP_LINE_WIDTH - trimmed.length) / 2));
+    text += ' '.repeat(padLen) + trimmed + '\n';
+  });
+  text += '\n';
 
   if (isBaslayis && ilgiEvrak && ilgiEvrak.trim()) {
     text += `İlgi     : ${ilgiEvrak.trim()}\n\n`;
   }
 
-  text += `\t${bodyParagraph}\n`;
-  text += `\t${closingSentence}\n\t\t\t\n\t\t\t\n`;
-  text += `\t\t\t                                    ${imzalayanAd}\n`;
-  text += `\t\t\t                                   ${imzalayanUnvan}\n`;
+  // Paragraph indents: 8 spaces (1.25 cm)
+  text += `        ${bodyParagraph}\n`;
+  text += `        ${closingSentence}\n\n\n`;
+
+  // Right-align signature block
+  const nameTrimmed = imzalayanAd.trim();
+  const titleTrimmed = imzalayanUnvan.trim();
+  const namePad = Math.max(0, UYAP_LINE_WIDTH - nameTrimmed.length - 2);
+  const titlePad = Math.max(0, UYAP_LINE_WIDTH - titleTrimmed.length - 2);
+
+  text += ' '.repeat(namePad) + nameTrimmed + '\n';
+  text += ' '.repeat(titlePad) + titleTrimmed + '\n';
 
   if (isRaporAyrilis) {
     text += `\nEk      : ${ekBelge}\n`;
