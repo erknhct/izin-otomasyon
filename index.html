@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UYAP .UDF İzin Evrak Otomasyonu & Personel Takip</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand-header">
+        <div class="brand-icon">
+          <i class="fa-solid fa-file-signature"></i>
+        </div>
+        <div>
+          <div class="brand-title">UDF OTOMASYON</div>
+          <div class="brand-subtitle">Ankara C. Başsavcılığı</div>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <a class="nav-item active" data-view="dashboard">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Ana Sayfa & UDF Oluştur</span>
+        </a>
+        <a class="nav-item" data-view="leaves">
+          <i class="fa-solid fa-calendar-check"></i>
+          <span>İzinler & Başlayış Takibi</span>
+          <span class="nav-badge" id="nav-pending-badge" style="display: none;">0</span>
+        </a>
+        <a class="nav-item" data-view="personnel">
+          <i class="fa-solid fa-users"></i>
+          <span>Personel Listesi (50)</span>
+        </a>
+        <a class="nav-item" data-view="settings">
+          <i class="fa-solid fa-sliders"></i>
+          <span>Şablon & İzin Türü Ayarları</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="theme-toggle-btn" id="theme-toggle-btn">
+          <i class="fa-solid fa-moon"></i>
+          <span>Karanlık Mod</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- DASHBOARD & QUICK ENTRY VIEW -->
+      <section id="view-dashboard" class="view-section active">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">İzin Girişi ve .UDF Evrak Oluşturucu</h1>
+            <p class="page-description">Personelinizi seçin, izin gününü ve türünü girip tek tıkla UDF evrakını indirin</p>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon primary">
+              <i class="fa-solid fa-user-clock"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="stat-active-leaves">0</div>
+              <div class="stat-label">Aktif İznide Olan Personel</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon warning">
+              <i class="fa-solid fa-bell"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="stat-pending-returns">0</div>
+              <div class="stat-label">Başlayış Yazısı Bekleyenler</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon success">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="stat-completed-returns">0</div>
+              <div class="stat-label">Tamamlanan İzinler</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon info">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div>
+              <div class="stat-value" id="stat-total-personnel">50</div>
+              <div class="stat-label">Kayıtlı Personel Sayısı</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MAIN FORM CARD: PERSONEL İZİN GİRİŞİ VE UDF OLUŞTURMA -->
+        <div class="glass-card" style="border: 2px solid var(--accent-primary);">
+          <div class="card-title">
+            <span><i class="fa-solid fa-file-pen" style="color: var(--accent-primary); margin-right: 8px;"></i> 📝 PERSONEL İZİN GİRİŞİ VE UDF YAZISI OLUŞTUR</span>
+            <span class="badge badge-info">%100 UYAP Uyumlu</span>
+          </div>
+
+          <form id="form-udf-wizard">
+            <div class="form-grid">
+              <!-- 1. Personel Seçimi -->
+              <div class="form-group">
+                <label for="wiz-personnel-select"><i class="fa-solid fa-user"></i> 1. Personel Seçiniz (50 Personel)</label>
+                <select id="wiz-personnel-select" required style="font-weight: 600;">
+                  <!-- Dynamically filled -->
+                </select>
+              </div>
+
+              <!-- 2. İzin Türü Seçimi -->
+              <div class="form-group">
+                <label for="wiz-leave-type"><i class="fa-solid fa-calendar-day"></i> 2. İzin Türü Seçiniz</label>
+                <select id="wiz-leave-type" required style="font-weight: 600;">
+                  <!-- Dynamically filled from getLeaveTypes() -->
+                </select>
+              </div>
+
+              <!-- 3. İşlem Tipi (Ayrılış / Başlayış) -->
+              <div class="form-group">
+                <label for="wiz-action-type"><i class="fa-solid fa-right-from-bracket"></i> 3. İşlem Tipi</label>
+                <select id="wiz-action-type" required style="font-weight: 600;">
+                  <option value="ayrilis">İzne Ayrılış (Ayrılış UDF Yaz)</option>
+                  <option value="baslayis">Göreve Başlayış (Başlayış UDF Yaz)</option>
+                </select>
+              </div>
+
+              <!-- 4. İzin Süresi (Gün Sayısı) -->
+              <div class="form-group">
+                <label for="wiz-izin-suresi"><i class="fa-solid fa-stopwatch"></i> 4. İzin Süresi (Kaç Gün?)</label>
+                <input type="number" id="wiz-izin-suresi" value="4" min="1" max="90" required style="font-size: 1.1rem; font-weight: 700; color: var(--accent-primary);" />
+              </div>
+
+              <!-- 5. İzin / Ayrılış Tarihi -->
+              <div class="form-group" id="group-ayrilis-tarih">
+                <label for="wiz-ayrilis-tarih"><i class="fa-solid fa-calendar-check"></i> 5. İzin / Ayrılış Tarihi</label>
+                <input type="date" id="wiz-ayrilis-tarih" required />
+              </div>
+
+              <!-- 6. Göreve Başlama Tarihi (Otomatik Hesaplanan) -->
+              <div class="form-group" id="group-baslayis-tarih">
+                <label for="wiz-baslayis-tarih"><i class="fa-solid fa-calendar-plus"></i> Tahmini Göreve Başlama Tarihi</label>
+                <input type="date" id="wiz-baslayis-tarih" style="background: rgba(16, 185, 129, 0.15); border-color: var(--accent-success); font-weight: 700;" />
+              </div>
+
+              <!-- İlgi Evrak (Başlayış Seçildiğinde Görünür) -->
+              <div class="form-group full-width" id="group-ilgi-evrak" style="display: none;">
+                <label for="wiz-ilgi-evrak"><i class="fa-solid fa-link"></i> İlgi Sayılı Yazı (Ayrılış Evrak Bilgisi)</label>
+                <input type="text" id="wiz-ilgi-evrak" placeholder="Örn: 03.08.2026 günlü yazımız" />
+              </div>
+
+              <!-- Sağlık Kurumu (Rapor Seçildiğinde Görünür) -->
+              <div class="form-group full-width" id="group-rapor-kurum" style="display: none;">
+                <label for="wiz-rapor-kurum"><i class="fa-solid fa-hospital"></i> Raporu Veren Sağlık Kurumu</label>
+                <input type="text" id="wiz-rapor-kurum" value="Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi" />
+              </div>
+
+              <!-- Gönderilen Makam -->
+              <div class="form-group full-width">
+                <label for="wiz-alici-makam"><i class="fa-solid fa-building-columns"></i> Gönderilecek Makam</label>
+                <select id="wiz-alici-makam" required>
+                  <option value="komisyon">ANKARA ADLÎ YARGI İLK DERECE MAHKEMESİ ADALET KOMİSYONU BAŞKANLIĞI'NA</option>
+                  <option value="bakanlik">ANKARA CUMHURİYET BAŞSAVCILIĞI Bakanlık Muhabere Bürosu'na</option>
+                  <option value="ozel">Özel Makam Yaz (Manuel)</option>
+                </select>
+              </div>
+
+              <div class="form-group full-width" id="group-alici-makam-ozel" style="display: none;">
+                <label for="wiz-alici-makam-ozel">Özel Alıcı Makam Metni</label>
+                <textarea id="wiz-alici-makam-ozel" rows="2"></textarea>
+              </div>
+
+              <!-- İmzalayan Yetkili -->
+              <div class="form-group full-width">
+                <label for="wiz-imzalayan"><i class="fa-solid fa-pen-nib"></i> İmzalayacak Yetkili</label>
+                <select id="wiz-imzalayan" required>
+                  <!-- Dynamically filled -->
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end; align-items: center;">
+              <button type="button" class="btn btn-secondary" id="btn-preview-xml">
+                <i class="fa-solid fa-eye"></i> UDF XML Önizle
+              </button>
+              <button type="submit" class="btn btn-success" id="btn-generate-udf" style="padding: 0.85rem 1.75rem; font-size: 1.05rem;">
+                <i class="fa-solid fa-download"></i> .UDF İNDİR VE İZİN KAYDINI BAŞLAT
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Pending Return Alerts Widget -->
+        <div class="glass-card">
+          <div class="card-title">
+            <span><i class="fa-solid fa-clock-rotate-left" style="color: var(--accent-warning); margin-right: 8px;"></i> Göreve Başlayış Yazısı Oluşturulması Gerekenler</span>
+            <span class="badge badge-warning" id="pending-count-badge">0 Kayıt</span>
+          </div>
+          <div id="pending-returns-container">
+            <!-- Dynamic pending list -->
+          </div>
+        </div>
+      </section>
+
+      <!-- LEAVES & TRACKING VIEW -->
+      <section id="view-leaves" class="view-section">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">İzinler & Başlayış Takibi</h1>
+            <p class="page-description">Tüm izin hareketleri ve tamamlanmamış göreve başlayış evrakları</p>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-title">
+            <span>İzin Kayıtları Geçmişi</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="table-leaves">
+              <thead>
+                <tr>
+                  <th>Personel</th>
+                  <th>İzin Türü</th>
+                  <th>Süre</th>
+                  <th>Ayrılış Tarihi</th>
+                  <th>Beklenen Başlayış</th>
+                  <th>Durum</th>
+                  <th>İşlem</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Dynamically filled -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- PERSONNEL MANAGEMENT VIEW -->
+      <section id="view-personnel" class="view-section">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Personel Yönetimi</h1>
+            <p class="page-description">Birimde çalışan 50+ personel listesi, ekleme ve düzenleme</p>
+          </div>
+          <div style="display: flex; gap: 0.75rem;">
+            <input type="text" id="search-personnel" placeholder="Personel Ara (Ad, Sicil)..." style="width: 250px;" />
+            <button class="btn btn-primary" id="btn-add-personnel">
+              <i class="fa-solid fa-user-plus"></i> Yeni Personel Ekle
+            </button>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="table-container">
+            <table class="data-table" id="table-personnel">
+              <thead>
+                <tr>
+                  <th>Sicil No</th>
+                  <th>Adı Soyadı</th>
+                  <th>Unvanı</th>
+                  <th>Çalıştığı Birim</th>
+                  <th>Durum</th>
+                  <th>İşlemler</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Dynamically filled -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section id="view-settings" class="view-section">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">İzin Türleri, Şablon ve Sistem Ayarları</h1>
+            <p class="page-description">İzin türleri ekleme/silme ve imza yetkilileri yönetimi</p>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+          <!-- Leave Types -->
+          <div class="glass-card">
+            <div class="card-title">
+              <span>İzin Türü Ekle / Sil</span>
+              <button class="btn btn-sm btn-primary" id="btn-add-leavetype"><i class="fa-solid fa-plus"></i> Yeni İzin Türü</button>
+            </div>
+            <div id="list-leavetypes">
+              <!-- Dynamically filled -->
+            </div>
+          </div>
+
+          <!-- Signatories -->
+          <div class="glass-card">
+            <div class="card-title">
+              <span>İmzalayacak Yetkililer</span>
+              <button class="btn btn-sm btn-primary" id="btn-add-signer"><i class="fa-solid fa-plus"></i> Yetkili Ekle</button>
+            </div>
+            <div id="list-signers">
+              <!-- Dynamically filled -->
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Component -->
+  <div class="modal-overlay" id="global-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Modal Başlık</h3>
+        <button class="close-btn" id="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Dynamic content -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script type="module" src="/src/app.js"></script>
+</body>
+</html>
