@@ -24,6 +24,26 @@ export function calculateExpectedReturn(startDateStr, days) {
 }
 
 /**
+ * Checks if a personnel already has an active or overlapping leave record in the same date range
+ */
+export function checkLeaveConflict(personnelId, ayrilisDate, expectedReturnDate, excludeRecordId = null) {
+  const records = getLeaveRecords();
+  return records.find(r => {
+    if (excludeRecordId && r.id === excludeRecordId) return false;
+    if (r.personnelId !== personnelId) return false;
+    
+    const existingStart = r.ayrilisDate;
+    const existingEnd = r.expectedReturnDate;
+    
+    if (!existingStart || !existingEnd) return false;
+
+    // Check date overlap: (StartA <= EndB) and (EndA >= StartB)
+    const isOverlap = (ayrilisDate <= existingEnd && expectedReturnDate >= existingStart);
+    return isOverlap ? r : null;
+  });
+}
+
+/**
  * Returns active leave records that require return (başlayış) document creation.
  * Evaluates records where status === 'ayrilis_yapildi'
  */
@@ -33,8 +53,6 @@ export function getPendingReturnRecords() {
   
   return records.filter(r => {
     if (r.status !== 'ayrilis_yapildi') return false;
-    
-    // Sort by return date proximity
     return true;
   }).map(r => {
     const isDue = r.expectedReturnDate <= today;

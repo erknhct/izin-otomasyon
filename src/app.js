@@ -5,7 +5,7 @@ import {
   getSignatories, saveSignatories,
   getLeaveRecords, addLeaveRecord, updateLeaveRecord
 } from './storage.js';
-import { calculateExpectedReturn, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
+import { calculateExpectedReturn, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
 
 // DOM Elements
 const navItems = document.querySelectorAll('.nav-item');
@@ -45,7 +45,7 @@ function showToast(message, type = 'info') {
   toastContainer.appendChild(toast);
   setTimeout(() => {
     toast.remove();
-  }, 4000);
+  }, 5000);
 }
 
 // Navigation
@@ -282,10 +282,20 @@ function setupWizardForm() {
   document.getElementById('form-udf-wizard').addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = getWizardPayload();
-    
     const isBaslayis = payload.actionType === 'baslayis';
-    const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
+
+    // Duplicate/Overlap Leave Check for the same personnel
+    if (!isBaslayis) {
+      const expReturn = calculateExpectedReturn(payload.ayrilisTarihi, payload.izinSuresi);
+      const conflict = checkLeaveConflict(payload.personnelId, payload.ayrilisTarihi, expReturn);
+      
+      if (conflict) {
+        showToast(`⚠️ ${payload.personnelName} için ${formatDateTR(conflict.ayrilisDate)} - ${formatDateTR(conflict.expectedReturnDate)} tarihleri arasında zaten active (${conflict.leaveTypeName}) kaydı mevcuttur! Aynı personel için çakışan tarihte 2. bir izin kaydı oluşturulamaz.`, 'danger');
+        return;
+      }
+    }
     
+    const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
     await downloadUdfFile(payload, filename);
     showToast(`${filename} UDF olarak oluşturuldu ve indirildi!`, 'success');
 
