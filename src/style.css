@@ -903,8 +903,221 @@ input:focus, select:focus, textarea:focus {
   font-weight: 700;
 }
 
-/* Print Rules */
+/* PDF Report Direct Printing Styles */
+#pdf-print-container {
+  display: none;
+}
+
 @media print {
+  /* When printing PDF report, hide everything except the print container */
+  body.printing-pdf-report .top-app-bar,
+  body.printing-pdf-report .sidebar,
+  body.printing-pdf-report .app-footer,
+  body.printing-pdf-report .app-container {
+    display: none !important;
+  }
+
+  html.printing-pdf-report,
+  body.printing-pdf-report {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+
+  body.printing-pdf-report #pdf-print-container {
+    display: block !important;
+    position: static !important;
+    width: 100%;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: visible;
+    z-index: 99999;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 10pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* All children of print container display normally */
+  body.printing-pdf-report #pdf-print-container div,
+  body.printing-pdf-report #pdf-print-container span,
+  body.printing-pdf-report #pdf-print-container table,
+  body.printing-pdf-report #pdf-print-container tbody,
+  body.printing-pdf-report #pdf-print-container thead,
+  body.printing-pdf-report #pdf-print-container tfoot,
+  body.printing-pdf-report #pdf-print-container tr,
+  body.printing-pdf-report #pdf-print-container td,
+  body.printing-pdf-report #pdf-print-container th,
+  body.printing-pdf-report #pdf-print-container h1,
+  body.printing-pdf-report #pdf-print-container h2,
+  body.printing-pdf-report #pdf-print-container p,
+  body.printing-pdf-report #pdf-print-container small,
+  body.printing-pdf-report #pdf-print-container strong,
+  body.printing-pdf-report #pdf-print-container img {
+    display: revert;
+    visibility: visible;
+    color: inherit;
+  }
+
+  /* Preserve flex on containers that use inline display:flex */
+  body.printing-pdf-report #pdf-print-container .kpi-container {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px;
+    margin-bottom: 14px;
+    justify-content: space-between;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.printing-pdf-report #pdf-print-container .kpi-box {
+    display: block !important;
+    flex: 1;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px;
+    padding: 8px;
+    background: #f8fafc !important;
+    text-align: center;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.printing-pdf-report #pdf-print-container .kpi-val {
+    display: block !important;
+    font-size: 13pt;
+    font-weight: 800;
+    color: #0f172a !important;
+  }
+
+  body.printing-pdf-report #pdf-print-container .kpi-lbl {
+    display: block !important;
+    font-size: 7.5pt;
+    color: #475569 !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  body.printing-pdf-report #pdf-print-container .report-table {
+    display: table !important;
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 8.5pt;
+  }
+
+  body.printing-pdf-report #pdf-print-container .report-table thead {
+    display: table-header-group !important;
+  }
+
+  body.printing-pdf-report #pdf-print-container .report-table tbody {
+    display: table-row-group !important;
+  }
+
+  body.printing-pdf-report #pdf-print-container .report-table tr {
+    display: table-row !important;
+  }
+
+  body.printing-pdf-report #pdf-print-container .report-table th {
+    display: table-cell !important;
+    background: #0f172a !important;
+    color: #ffffff !important;
+    padding: 6px 5px;
+    text-align: left;
+    font-weight: 700;
+    border: 1px solid #0f172a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.printing-pdf-report #pdf-print-container .report-table td {
+    display: table-cell !important;
+    padding: 5px;
+    border: 1px solid #cbd5e1;
+  }
+
+  body.printing-pdf-report #pdf-print-container .header-table {
+    display: table !important;
+    width: 100%;
+    margin-bottom: 14px;
+    border-bottom: 2px solid #be123c !important;
+    padding-bottom: 10px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.printing-pdf-report #pdf-print-container .header-table tr {
+    display: table-row !important;
+  }
+
+  body.printing-pdf-report #pdf-print-container .header-table td {
+    display: table-cell !important;
+    vertical-align: middle;
+  }
+
+  body.printing-pdf-report #pdf-print-container .logo-img {
+    display: block !important;
+    width: 70px;
+    height: 70px;
+  }
+
+  body.printing-pdf-report #pdf-print-container .title-main {
+    display: block !important;
+    font-size: 13pt;
+    font-weight: 800;
+    color: #be123c !important;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body.printing-pdf-report #pdf-print-container .title-sub {
+    display: block !important;
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: #0f172a !important;
+    margin: 3px 0 0 0;
+  }
+
+  body.printing-pdf-report #pdf-print-container .title-area {
+    text-align: center;
+  }
+
+  body.printing-pdf-report #pdf-print-container .signature-area {
+    display: block !important;
+    width: 100%;
+    margin-top: 22px;
+    page-break-inside: avoid;
+    overflow: hidden;
+  }
+
+  body.printing-pdf-report #pdf-print-container .signature-box {
+    display: block !important;
+    float: right;
+    width: 230px;
+    text-align: center;
+  }
+
+  body.printing-pdf-report #pdf-print-container .signature-title {
+    display: block !important;
+    font-weight: 700;
+    font-size: 9.5pt;
+    color: #0f172a !important;
+  }
+
+  body.printing-pdf-report #pdf-print-container .signature-name {
+    display: block !important;
+    font-weight: 800;
+    font-size: 10.5pt;
+    color: #be123c !important;
+    margin-top: 5px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Regular page print rules (non-PDF-report printing) */
   .sidebar, .top-app-bar, .app-footer, .page-header button, #report-search-personnel, #report-type-filter {
     display: none !important;
   }

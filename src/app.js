@@ -35,7 +35,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupWizardForm();
   renderPersonnelTable();
   renderLeavesTable();
+  renderReports();
   renderSettings();
+
+  // Global delegation for PDF report button
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('#btn-export-reports-pdf');
+    if (btn) {
+      e.preventDefault();
+      exportReportsPdf();
+    }
+  });
 });
 
 // Toast System
@@ -1329,9 +1339,8 @@ function renderReports() {
   }
 
   const exportPdfBtn = document.getElementById('btn-export-reports-pdf');
-  if (exportPdfBtn && !exportPdfBtn.dataset.hasListener) {
-    exportPdfBtn.dataset.hasListener = "true";
-    exportPdfBtn.addEventListener('click', exportReportsPdf);
+  if (exportPdfBtn) {
+    exportPdfBtn.onclick = exportReportsPdf;
   }
 
   const searchQuery = (searchInput?.value || '').toLowerCase();
@@ -1670,7 +1679,7 @@ function exportReportsPdf() {
   let totalAllDays = 0;
   let totalRaporCount = 0;
 
-  const rowsHtml = personnelList.map((p, idx) => {
+  const personStats = personnelList.map(p => {
     const pRecords = allRecords.filter(r => r.personnelId === p.id);
     let rCount = 0, rDays = 0, yCount = 0, yDays = 0, oCount = 0, oDays = 0;
     let pOtherMap = {};
@@ -1700,26 +1709,85 @@ function exportReportsPdf() {
     totalOtherDays += oDays;
     totalAllDays += pTotalDays;
 
-    const otherText = Object.keys(pOtherMap).length > 0
-      ? Object.entries(pOtherMap).map(([tName, tData]) => `${tName} (${tData.count} Kez / ${tData.days} Gün)`).join(', ')
+    return {
+      person: p,
+      raporCount: rCount,
+      raporDays: rDays,
+      yillikCount: yCount,
+      yillikDays: yDays,
+      otherCount: oCount,
+      otherDays: oDays,
+      otherMap: pOtherMap,
+      totalCount: rCount + yCount + oCount,
+      totalDays: pTotalDays,
+      records: pRecords
+    };
+  });
+
+  const rowsHtml = personStats.map((s, idx) => {
+    const otherText = Object.keys(s.otherMap).length > 0
+      ? Object.entries(s.otherMap).map(([tName, tData]) => `${tName} (${tData.count} Kez / ${tData.days} Gün)`).join(', ')
       : '-';
 
     return `
       <tr>
         <td style="text-align: center;">${idx + 1}</td>
-        <td>${p.sicil}</td>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.title}</td>
-        <td>${p.birim}</td>
-        <td style="text-align: center; ${rDays > 0 ? 'color: #dc2626; font-weight: bold;' : ''}">${rCount > 0 ? `${rCount} Kez (${rDays} Gün)` : '-'}</td>
-        <td style="text-align: center;">${yCount > 0 ? `${yCount} Kez (${yDays} Gün)` : '-'}</td>
+        <td>${s.person.sicil}</td>
+        <td><strong>${s.person.name}</strong></td>
+        <td>${s.person.title}</td>
+        <td>${s.person.birim}</td>
+        <td style="text-align: center; ${s.raporDays > 0 ? 'color: #dc2626; font-weight: bold;' : ''}">${s.raporCount > 0 ? `${s.raporCount} Kez (${s.raporDays} Gün)` : '-'}</td>
+        <td style="text-align: center;">${s.yillikCount > 0 ? `${s.yillikCount} Kez (${s.yillikDays} Gün)` : '-'}</td>
         <td style="text-align: center;">${otherText}</td>
-        <td style="text-align: center; font-weight: bold;">${pTotalDays} Gün</td>
+        <td style="text-align: center; font-weight: bold;">${s.totalDays} Gün</td>
       </tr>
     `;
   }).join('');
 
   const todayStr = formatDateTR(new Date().toISOString().split('T')[0]);
+
+  // 1. Leave Types Distribution HTML for PDF
+  const typeMap = {};
+  allRecords.forEach(r => {
+    const typeName = r.leaveTypeName || 'Diğer';
+    const days = parseInt(r.days || 0, 10);
+    if (!typeMap[typeName]) typeMap[typeName] = { count: 0, days: 0 };
+    typeMap[typeName].count++;
+    typeMap[typeName].days += days;
+  });
+  const typeList = Object.entries(typeMap).sort((a,b) => b[1].days - a[1].days);
+  const typeListPdfHtml = typeList.map(([name, data]) => {
+    const pct = totalAllDays > 0 ? Math.round((data.days / totalAllDays) * 100) : 0;
+    return `<div style="font-size: 8pt; margin-bottom: 3px; display: flex; justify-content: space-between;">
+      <span><strong>${name}</strong></span>
+      <span>${data.days} Gün (${data.count} İzin / %${pct})</span>
+    </div>`;
+  }).join('') || '<div style="font-size: 8pt; color: #64748b;">Kayıt yok.</div>';
+
+  // 2. Top 5 Health Report Users for PDF
+  const top5RaporPdf = [...personStats]
+    .filter(s => s.raporDays > 0)
+    .sort((a, b) => b.raporDays - a.raporDays || b.raporCount - a.raporCount)
+    .slice(0, 5);
+
+  const topRaporPdfHtml = top5RaporPdf.map((s, idx) => `
+    <div style="font-size: 8pt; margin-bottom: 3px; display: flex; justify-content: space-between;">
+      <span><strong>${idx + 1}. ${s.person.name}</strong> <small>(${s.person.sicil})</small></span>
+      <span style="color: #dc2626; font-weight: bold;">${s.raporCount} Kez (${s.raporDays} Gün)</span>
+    </div>
+  `).join('') || '<div style="font-size: 8pt; color: #64748b;">Rapor alan yok.</div>';
+
+  // 3. Yearly Leave Multi-Splitters (2+ parts) for PDF
+  const splittersPdf = [...personStats]
+    .filter(s => s.yillikCount > 2)
+    .sort((a, b) => b.yillikCount - a.yillikCount || b.yillikDays - a.yillikDays);
+
+  const topSplittersPdfHtml = splittersPdf.length > 0 ? splittersPdf.map(s => `
+    <div style="font-size: 8pt; margin-bottom: 3px; display: flex; justify-content: space-between;">
+      <span><strong>${s.person.name}</strong> <small>(${s.person.sicil})</small></span>
+      <span style="color: #d97706; font-weight: bold;">⚠️ ${s.yillikCount} Parça (${s.yillikDays} Gün)</span>
+    </div>
+  `).join('') : '<div style="font-size: 8pt; color: #166534; font-weight: 600;">✅ Mevzuata aykırı bölme yok.</div>';
 
   const pdfHtml = `
     <!DOCTYPE html>
@@ -1737,7 +1805,7 @@ function exportReportsPdf() {
         .title-sub { font-size: 12pt; font-weight: 700; color: #0f172a; margin: 4px 0 0 0; }
         .title-date { font-size: 9.5pt; color: #64748b; margin-top: 5px; }
         
-        .kpi-container { display: flex; gap: 15px; margin-bottom: 20px; justify-content: space-between; }
+        .kpi-container { display: flex; gap: 15px; margin-bottom: 15px; justify-content: space-between; }
         .kpi-box { flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc; text-align: center; }
         .kpi-val { font-size: 14pt; font-weight: 800; color: #0f172a; }
         .kpi-lbl { font-size: 8pt; color: #475569; font-weight: 600; text-transform: uppercase; margin-top: 3px; }
@@ -1757,7 +1825,7 @@ function exportReportsPdf() {
     <body>
       <table class="header-table">
         <tr>
-          <td width="100"><img src="/logo.png" class="logo-img" /></td>
+          <td width="100"><img src="${window.location.origin}/logo.png" class="logo-img" /></td>
           <td class="title-area">
             <h1 class="title-main">ANKARA ADLİYESİ BİLGİ İŞLEM MÜDÜRLÜĞÜ</h1>
             <h2 class="title-sub">PERSONEL İZİN & SAĞLIK RAPORU DETAYLI ANALİZ RAPORU</h2>
@@ -1769,22 +1837,43 @@ function exportReportsPdf() {
         </tr>
       </table>
 
-      <div class="kpi-container">
-        <div class="kpi-box" style="border-left: 4px solid #ef4444;">
-          <div class="kpi-val" style="color: #dc2626;">${totalRaporDays} Gün</div>
-          <div class="kpi-lbl">Toplam İstirahat İzni / Rapor (${totalRaporCount} Kez)</div>
+      <div style="display:flex; flex-direction:row; gap:12px; margin-bottom:14px; justify-content:space-between;">
+        <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #ef4444; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
+          <div style="font-size:14pt; font-weight:800; color:#dc2626;">${totalRaporDays} Gün</div>
+          <div style="font-size:7.5pt; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px;">Toplam İstirahat İzni / Rapor (${totalRaporCount} Kez)</div>
         </div>
-        <div class="kpi-box" style="border-left: 4px solid #4f46e5;">
-          <div class="kpi-val">${totalYillikDays} Gün</div>
-          <div class="kpi-lbl">Toplam Kullanılan Yıllık İzin</div>
+        <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #4f46e5; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
+          <div style="font-size:14pt; font-weight:800; color:#0f172a;">${totalYillikDays} Gün</div>
+          <div style="font-size:7.5pt; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px;">Toplam Kullanılan Yıllık İzin</div>
         </div>
-        <div class="kpi-box" style="border-left: 4px solid #f59e0b;">
-          <div class="kpi-val">${totalOtherDays} Gün</div>
-          <div class="kpi-lbl">Diğer Mazeret İzinleri</div>
+        <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #f59e0b; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
+          <div style="font-size:14pt; font-weight:800; color:#0f172a;">${totalOtherDays} Gün</div>
+          <div style="font-size:7.5pt; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px;">Diğer Mazeret İzinleri</div>
         </div>
-        <div class="kpi-box" style="border-left: 4px solid #10b981;">
-          <div class="kpi-val">${totalAllDays} Gün</div>
-          <div class="kpi-lbl">Genel İzin & Rapor Gün Toplamı</div>
+        <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #10b981; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
+          <div style="font-size:14pt; font-weight:800; color:#0f172a;">${totalAllDays} Gün</div>
+          <div style="font-size:7.5pt; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px;">Genel İzin &amp; Rapor Gün Toplamı</div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:row; gap:12px; margin-bottom:18px;">
+        <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
+          <div style="font-weight:800; font-size:8.5pt; color:#0f172a; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
+            📊 İZİN TÜRLERİNE GÖRE DAĞILIM
+          </div>
+          ${typeListPdfHtml}
+        </div>
+        <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
+          <div style="font-weight:800; font-size:8.5pt; color:#dc2626; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
+            🩺 EN ÇOK RAPOR ALANLAR (TOP 5)
+          </div>
+          ${topRaporPdfHtml}
+        </div>
+        <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
+          <div style="font-weight:800; font-size:8.5pt; color:#d97706; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
+            ⚠️ YILLIK İZNİNİ 2'DEN FAZLA PARÇAYA BÖLENLER
+          </div>
+          ${topSplittersPdfHtml}
         </div>
       </div>
 
@@ -1821,39 +1910,43 @@ function exportReportsPdf() {
           <div class="signature-name">Erkan HACAT</div>
         </div>
       </div>
+      <script>
+        window.onload = function() {
+          setTimeout(function() {
+            window.print();
+          }, 150);
+        };
+      </script>
     </body>
     </html>
   `;
 
-  // Use hidden iframe to avoid blocking parent window event loop
-  let printIframe = document.getElementById('report-print-iframe');
-  if (printIframe) {
-    printIframe.remove();
-  }
-  printIframe = document.createElement('iframe');
-  printIframe.id = 'report-print-iframe';
-  printIframe.style.position = 'fixed';
-  printIframe.style.right = '0';
-  printIframe.style.bottom = '0';
-  printIframe.style.width = '0';
-  printIframe.style.height = '0';
-  printIframe.style.border = '0';
-  printIframe.style.visibility = 'hidden';
-  document.body.appendChild(printIframe);
+  // Create temporary print container on main document
+  let printDiv = document.getElementById('pdf-print-container');
+  if (printDiv) printDiv.remove();
+  printDiv = document.createElement('div');
+  printDiv.id = 'pdf-print-container';
+  printDiv.innerHTML = pdfHtml;
+  document.body.appendChild(printDiv);
+  document.body.classList.add('printing-pdf-report');
+  document.documentElement.classList.add('printing-pdf-report');
 
-  const iframeDoc = printIframe.contentWindow.document;
-  iframeDoc.open();
-  iframeDoc.write(pdfHtml);
-  iframeDoc.close();
+  // Inject @page landscape rule temporarily
+  const pageStyle = document.createElement('style');
+  pageStyle.id = 'pdf-page-style';
+  pageStyle.textContent = '@page { size: A4 landscape; margin: 12mm; }';
+  document.head.appendChild(pageStyle);
 
   setTimeout(() => {
-    try {
-      printIframe.contentWindow.focus();
-      printIframe.contentWindow.print();
-    } catch (e) {
-      console.error(e);
-    }
-  }, 250);
+    window.print();
+    setTimeout(() => {
+      document.body.classList.remove('printing-pdf-report');
+      document.documentElement.classList.remove('printing-pdf-report');
+      const ps = document.getElementById('pdf-page-style');
+      if (ps) ps.remove();
+      if (printDiv) printDiv.remove();
+    }, 800);
+  }, 200);
 }
 
 // Helper

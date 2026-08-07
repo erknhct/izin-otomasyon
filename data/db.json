@@ -469,6 +469,23 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786143389611",
+      "personnelId": "4",
+      "personnelName": "Hasan KARAKOÇLAR",
+      "sicil": "142055",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "rapor",
+      "leaveTypeName": "İstirahat Raporu / Sağlık İzni",
+      "days": 5,
+      "ayrilisDate": "2026-01-12",
+      "expectedReturnDate": "2026-01-19",
+      "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
+      "aliciMakam": "bakanlik",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786142854771",
       "personnelId": "2",
       "personnelName": "Erdal ŞİMŞEK",
@@ -566,9 +583,9 @@
       "expectedReturnDate": "2026-02-06",
       "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-07"
     },
     {
       "id": "rec-1786141235117",
@@ -583,9 +600,9 @@
       "expectedReturnDate": "2026-04-06",
       "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-07"
     },
     {
       "id": "rec-1786138720798",
