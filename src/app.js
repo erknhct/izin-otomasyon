@@ -137,21 +137,23 @@ function renderDashboard() {
     badge.style.display = 'none';
   }
 
-  // Pending returns list
+  // Pending and Completed returns list
   const pendingContainer = document.getElementById('pending-returns-container');
+  const allRecords = getLeaveRecords();
   const pendingList = getPendingReturnRecords();
   const dueList = pendingList.filter(r => r.isDue);
   const upcomingList = pendingList.filter(r => !r.isDue);
+  const completedList = allRecords.filter(r => r.status === 'baslayis_yapildi');
 
   document.getElementById('pending-count-badge').textContent = dueList.length > 0 
-    ? `${pendingList.length} Kayıt (${dueList.length} ACİL)` 
-    : `${pendingList.length} Kayıt`;
+    ? `${pendingList.length} Bekleyen (${dueList.length} ACİL)` 
+    : `${pendingList.length} Bekleyen`;
 
-  if (pendingList.length === 0) {
+  if (pendingList.length === 0 && completedList.length === 0) {
     pendingContainer.innerHTML = `
       <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
         <i class="fa-solid fa-circle-check" style="font-size: 2rem; color: var(--accent-success); margin-bottom: 0.5rem;"></i>
-        <p>Şu anda göreve başlayış yazısı bekleyen izinli personel bulunmamaktadır.</p>
+        <p>Şu anda takipte olan veya göreve başlayış yazısı bekleyen izin kaydı bulunmamaktadır.</p>
       </div>
     `;
     return;
@@ -252,13 +254,68 @@ function renderDashboard() {
     `;
   }
 
+  if (completedList.length > 0) {
+    html += `
+      <div style="margin-top: 1.5rem; border: 1px solid var(--accent-success); background: rgba(16, 185, 129, 0.05); padding: 1.25rem; border-radius: var(--radius-md);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h4 style="color: var(--accent-success); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+            <i class="fa-solid fa-circle-check"></i> ✅ BAŞLAYIŞI YAPILAN VE TAMAMLANAN İZİNLER
+          </h4>
+          <span class="badge badge-success">${completedList.length} Kayıt</span>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Personel</th>
+                <th>Sicil</th>
+                <th>İzin Türü</th>
+                <th>Ayrılış Tarihi</th>
+                <th>Başlayış Tarihi</th>
+                <th>Durum</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${completedList.map(item => `
+                <tr>
+                  <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${item.unvan}</small></td>
+                  <td>${item.sicil}</td>
+                  <td><span class="badge badge-info">${item.leaveTypeName}</span></td>
+                  <td>${formatDateTR(item.ayrilisDate)}</td>
+                  <td>${formatDateTR(item.baslayisDate || item.expectedReturnDate)}</td>
+                  <td><span class="badge badge-success"><i class="fa-solid fa-check"></i> BAŞLAYIŞ YAPILDI</span></td>
+                  <td style="display: flex; gap: 0.4rem; align-items: center;">
+                    <button class="btn btn-sm btn-primary btn-re-download-baslayis" data-record-id="${item.id}">
+                      <i class="fa-solid fa-download"></i> UDF İndir
+                    </button>
+                    <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${item.id}">
+                      <i class="fa-solid fa-trash"></i> Sil / Kaldır
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
   pendingContainer.innerHTML = html;
 
   // Add click listeners
   pendingContainer.querySelectorAll('.btn-create-baslayis').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const recId = btn.getAttribute('data-record-id');
-      startBaslayisWizardForRecord(recId);
+      await startBaslayisWizardForRecord(recId);
+    });
+  });
+
+  pendingContainer.querySelectorAll('.btn-re-download-baslayis').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const recId = btn.getAttribute('data-record-id');
+      await startBaslayisWizardForRecord(recId);
     });
   });
 
@@ -266,7 +323,7 @@ function renderDashboard() {
     btn.addEventListener('click', () => {
       const recId = btn.getAttribute('data-record-id');
       deleteLeaveRecord(recId);
-      showToast('İzin kaydı silindi.', 'warning');
+      showToast('İzin kaydı listeden kaldırıldı.', 'warning');
       renderDashboard();
       renderLeavesTable();
     });
@@ -480,12 +537,10 @@ function getWizardPayload() {
   };
 }
 
-function startBaslayisWizardForRecord(recId) {
+async function startBaslayisWizardForRecord(recId) {
   const records = getLeaveRecords();
   const rec = records.find(r => r.id === recId);
   if (!rec) return;
-
-  switchView('dashboard');
 
   document.getElementById('wiz-personnel-select').value = rec.personnelId;
   document.getElementById('wiz-leave-type').value = rec.leaveType;
@@ -497,13 +552,31 @@ function startBaslayisWizardForRecord(recId) {
   document.getElementById('wiz-izin-suresi').value = rec.days;
   
   const formattedAyrilisDate = formatDateTR(rec.ayrilisDate);
-  document.getElementById('wiz-ilgi-evrak').value = `${formattedAyrilisDate} günlü yazımız`;
+  document.getElementById('wiz-ilgi-evrak').value = `${formattedAyrilisDate} tarihli yazımız.`;
   
-  document.getElementById('wiz-baslayis-tarih').value = rec.expectedReturnDate;
+  const todayStr = new Date().toISOString().split('T')[0];
+  const baslayisDateVal = (rec.expectedReturnDate && rec.expectedReturnDate <= todayStr) ? todayStr : (rec.expectedReturnDate || todayStr);
+  document.getElementById('wiz-baslayis-tarih').value = baslayisDateVal;
   document.getElementById('form-udf-wizard').dataset.linkedRecordId = rec.id;
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  showToast(`${rec.personnelName} için göreve başlayış verileri otomatik bağlandı.`, 'info');
+  try {
+    const payload = getWizardPayload();
+    const filename = `${payload.personnelName}_${payload.leaveType}_baslayis.udf`;
+    await downloadUdfFile(payload, filename);
+
+    updateLeaveRecord(rec.id, {
+      status: 'baslayis_yapildi',
+      baslayisDate: payload.baslayisTarihi
+    });
+
+    delete document.getElementById('form-udf-wizard').dataset.linkedRecordId;
+    showToast(`✅ ${rec.personnelName} için Göreve Başlayış UDF belgesi indirildi ve işlem tamamlandı!`, 'success');
+    renderDashboard();
+    renderLeavesTable();
+  } catch (err) {
+    console.error('Başlayış UDF oluşturma hatası:', err);
+    showToast('Hata: ' + err.message, 'danger');
+  }
 }
 
 // 3. LEAVES TABLE STATE & FILTERS & PAGINATION
@@ -620,7 +693,7 @@ function renderLeavesTable() {
       <td>
         ${r.status === 'baslayis_yapildi' 
           ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>' 
-          : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İznide (Ayrılış Yapıldı)</span>'}
+          : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İzinde (Ayrılış Yapıldı)</span>'}
       </td>
       <td style="display: flex; gap: 0.4rem; align-items: center;">
         ${r.status === 'ayrilis_yapildi' 
@@ -632,8 +705,8 @@ function renderLeavesTable() {
   `).join('');
 
   tbody.querySelectorAll('.btn-create-baslayis').forEach(btn => {
-    btn.addEventListener('click', () => {
-      startBaslayisWizardForRecord(btn.getAttribute('data-record-id'));
+    btn.addEventListener('click', async () => {
+      await startBaslayisWizardForRecord(btn.getAttribute('data-record-id'));
     });
   });
 
@@ -849,9 +922,7 @@ function renderSettings() {
       <div>
         <strong style="color: var(--text-main);">${l.name}</strong>
         <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
-          <span>Konu: <em>${l.subjectText || l.name}</em></span> | 
-          <span>Ayrılış: <em>${l.ayrilisPhrase || '-'}</em></span> | 
-          <span>Başlayış: <em>${l.baslayisPhrase || '-'}</em></span>
+          <span>Konu: <em>${l.subjectText || l.name}</em></span>
         </div>
       </div>
       <div style="display: flex; gap: 0.4rem;">
@@ -880,12 +951,12 @@ function renderSettings() {
 
       const isRapor = lt.code === 'rapor';
       const defaultAyrilisTpl = isRapor 
-        ? `{birim}müzde {unvan} olarak görev yapan {personel} ({sicil}) {ayrilisPhrase} {gun} günlük istirahat raporuyla {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`
-        : `{birim}müzde görevli {unvan} {personel} ({sicil}) {ayrilisPhrase} {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`;
+        ? `{birim}müzde {unvan} olarak görev yapan {personel} ({sicil}) ekte gönderilen {gun} günlük istirahat raporuyla {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`
+        : `{birim}müzde görevli {unvan} {personel} ({sicil}) ${lt.name.toLowerCase()}nden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`;
 
       const defaultBaslayisTpl = isRapor
-        ? `İlgi sayılı yazımız ile {baslayisPhrase} {gun} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır.`
-        : `İlgi sayılı yazımız ile {gun} günlük {baslayisPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır.`;
+        ? `İlgi sayılı yazımız ile ekte gönderilen {gun} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır.`
+        : `İlgi sayılı yazımız ile {gun} günlük ${lt.name.toLowerCase()}ni kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır.`;
 
       openModal('İzin Türü ve Tam Şablon Düzenle', `
         <form id="form-edit-leavetype" class="form-grid">
@@ -895,21 +966,13 @@ function renderSettings() {
           </div>
           <div class="form-group full-width">
             <label>Konu Metni (Evrak Üst Konu Başlığı)</label>
-            <input type="text" id="edit-lt-subject" required value="${lt.subjectText || lt.name}" placeholder="Örn: Babalık İzni, Yıllık İzin" />
-          </div>
-          <div class="form-group">
-            <label>Ayrılış Cümle Eki (Kısayol İfadesi)</label>
-            <input type="text" id="edit-lt-ayrilis" value="${lt.ayrilisPhrase || ''}" placeholder="Örn: babalık izninden, evlilik izninden" />
-          </div>
-          <div class="form-group">
-            <label>Başlayış Cümle Eki (Kısayol İfadesi)</label>
-            <input type="text" id="edit-lt-baslayis" value="${lt.baslayisPhrase || ''}" placeholder="Örn: babalık iznini, evlilik iznini" />
+            <input type="text" id="edit-lt-subject" required value="${lt.subjectText || lt.name}" placeholder="Örn: {personel} - Babalık İzni" />
           </div>
 
           <div class="form-group full-width" style="margin-top: 0.5rem;">
             <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-main);">
               <strong>ℹ️ Kullanılabilecek Şablon Değişkenleri:</strong><br>
-              <code>{birim}</code>, <code>{unvan}</code>, <code>{personel}</code>, <code>{sicil}</code>, <code>{gun}</code>, <code>{ayrilisTarihi}</code>, <code>{baslayisTarihi}</code>, <code>{donusNotu}</code>, <code>{ilgiEvrak}</code>, <code>{ayrilisPhrase}</code>, <code>{baslayisPhrase}</code>
+              <code>{birim}</code>, <code>{unvan}</code>, <code>{personel}</code>, <code>{sicil}</code>, <code>{gun}</code>, <code>{ayrilisTarihi}</code>, <code>{baslayisTarihi}</code>, <code>{donusNotu}</code>, <code>{ilgiEvrak}</code>
             </div>
           </div>
 
@@ -938,8 +1001,6 @@ function renderSettings() {
             ...current[index],
             name: document.getElementById('edit-lt-name').value,
             subjectText: document.getElementById('edit-lt-subject').value,
-            ayrilisPhrase: document.getElementById('edit-lt-ayrilis').value,
-            baslayisPhrase: document.getElementById('edit-lt-baslayis').value,
             ayrilisTemplate: document.getElementById('edit-lt-ayrilis-tpl').value,
             baslayisTemplate: document.getElementById('edit-lt-baslayis-tpl').value
           };
@@ -947,16 +1008,13 @@ function renderSettings() {
           closeModal();
           renderSettings();
           populateWizardOptions();
-          showToast('İzin türü ve tüm şablonlar güncellendi!', 'success');
+          showToast('İzin türü ve şablonlar güncellendi!', 'success');
         }
       });
     });
   });
 
   document.getElementById('btn-add-leavetype')?.addEventListener('click', () => {
-    const defaultAyrilisTpl = `{birim}müzde görevli {unvan} {personel} ({sicil}) {ayrilisPhrase} {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`;
-    const defaultBaslayisTpl = `İlgi sayılı yazımız ile {gun} günlük {baslayisPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır.`;
-
     openModal('Yeni İzin Türü ve Tam Şablon Ekle', `
       <form id="form-add-leavetype" class="form-grid">
         <div class="form-group full-width">
@@ -967,30 +1025,22 @@ function renderSettings() {
           <label>Konu Metni (Evrak Üst Konu Başlığı)</label>
           <input type="text" id="lt-subject" required placeholder="Örn: Babalık İzni" />
         </div>
-        <div class="form-group">
-          <label>Ayrılış Cümle Eki (Kısayol İfadesi)</label>
-          <input type="text" id="lt-ayrilis" placeholder="Örn: babalık izninden" />
-        </div>
-        <div class="form-group">
-          <label>Başlayış Cümle Eki (Kısayol İfadesi)</label>
-          <input type="text" id="lt-baslayis" placeholder="Örn: babalık iznini" />
-        </div>
 
         <div class="form-group full-width" style="margin-top: 0.5rem;">
           <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.8rem; color: var(--text-main);">
             <strong>ℹ️ Kullanılabilecek Şablon Değişkenleri:</strong><br>
-            <code>{birim}</code>, <code>{unvan}</code>, <code>{personel}</code>, <code>{sicil}</code>, <code>{gun}</code>, <code>{ayrilisTarihi}</code>, <code>{baslayisTarihi}</code>, <code>{donusNotu}</code>, <code>{ilgiEvrak}</code>, <code>{ayrilisPhrase}</code>, <code>{baslayisPhrase}</code>
+            <code>{birim}</code>, <code>{unvan}</code>, <code>{personel}</code>, <code>{sicil}</code>, <code>{gun}</code>, <code>{ayrilisTarihi}</code>, <code>{baslayisTarihi}</code>, <code>{donusNotu}</code>, <code>{ilgiEvrak}</code>
           </div>
         </div>
 
         <div class="form-group full-width">
           <label>İzne Ayrılış Metni (Tam Paragraf Şablonu)</label>
-          <textarea id="lt-ayrilis-tpl" rows="3" style="font-family: monospace; font-size: 0.85rem;">${defaultAyrilisTpl}</textarea>
+          <textarea id="lt-ayrilis-tpl" rows="3" style="font-family: monospace; font-size: 0.85rem;" placeholder="{birim}müzde görevli {unvan} {personel} ({sicil}) mazeret izninden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır."></textarea>
         </div>
 
         <div class="form-group full-width">
           <label>Göreve Başlayış Metni (Tam Paragraf Şablonu)</label>
-          <textarea id="lt-baslayis-tpl" rows="3" style="font-family: monospace; font-size: 0.85rem;">${defaultBaslayisTpl}</textarea>
+          <textarea id="lt-baslayis-tpl" rows="3" style="font-family: monospace; font-size: 0.85rem;" placeholder="İlgi sayılı yazımız ile {gun} günlük mazeret iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."></textarea>
         </div>
 
         <div class="form-group full-width" style="margin-top: 1rem; display: flex; justify-content: flex-end;">
@@ -1004,15 +1054,16 @@ function renderSettings() {
       const current = getLeaveTypes();
       const name = document.getElementById('lt-name').value;
       const code = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const defaultAyrilisTpl = `{birim}müzde görevli {unvan} {personel} ({sicil}) ${name.toLowerCase()}nden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`;
+      const defaultBaslayisTpl = `İlgi sayılı yazımız ile {gun} günlük ${name.toLowerCase()}ni kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır.`;
+
       current.push({
         id: Date.now().toString(),
         name: name,
         code: code || 'izin',
         subjectText: document.getElementById('lt-subject').value || name,
-        ayrilisPhrase: document.getElementById('lt-ayrilis').value || `${name.toLowerCase()}nden`,
-        baslayisPhrase: document.getElementById('lt-baslayis').value || `${name.toLowerCase()}ni`,
-        ayrilisTemplate: document.getElementById('lt-ayrilis-tpl').value,
-        baslayisTemplate: document.getElementById('lt-baslayis-tpl').value
+        ayrilisTemplate: document.getElementById('lt-ayrilis-tpl').value || defaultAyrilisTpl,
+        baslayisTemplate: document.getElementById('lt-baslayis-tpl').value || defaultBaslayisTpl
       });
       saveLeaveTypes(current);
       closeModal();

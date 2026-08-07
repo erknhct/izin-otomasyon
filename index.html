@@ -70,7 +70,7 @@
             </div>
             <div>
               <div class="stat-value" id="stat-active-leaves">0</div>
-              <div class="stat-label">Aktif İznide Olan Personel</div>
+              <div class="stat-label">Aktif İzinde Olan Personel</div>
             </div>
           </div>
 
@@ -159,7 +159,7 @@
               <!-- İlgi Evrak (Başlayış Seçildiğinde Görünür) -->
               <div class="form-group full-width" id="group-ilgi-evrak" style="display: none;">
                 <label for="wiz-ilgi-evrak"><i class="fa-solid fa-link"></i> İlgi Sayılı Yazı (Ayrılış Evrak Bilgisi)</label>
-                <input type="text" id="wiz-ilgi-evrak" placeholder="Örn: 03.08.2026 günlü yazımız" />
+                <input type="text" id="wiz-ilgi-evrak" placeholder="Örn: 03.08.2026 tarihli yazımız." />
               </div>
 
               <!-- Sağlık Kurumu (Rapor Seçildiğinde Görünür) -->
@@ -230,20 +230,20 @@
           </div>
 
           <!-- Leaves Table Filter Bar -->
-          <div class="filter-bar" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
-            <div style="flex: 1; min-width: 200px;">
-              <input type="text" id="filter-leaves-search" placeholder="Personel Ara (Ad, Sicil)..." style="width: 100%;" />
+          <div class="filter-bar" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem;">
+            <div style="flex: 1 1 240px; min-width: 200px;">
+              <input type="text" id="filter-leaves-search" placeholder="🔍 Personel Ara (Ad, Sicil)..." style="width: 100%;" />
             </div>
-            <div style="width: 180px;">
-              <select id="filter-leaves-type">
+            <div style="flex: 1 1 220px; min-width: 180px;">
+              <select id="filter-leaves-type" style="width: 100%;">
                 <option value="">Tüm İzin Türleri</option>
                 <!-- Dynamically filled -->
               </select>
             </div>
-            <div style="width: 180px;">
-              <select id="filter-leaves-status">
+            <div style="flex: 1 1 220px; min-width: 180px;">
+              <select id="filter-leaves-status" style="width: 100%;">
                 <option value="">Tüm Durumlar</option>
-                <option value="ayrilis_yapildi">İznide (Ayrılış Yapıldı)</option>
+                <option value="ayrilis_yapildi">İzinde (Ayrılış Yapıldı)</option>
                 <option value="baslayis_yapildi">Göreve Başladı</option>
               </select>
             </div>

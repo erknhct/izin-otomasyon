@@ -80,9 +80,7 @@ export function getDocumentTextComponents(payload) {
     ayrilisTarihi: formatDateTR(ayrilisTarihi),
     baslayisTarihi: formatDateTR(baslayisTarihi),
     donusNotu: notuPart,
-    ilgiEvrak: ilgiEvrak ? ilgiEvrak.trim() : '',
-    ayrilisPhrase: ayrilisPhrase || (isRapor ? 'ekte gönderilen' : `${leaveTypeName.toLowerCase()}nden`),
-    baslayisPhrase: baslayisPhrase || (isRapor ? 'ekte gönderilen' : `${leaveTypeName.toLowerCase()}ni`)
+    ilgiEvrak: ilgiEvrak ? ilgiEvrak.trim() : ''
   };
 
   let rawSubject = "";
@@ -94,18 +92,20 @@ export function getDocumentTextComponents(payload) {
     if (baslayisTemplate && baslayisTemplate.trim()) {
       bodyParagraph = interpolateTemplate(baslayisTemplate, variables);
     } else if (isRapor) {
-      bodyParagraph = `İlgi sayılı yazımız ile ${variables.baslayisPhrase} ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+      bodyParagraph = `İlgi sayılı yazımız ile ekte gönderilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
     } else {
-      bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük ${variables.baslayisPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+      const lowerName = leaveTypeName.toLowerCase();
+      bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük ${lowerName}ni kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
     }
   } else {
-    rawSubject = subjectText || (isRapor ? "{personel}-Rapor İşlemi" : leaveTypeName);
+    rawSubject = subjectText || (isRapor ? "{personel} - Rapor İşlemi" : leaveTypeName);
     if (ayrilisTemplate && ayrilisTemplate.trim()) {
       bodyParagraph = interpolateTemplate(ayrilisTemplate, variables);
     } else if (isRapor) {
-      bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${variables.ayrilisPhrase} ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+      bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ekte gönderilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
     } else {
-      bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${variables.ayrilisPhrase} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+      const lowerName = leaveTypeName.toLowerCase();
+      bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${lowerName}nden ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
     }
   }
 
@@ -164,6 +164,11 @@ export function generateDocumentPreviewHtml(payload) {
   const isBaslayis = docType.includes('baslayis');
   const isRaporAyrilis = docType.includes('rapor_ayrilis');
 
+  let cleanIlgi = ilgiEvrak ? ilgiEvrak.trim() : '';
+  if (cleanIlgi && !cleanIlgi.endsWith('.')) {
+    cleanIlgi += '.';
+  }
+
   return `
     <div style="margin-bottom: 1.25rem; display: flex; justify-content: flex-end;">
       <button class="btn btn-primary" id="btn-modal-download-udf" style="font-weight: 600;">
@@ -177,7 +182,7 @@ export function generateDocumentPreviewHtml(payload) {
         ${destTitleLines.join('<br>')}
       </div>
 
-      ${isBaslayis && ilgiEvrak && ilgiEvrak.trim() ? `<div style="margin-bottom: 1.5rem;"><strong>İlgi     :</strong> ${ilgiEvrak.trim()}</div>` : ''}
+      ${isBaslayis && cleanIlgi ? `<div style="margin-bottom: 1.5rem;"><strong>İlgi     :</strong> ${cleanIlgi}</div>` : ''}
 
       <div style="text-indent: 1.25cm; text-align: justify; margin-bottom: 1rem;">
         ${bodyParagraph}
@@ -248,6 +253,11 @@ export function buildUdfXml(payload) {
   const isBaslayis = docType.includes('baslayis');
   const isRaporAyrilis = docType.includes('rapor_ayrilis');
 
+  let cleanIlgi = ilgiEvrak ? ilgiEvrak.trim() : '';
+  if (cleanIlgi && !cleanIlgi.endsWith('.')) {
+    cleanIlgi += '.';
+  }
+
   // Build Structured Line Definition: [Text, Alignment (0:left, 1:center, 3:justify), isBold, fontSize, firstLineIndentInPt]
   // 1.25 cm = 35.4375 pt
   const INDENT_1_25_CM = "35.4375";
@@ -266,8 +276,8 @@ export function buildUdfXml(payload) {
 
   lines.push(["", 0, false, 12, "0.0"]);
 
-  if (isBaslayis && ilgiEvrak && ilgiEvrak.trim()) {
-    lines.push([`İlgi     : ${ilgiEvrak.trim()}`, 0, false, 12, "0.0"]);
+  if (isBaslayis && cleanIlgi) {
+    lines.push([`İlgi     : ${cleanIlgi}`, 0, false, 12, "0.0"]);
     lines.push(["", 0, false, 12, "0.0"]);
   }
 

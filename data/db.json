@@ -407,60 +407,56 @@
       "name": "Yıllık İzin",
       "code": "yillik",
       "subjectText": "{personel} - Yıllık İzin",
-      "ayrilisPhrase": "yıllık izninden",
-      "baslayisPhrase": "yıllık iznini",
-      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) {ayrilisPhrase} {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
-      "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük {baslayisPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
+      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) yıllık izninden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük yıllık iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     },
     {
       "id": "rapor",
       "name": "İstirahat Raporu / Sağlık İzni",
       "code": "rapor",
-      "subjectText": "Rapor İşlemi",
-      "ayrilisPhrase": "ekte gönderilen",
-      "baslayisPhrase": " ",
-      "ayrilisTemplate": "{birim}müzde {unvan} olarak görev yapan {personel} ({sicil}) {ayrilisPhrase} {gun} günlük istirahat raporuyla {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
-      "baslayisTemplate": "İlgi sayılı yazımız ile {baslayisPhrase} {gun} günlük istirahat raporuyla görevinden ayrılışınıTEST bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
+      "subjectText": "{personel} - Rapor İşlemi",
+      "ayrilisTemplate": "{birim}müzde {unvan} olarak görev yapan {personel} ({sicil}) ekte gönderilen {gun} günlük istirahat raporuyla {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     },
     {
       "id": "mazeret",
       "name": "Mazeret İzni",
       "code": "mazeret",
       "subjectText": "Mazeret İzni",
-      "ayrilisPhrase": "mazeret izninden",
-      "baslayisPhrase": "mazeret iznini"
+      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) mazeret izninden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük mazeret iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     },
     {
       "id": "babalik",
       "name": "Babalık İzni",
       "code": "babalik",
       "subjectText": "Babalık İzni",
-      "ayrilisPhrase": "babalık izninden",
-      "baslayisPhrase": "babalık iznini"
+      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) babalık izninden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük babalık iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     },
     {
       "id": "dogum",
       "name": "Doğum İzni",
       "code": "dogum",
       "subjectText": "Doğum İzni",
-      "ayrilisPhrase": "doğum izninden",
-      "baslayisPhrase": "doğum iznini"
+      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) doğum izninden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük doğum iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     },
     {
       "id": "vefat",
       "name": "Vefat İzni",
       "code": "vefat",
       "subjectText": "Vefat İzni",
-      "ayrilisPhrase": "vefat izninden",
-      "baslayisPhrase": "vefat iznini"
+      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) vefat izninden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük vefat iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     },
     {
       "id": "evlilik",
       "name": "Evlilik İzni",
       "code": "evlilik",
       "subjectText": "Evlilik İzni",
-      "ayrilisPhrase": "evlilik izninden",
-      "baslayisPhrase": "evlilik iznini"
+      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) evlilik izninden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük evlilik iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     }
   ],
   "signatories": [
@@ -473,22 +469,89 @@
   ],
   "leaveRecords": [
     {
-      "id": "rec-1",
+      "id": "rec-1786135806547",
+      "personnelId": "7",
+      "personnelName": "Mehmet KAYA",
+      "sicil": "115678",
+      "unvan": "Bilgisayar İşletmeni",
+      "leaveType": "rapor",
+      "leaveTypeName": "İstirahat Raporu / Sağlık İzni",
+      "days": 17,
+      "ayrilisDate": "2026-08-07",
+      "expectedReturnDate": "2026-08-24",
+      "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
+      "aliciMakam": "bakanlik",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1786134596080",
+      "personnelId": "32",
+      "personnelName": "Hakan GÜL",
+      "sicil": "364663",
+      "unvan": "Programcı",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 10,
+      "ayrilisDate": "2026-07-27",
+      "expectedReturnDate": "2026-08-06",
+      "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
+      "aliciMakam": "komisyon",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-06"
+    },
+    {
+      "id": "rec-1786134461527",
       "personnelId": "1",
       "personnelName": "Tuğba ALTUNTAŞ",
       "sicil": "304581",
       "unvan": "Zabıt Katibi",
       "leaveType": "yillik",
       "leaveTypeName": "Yıllık İzin",
-      "days": 4,
-      "ayrilisDate": "2026-08-10",
-      "expectedReturnDate": "2026-08-14",
-      "evrakNo": "",
-      "evrakTarihi": "2026-08-10",
+      "days": 5,
+      "ayrilisDate": "2026-08-03",
+      "expectedReturnDate": "2026-08-10",
+      "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-10"
+    },
+    {
+      "id": "rec-1786134438823",
+      "personnelId": "9",
+      "personnelName": "Fatma ÇELİK",
+      "sicil": "131234",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 4,
+      "ayrilisDate": "2026-08-03",
+      "expectedReturnDate": "2026-08-07",
+      "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
+      "aliciMakam": "komisyon",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-07"
+    },
+    {
+      "id": "rec-1786133827258",
+      "personnelId": "13",
+      "personnelName": "Elif KILIÇ",
+      "sicil": "173456",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 15,
+      "ayrilisDate": "2026-08-07",
+      "expectedReturnDate": "2026-08-24",
+      "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
+      "aliciMakam": "komisyon",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-24"
     }
   ]
 }
