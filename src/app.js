@@ -82,7 +82,7 @@ function switchView(viewName) {
 
   const viewTitles = {
     dashboard: '<i class="fa-solid fa-house" style="color: var(--accent-primary);"></i> Ana Sayfa',
-    leaves: '<i class="fa-solid fa-calendar-check" style="color: var(--accent-primary);"></i> İzinler & Başlayış Takibi',
+    leaves: '<i class="fa-solid fa-calendar-check" style="color: var(--accent-primary);"></i> İzin Kayıtları Geçmişi',
     personnel: '<i class="fa-solid fa-users" style="color: var(--accent-primary);"></i> Personel Listesi (50)',
     settings: '<i class="fa-solid fa-sliders" style="color: var(--accent-primary);"></i> Şablon & İzin Türü Ayarları'
   };
@@ -131,6 +131,32 @@ function openModal(title, contentHtml) {
 
 function closeModal() {
   modalOverlay.classList.remove('active');
+}
+
+function showConfirmModal({ title, message, confirmText = 'Evet, Sil', cancelText = 'Vazgeç', onConfirm }) {
+  const html = `
+    <div style="text-align: center; padding: 1rem 0.5rem;">
+      <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); border: 2px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto; box-shadow: 0 0 25px rgba(239, 68, 68, 0.3);">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; color: #ef4444;"></i>
+      </div>
+      <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 0.6rem; color: var(--text-main);">${title}</h3>
+      <div style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.75rem;">${message}</div>
+      <div style="display: flex; gap: 0.75rem; justify-content: center;">
+        <button class="btn btn-secondary" id="confirm-modal-cancel" style="min-width: 110px; font-weight: 600;">${cancelText}</button>
+        <button class="btn btn-danger" id="confirm-modal-ok" style="min-width: 125px; font-weight: 800; color: #ffffff !important; background: linear-gradient(135deg, #ef4444, #dc2626); border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+          <i class="fa-solid fa-trash"></i> ${confirmText}
+        </button>
+      </div>
+    </div>
+  `;
+
+  openModal('⚠️ Silme Onayı', html);
+
+  document.getElementById('confirm-modal-cancel')?.addEventListener('click', closeModal);
+  document.getElementById('confirm-modal-ok')?.addEventListener('click', () => {
+    closeModal();
+    if (typeof onConfirm === 'function') onConfirm();
+  });
 }
 
 // Notification Bell System
@@ -230,7 +256,7 @@ function renderDashboard() {
   const pendingList = getPendingReturnRecords();
   const dueList = pendingList.filter(r => r.isDue);
   const upcomingList = pendingList.filter(r => !r.isDue);
-  const completedList = allRecords.filter(r => r.status === 'baslayis_yapildi');
+  const completedList = allRecords.filter(r => r.status === 'baslayis_yapildi' && !r.hiddenFromDashboard);
 
   document.getElementById('pending-count-badge').textContent = dueList.length > 0 
     ? `${pendingList.length} Bekleyen (${dueList.length} ACİL)` 
@@ -283,8 +309,8 @@ function renderDashboard() {
                     <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}" style="font-weight: 700;">
                       <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
                     </button>
-                    <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${item.id}">
-                      <i class="fa-solid fa-trash"></i> Sil
+                    <button class="btn btn-sm btn-secondary btn-delete-leave-record" data-record-id="${item.id}" title="Ana Sayfa Panosundan Kaldır">
+                      <i class="fa-solid fa-eye-slash"></i> Panodan Kaldır
                     </button>
                   </td>
                 </tr>
@@ -328,8 +354,8 @@ function renderDashboard() {
                     <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}">
                       <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
                     </button>
-                    <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${item.id}">
-                      <i class="fa-solid fa-trash"></i> Sil
+                    <button class="btn btn-sm btn-secondary btn-delete-leave-record" data-record-id="${item.id}" title="Ana Sayfa Panosundan Kaldır">
+                      <i class="fa-solid fa-eye-slash"></i> Panodan Kaldır
                     </button>
                   </td>
                 </tr>
@@ -376,8 +402,8 @@ function renderDashboard() {
                     <button class="btn btn-sm btn-primary btn-re-download-baslayis" data-record-id="${item.id}">
                       <i class="fa-solid fa-download"></i> UDF İndir
                     </button>
-                    <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${item.id}">
-                      <i class="fa-solid fa-trash"></i> Sil / Kaldır
+                    <button class="btn btn-sm btn-secondary btn-delete-leave-record" data-record-id="${item.id}" title="Ana Sayfa Panosundan Kaldır">
+                      <i class="fa-solid fa-eye-slash"></i> Panodan Kaldır
                     </button>
                   </td>
                 </tr>
@@ -409,10 +435,22 @@ function renderDashboard() {
   pendingContainer.querySelectorAll('.btn-delete-leave-record').forEach(btn => {
     btn.addEventListener('click', () => {
       const recId = btn.getAttribute('data-record-id');
-      deleteLeaveRecord(recId);
-      showToast('İzin kaydı listeden kaldırıldı.', 'warning');
-      renderDashboard();
-      renderLeavesTable();
+      const rec = getLeaveRecords().find(r => r.id === recId);
+      const name = rec ? rec.personnelName : 'Seçili';
+
+      showConfirmModal({
+        title: 'Panodan Kaldır',
+        message: `<strong>${name}</strong> isimli personelin bu izin kaydını Ana Sayfa panosundan kaldırmak istediğinizden emin misiniz?<br><br><small style="color: var(--text-muted);"><i class="fa-solid fa-circle-info"></i> Not: Bu izin kaydı <strong>İzinler & Başlayış Takibi</strong> (İzin Kayıtları Geçmişi) sayfasında saklanmaya devam edecektir.</small>`,
+        confirmText: 'Evet, Panodan Kaldır',
+        cancelText: 'Vazgeç',
+        onConfirm: () => {
+          updateLeaveRecord(recId, { hiddenFromDashboard: true });
+          showToast('İzin kaydı panodan kaldırıldı. İzin kayıtları geçmişinde saklanıyor.', 'warning');
+          renderDashboard();
+          renderLeavesTable();
+          renderNotificationBell();
+        }
+      });
     });
   });
 }
@@ -814,10 +852,22 @@ function renderLeavesTable() {
   tbody.querySelectorAll('.btn-delete-leave-record').forEach(btn => {
     btn.addEventListener('click', () => {
       const recId = btn.getAttribute('data-record-id');
-      deleteLeaveRecord(recId);
-      showToast('İzin kaydı silindi.', 'warning');
-      renderDashboard();
-      renderLeavesTable();
+      const rec = getLeaveRecords().find(r => r.id === recId);
+      const name = rec ? rec.personnelName : 'Seçili';
+
+      showConfirmModal({
+        title: 'İzin Kaydını Kalıcı Olarak Sil',
+        message: `<strong>${name}</strong> isimli personelin bu izin kaydını sistemden ve izin geçmişinden <strong>KALICI OLARAK SİLMEK</strong> istediğinizden emin misiniz?<br><br><small style="color: #f87171;">⚠️ Bu işlem geri alınamaz ve db.json dosyasından tamamen silinir!</small>`,
+        confirmText: 'Evet, Kalıcı Olarak Sil',
+        cancelText: 'Vazgeç',
+        onConfirm: () => {
+          deleteLeaveRecord(recId);
+          showToast('İzin kaydı veritabanından tamamen silindi.', 'warning');
+          renderDashboard();
+          renderLeavesTable();
+          renderNotificationBell();
+        }
+      });
     });
   });
 }
@@ -950,12 +1000,22 @@ function renderPersonnelTable() {
   tbody.querySelectorAll('.btn-delete-personnel').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
-      let current = getPersonnelList();
-      current = current.filter(p => p.id !== id);
-      savePersonnelList(current);
-      showToast('Personel silindi ve db.json güncellendi.', 'warning');
-      renderPersonnelTable();
-      populateWizardOptions();
+      const person = getPersonnelList().find(p => p.id === id);
+      const name = person ? person.name : 'Seçili';
+
+      showConfirmModal({
+        title: 'Personeli Sil',
+        message: `<strong>${name}</strong> isimli personeli sistemden ve db.json kaydından tamamen silmek istediğinizden emin misiniz?`,
+        confirmText: 'Evet, Personeli Sil',
+        onConfirm: () => {
+          let current = getPersonnelList();
+          current = current.filter(p => p.id !== id);
+          savePersonnelList(current);
+          showToast('Personel silindi ve db.json güncellendi.', 'warning');
+          renderPersonnelTable();
+          populateWizardOptions();
+        }
+      });
     });
   });
 }
@@ -975,11 +1035,23 @@ function renderSettings() {
 
   document.querySelectorAll('.btn-del-signer').forEach(btn => {
     btn.addEventListener('click', () => {
-      let current = getSignatories();
-      current = current.filter(s => s.id !== btn.getAttribute('data-id'));
-      saveSignatories(current);
-      renderSettings();
-      populateWizardOptions();
+      const id = btn.getAttribute('data-id');
+      const signer = getSignatories().find(s => s.id === id);
+      const name = signer ? signer.name : 'Seçili';
+
+      showConfirmModal({
+        title: 'Yetkiliyi Sil',
+        message: `<strong>${name}</strong> imza yetkilisini listeden kaldırmak istediğinizden emin misiniz?`,
+        confirmText: 'Evet, Sil',
+        onConfirm: () => {
+          let current = getSignatories();
+          current = current.filter(s => s.id !== id);
+          saveSignatories(current);
+          renderSettings();
+          populateWizardOptions();
+          showToast('Yetkili silindi.', 'warning');
+        }
+      });
     });
   });
 
@@ -1035,12 +1107,23 @@ function renderSettings() {
 
   document.querySelectorAll('.btn-del-leavetype').forEach(btn => {
     btn.addEventListener('click', () => {
-      let current = getLeaveTypes();
-      current = current.filter(l => l.id !== btn.getAttribute('data-id'));
-      saveLeaveTypes(current);
-      renderSettings();
-      populateWizardOptions();
-      showToast('İzin türü silindi.', 'warning');
+      const id = btn.getAttribute('data-id');
+      const lt = getLeaveTypes().find(l => l.id === id);
+      const name = lt ? lt.name : 'Seçili';
+
+      showConfirmModal({
+        title: 'İzin Türünü Sil',
+        message: `<strong>${name}</strong> izin türünü ve bağlı şablon ayarlarını silmek istediğinizden emin misiniz?`,
+        confirmText: 'Evet, İzin Türünü Sil',
+        onConfirm: () => {
+          let current = getLeaveTypes();
+          current = current.filter(l => l.id !== id);
+          saveLeaveTypes(current);
+          renderSettings();
+          populateWizardOptions();
+          showToast('İzin türü silindi.', 'warning');
+        }
+      });
     });
   });
 

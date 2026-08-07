@@ -123,6 +123,7 @@ export function getPendingReturnRecords() {
   
   return records.filter(r => {
     if (r.status !== 'ayrilis_yapildi') return false;
+    if (r.hiddenFromDashboard) return false;
     return true;
   }).map(r => {
     const isDue = r.expectedReturnDate <= today;
