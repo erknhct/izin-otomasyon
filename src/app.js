@@ -1,4 +1,4 @@
-import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, generatePlainUdfText, formatDateTR } from './udfGenerator.js';
+import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, generateCopyableHtml, generatePlainUdfText, formatDateTR } from './udfGenerator.js';
 import {
   initStorage, exportDbJsonFile, importDbJsonData,
   getPersonnelList, savePersonnelList,
@@ -290,13 +290,21 @@ function setupWizardForm() {
     const previewHtml = generateDocumentPreviewHtml(payload);
     openModal('📄 UDF EVRAK ÖNİZLEME', previewHtml);
 
-    document.getElementById('btn-copy-udf-text')?.addEventListener('click', () => {
+    document.getElementById('btn-copy-udf-text')?.addEventListener('click', async () => {
+      const copyHtml = generateCopyableHtml(payload);
       const plainText = generatePlainUdfText(payload);
-      navigator.clipboard.writeText(plainText).then(() => {
-        showToast('📋 UYAP evrak metni panoya kopyalandı! UYAP Doküman Editörüne doğrudan yapıştırabilirsiniz.', 'success');
-      }).catch(() => {
-        showToast('Metin kopyalanamadı!', 'danger');
-      });
+
+      try {
+        const blobHtml = new Blob([copyHtml], { type: 'text/html' });
+        const blobText = new Blob([plainText], { type: 'text/plain' });
+        const data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
+        await navigator.clipboard.write(data);
+        showToast('📋 UYAP evrak metni ve hizalamaları panoya kopyalandı! Doküman Editörüne doğrudan yapıştırabilirsiniz.', 'success');
+      } catch (err) {
+        navigator.clipboard.writeText(plainText).then(() => {
+          showToast('📋 Evrak metni kopyalandı!', 'success');
+        });
+      }
     });
   });
 

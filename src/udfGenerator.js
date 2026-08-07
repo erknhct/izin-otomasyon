@@ -34,7 +34,108 @@ export function formatDateTR(dateStr) {
 }
 
 /**
- * Generates plain text formatted for direct copy/paste into UYAP Editor
+ * Generates HTML formatted specifically for RichText / UYAP Editor Clipboard
+ */
+export function generateCopyableHtml(payload) {
+  const {
+    docType,
+    personnelName,
+    sicilNo,
+    unvan,
+    birim = 'Bilgi İşlem Müdürlüğü',
+    tarih = formatDateTR(new Date().toISOString().split('T')[0]),
+    izinSuresi = 5,
+    ayrilisTarihi = tarih,
+    baslayisTarihi = tarih,
+    raporKurum = 'Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi',
+    ilgiEvrak = '',
+    aliciMakam = 'komisyon',
+    aliciMakamOzel = '',
+    imzalayanAd = 'Dr. Arif Naci SUCUOĞLU',
+    imzalayanUnvan = 'Cumhuriyet Başsavcı Vekili',
+    ekBelge = 'Rapor (1 Sayfa)',
+    donusNotu = ''
+  } = payload;
+
+  const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
+
+  let destTitleLines = [];
+  let closingSentence = "Bilgilerinize arz olunur.";
+
+  if (aliciMakam === 'komisyon') {
+    destTitleLines = [
+      "ANKARA ADLÎ YARGI",
+      "İLK DERECE MAHKEMESİ",
+      "ADALET KOMİSYONU BAŞKANLIĞI'NA"
+    ];
+    closingSentence = "Bilgilerinize arz olunur.";
+  } else if (aliciMakam === 'bakanlik') {
+    destTitleLines = [
+      "ANKARA CUMHURİYET BAŞSAVCILIĞI",
+      "Bakanlık Muhabere Bürosu'na"
+    ];
+    closingSentence = "Gereğini arz ederim.";
+  } else {
+    destTitleLines = aliciMakamOzel.split('\n').filter(l => l.trim());
+    if (destTitleLines.length === 0) {
+      destTitleLines = ["ANKARA ADLÎ YARGI", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
+    }
+  }
+
+  let bodyParagraph = "";
+  let subjectStr = "";
+  const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
+  const izinEkStr = docType.includes('mazeret') ? "mazeret izninden" : "yıllık izninden";
+
+  if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
+    subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
+    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${izinEkStr} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+  } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
+    subjectStr = "Göreve Başlama";
+    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+  } else if (docType.includes('rapor_ayrilis')) {
+    subjectStr = `${personnelName}-Rapor İşlemi`;
+    bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+  } else if (docType.includes('rapor_baslayis')) {
+    subjectStr = `${personnelName} Göreve Başlama`;
+    bodyParagraph = `İlgi sayılı yazımız ile ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+  }
+
+  const isBaslayis = docType.includes('baslayis');
+  const isRaporAyrilis = docType.includes('rapor_ayrilis');
+
+  const destHtml = destTitleLines.map(l => `<p align="center" style="text-align: center; margin: 0; padding: 0;">${l}</p>`).join('');
+
+  return `
+    <div style="font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000; line-height: 1.5;">
+      <p style="margin-bottom: 24pt;">Konu : ${subjectStr}</p>
+      
+      <div style="text-align: center; margin-top: 36pt; margin-bottom: 24pt;">
+        ${destHtml}
+      </div>
+
+      ${isBaslayis && ilgiEvrak && ilgiEvrak.trim() ? `<p style="margin-bottom: 12pt;">İlgi     : ${ilgiEvrak.trim()}</p>` : ''}
+
+      <p style="text-indent: 1.25cm; text-align: justify; margin-bottom: 12pt;">
+        ${bodyParagraph}
+      </p>
+
+      <p style="text-indent: 1.25cm; margin-bottom: 48pt;">
+        ${closingSentence}
+      </p>
+
+      <div style="text-align: right; margin-right: 20pt; line-height: 1.2;">
+        <p style="text-align: right; margin: 0;">${imzalayanAd}</p>
+        <p style="text-align: right; margin: 0;">${imzalayanUnvan}</p>
+      </div>
+
+      ${isRaporAyrilis ? `<p style="margin-top: 24pt;">Ek      : ${ekBelge}</p>` : ''}
+    </div>
+  `;
+}
+
+/**
+ * Generates plain text formatted for fallback copy
  */
 export function generatePlainUdfText(payload) {
   const {
@@ -85,10 +186,11 @@ export function generatePlainUdfText(payload) {
   let bodyParagraph = "";
   let subjectStr = "";
   const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
+  const izinEkStr = docType.includes('mazeret') ? "mazeret izninden" : "yıllık izninden";
 
   if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
     subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
-    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${subjectStr.toLowerCase()}nden ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${izinEkStr} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
   } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
     subjectStr = "Göreve Başlama";
     bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
@@ -177,10 +279,11 @@ export function generateDocumentPreviewHtml(payload) {
   let bodyParagraph = "";
   let subjectStr = "";
   const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
+  const izinEkStr = docType.includes('mazeret') ? "mazeret izninden" : "yıllık izninden";
 
   if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
     subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
-    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${subjectStr.toLowerCase()}nden ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${izinEkStr} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
   } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
     subjectStr = "Göreve Başlama";
     bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
@@ -282,10 +385,11 @@ export function buildUdfXml(payload) {
   let bodyParagraph = "";
   let subjectStr = "";
   const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
+  const izinEkStr = docType.includes('mazeret') ? "mazeret izninden" : "yıllık izninden";
 
   if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
     subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
-    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${subjectStr.toLowerCase()}nden ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${izinEkStr} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
   } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
     subjectStr = "Göreve Başlama";
     bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
