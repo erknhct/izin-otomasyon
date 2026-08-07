@@ -1536,23 +1536,58 @@ function renderReports() {
     }).join('') || '<p style="color: var(--text-muted);">Henüz izin verisi yok.</p>';
   }
 
-  // Top 5 Users List
-  const topUsersContainer = document.getElementById('reports-top-users');
-  if (topUsersContainer) {
-    const top5 = [...personStats].filter(s => s.totalDays > 0).sort((a,b) => b.totalDays - a.totalDays).slice(0, 5);
+  // Top 5 Health Report Users
+  const topRaporUsersContainer = document.getElementById('reports-top-rapor-users');
+  if (topRaporUsersContainer) {
+    const top5Rapor = [...personStats]
+      .filter(s => s.raporDays > 0)
+      .sort((a, b) => b.raporDays - a.raporDays || b.raporCount - a.raporCount)
+      .slice(0, 5);
 
-    topUsersContainer.innerHTML = top5.map((s, idx) => `
-      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <span style="width: 26px; height: 26px; border-radius: 50%; background: ${idx === 0 ? '#f59e0b' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : 'rgba(255,255,255,0.1)'}; color: #fff; font-weight: 800; font-size: 0.8rem; display: flex; align-items: center; justify-content: center;">${idx + 1}</span>
+    topRaporUsersContainer.innerHTML = top5Rapor.map((s, idx) => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="width: 24px; height: 24px; border-radius: 50%; background: ${idx === 0 ? '#ef4444' : idx === 1 ? '#f97316' : idx === 2 ? '#f59e0b' : 'rgba(255,255,255,0.1)'}; color: #fff; font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center;">${idx + 1}</span>
           <div>
             <strong>${s.person.name}</strong><br>
-            <small style="color: var(--text-muted);">${s.person.title} | ${s.raporCount} Rapor (${s.raporDays} Gün)</small>
+            <small style="color: var(--text-muted);">${s.person.title} | ${s.person.sicil}</small>
           </div>
         </div>
-        <span class="badge badge-info" style="font-size: 0.85rem; font-weight: 800;">${s.totalDays} Gün İzin</span>
+        <span class="badge badge-danger" style="font-size: 0.8rem; font-weight: 800;"><i class="fa-solid fa-stethoscope"></i> ${s.raporCount} Kez (${s.raporDays} Gün)</span>
       </div>
-    `).join('') || '<p style="color: var(--text-muted);">Henüz izin alan personel yok.</p>';
+    `).join('') || '<p style="color: var(--text-muted); padding: 0.5rem 0; font-size: 0.85rem;">Sistemde sıhhi izin/rapor alan personel kaydı yok.</p>';
+  }
+
+  // Yearly Leave Multi-Splitters (2+ parts)
+  const topYillikSplittersContainer = document.getElementById('reports-top-yillik-splitters');
+  if (topYillikSplittersContainer) {
+    const splitters = [...personStats]
+      .filter(s => s.yillikCount > 2)
+      .sort((a, b) => b.yillikCount - a.yillikCount || b.yillikDays - a.yillikDays);
+
+    if (splitters.length === 0) {
+      topYillikSplittersContainer.innerHTML = `
+        <div style="padding: 0.75rem 0; text-align: center; color: var(--text-muted);">
+          <i class="fa-solid fa-circle-check" style="color: var(--accent-success); font-size: 1.5rem; margin-bottom: 0.3rem;"></i>
+          <p style="font-size: 0.82rem; margin: 0;">Yıllık iznini 2'den fazla parçaya bölerek kullanan personel bulunmuyor.</p>
+        </div>
+      `;
+    } else {
+      topYillikSplittersContainer.innerHTML = splitters.map(s => `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <i class="fa-solid fa-triangle-exclamation" style="color: #f59e0b; font-size: 1rem;"></i>
+            <div>
+              <strong>${s.person.name}</strong><br>
+              <small style="color: var(--text-muted);">${s.person.title} | ${s.person.sicil}</small>
+            </div>
+          </div>
+          <span class="badge badge-warning" style="font-size: 0.8rem; font-weight: 800; border-color: rgba(245, 158, 11, 0.5);">
+            ⚠️ ${s.yillikCount} Parça İzin (${s.yillikDays} Gün)
+          </span>
+        </div>
+      `).join('');
+    }
   }
 }
 

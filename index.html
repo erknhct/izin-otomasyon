@@ -377,7 +377,37 @@
           <!-- Filled dynamically -->
         </div>
 
-        <!-- 2. Filters & Personnel Analysis Table -->
+        <!-- 2. Leave Type Summary & Distribution Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+          <div class="glass-card" style="margin-bottom: 0;">
+            <div class="card-title">
+              <span><i class="fa-solid fa-chart-bar" style="color: var(--accent-warning); margin-right: 8px;"></i> İzin Türlerine Göre Dağılım</span>
+            </div>
+            <div id="reports-type-distribution">
+              <!-- Dynamic bar list -->
+            </div>
+          </div>
+
+          <div class="glass-card" style="margin-bottom: 0;">
+            <div class="card-title">
+              <span><i class="fa-solid fa-stethoscope" style="color: #ef4444; margin-right: 8px;"></i> En Çok Rapor Alanlar (Top 5)</span>
+            </div>
+            <div id="reports-top-rapor-users">
+              <!-- Dynamic list -->
+            </div>
+          </div>
+
+          <div class="glass-card" style="margin-bottom: 0;">
+            <div class="card-title">
+              <span><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-warning); margin-right: 8px;"></i> Yıllık İznini 2'den Fazla Parçaya Bölüp Kullananlar</span>
+            </div>
+            <div id="reports-top-yillik-splitters">
+              <!-- Dynamic list -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Filters & Personnel Analysis Table -->
         <div class="glass-card">
           <div class="card-title" style="flex-wrap: wrap; gap: 1rem;">
             <span><i class="fa-solid fa-user-gear" style="color: var(--accent-primary); margin-right: 8px;"></i> Personel İzin & Rapor Kullanım Analizi</span>
@@ -408,27 +438,6 @@
                 <!-- Filled dynamically -->
               </tbody>
             </table>
-          </div>
-        </div>
-
-        <!-- 3. Leave Type Summary & Distribution Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
-          <div class="glass-card">
-            <div class="card-title">
-              <span><i class="fa-solid fa-chart-bar" style="color: var(--accent-warning); margin-right: 8px;"></i> İzin Türlerine Göre Genel Dağılım</span>
-            </div>
-            <div id="reports-type-distribution">
-              <!-- Dynamic bar list -->
-            </div>
-          </div>
-
-          <div class="glass-card">
-            <div class="card-title">
-              <span><i class="fa-solid fa-user-clock" style="color: var(--accent-success); margin-right: 8px;"></i> En Çok İzin & Rapor Kullananlar (Top 5)</span>
-            </div>
-            <div id="reports-top-users">
-              <!-- Dynamic list -->
-            </div>
           </div>
         </div>
       </section>
