@@ -55,5 +55,10 @@ function localJsonStoragePlugin() {
 }
 
 export default defineConfig({
-  plugins: [localJsonStoragePlugin()]
+  plugins: [localJsonStoragePlugin()],
+  server: {
+    host: '0.0.0.0',   // Tüm ağ arayüzlerinde dinle (LAN erişimi)
+    port: 5173,
+    strictPort: true
+  }
 });
