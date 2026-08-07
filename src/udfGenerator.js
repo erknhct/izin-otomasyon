@@ -34,6 +34,60 @@ export function formatDateTR(dateStr) {
 }
 
 /**
+ * Helper to dynamically generate Subject and Body Text components based on leave type config
+ */
+export function getDocumentTextComponents(payload) {
+  const {
+    docType,
+    personnelName,
+    sicilNo,
+    unvan,
+    birim = 'Bilgi İşlem Müdürlüğü',
+    izinSuresi = 5,
+    ayrilisTarihi = '',
+    baslayisTarihi = '',
+    raporKurum = 'Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi',
+    donusNotu = '',
+    leaveTypeName = 'İzin',
+    subjectText = '',
+    ayrilisPhrase = '',
+    baslayisPhrase = ''
+  } = payload;
+
+  const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
+  const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
+  const isBaslayis = docType.includes('baslayis');
+  const isRapor = docType.includes('rapor');
+
+  let subjectStr = "";
+  let bodyParagraph = "";
+
+  if (isRapor) {
+    const effSubject = subjectText || (isBaslayis ? "Göreve Başlama" : `${personnelName}-Rapor İşlemi`);
+    subjectStr = effSubject;
+
+    if (!isBaslayis) {
+      const effAyrilis = ayrilisPhrase || "ekte gönderilen";
+      bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${effAyrilis} ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+    } else {
+      const effBaslayis = baslayisPhrase || "ekte gönderilen";
+      bodyParagraph = `İlgi sayılı yazımız ile ${effBaslayis} ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+    }
+  } else if (!isBaslayis) {
+    const effSubject = subjectText || leaveTypeName;
+    const effPhrase = ayrilisPhrase || `${leaveTypeName.toLowerCase()}nden`;
+    subjectStr = effSubject;
+    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${effPhrase} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+  } else {
+    const effPhrase = baslayisPhrase || `${leaveTypeName.toLowerCase()}ni`;
+    subjectStr = "Göreve Başlama";
+    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük ${effPhrase} kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+  }
+
+  return { subjectStr, bodyParagraph };
+}
+
+/**
  * Generates clean HTML document preview for modal view
  */
 export function generateDocumentPreviewHtml(payload) {
@@ -53,11 +107,8 @@ export function generateDocumentPreviewHtml(payload) {
     aliciMakamOzel = '',
     imzalayanAd = 'Dr. Arif Naci SUCUOĞLU',
     imzalayanUnvan = 'Cumhuriyet Başsavcı Vekili',
-    ekBelge = 'Rapor (1 Sayfa)',
-    donusNotu = ''
+    ekBelge = 'Rapor (1 Sayfa)'
   } = payload;
-
-  const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
 
   let destTitleLines = [];
   let closingSentence = "Bilgilerinize arz olunur.";
@@ -82,25 +133,7 @@ export function generateDocumentPreviewHtml(payload) {
     }
   }
 
-  let bodyParagraph = "";
-  let subjectStr = "";
-  const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
-  const izinEkStr = docType.includes('mazeret') ? "mazeret izninden" : "yıllık izninden";
-
-  if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
-    subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
-    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${izinEkStr} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
-  } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
-    subjectStr = "Göreve Başlama";
-    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
-  } else if (docType.includes('rapor_ayrilis')) {
-    subjectStr = `${personnelName}-Rapor İşlemi`;
-    bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
-  } else if (docType.includes('rapor_baslayis')) {
-    subjectStr = `${personnelName} Göreve Başlama`;
-    bodyParagraph = `İlgi sayılı yazımız ile ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
-  }
-
+  const { subjectStr, bodyParagraph } = getDocumentTextComponents(payload);
   const isBaslayis = docType.includes('baslayis');
   const isRaporAyrilis = docType.includes('rapor_ayrilis');
 
@@ -157,11 +190,8 @@ export function buildUdfXml(payload) {
     aliciMakamOzel = '',
     imzalayanAd = 'Dr. Arif Naci SUCUOĞLU',
     imzalayanUnvan = 'Cumhuriyet Başsavcı Vekili',
-    ekBelge = 'Rapor (1 Sayfa)',
-    donusNotu = ''
+    ekBelge = 'Rapor (1 Sayfa)'
   } = payload;
-
-  const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
 
   // Destination lines
   let destTitleLines = [];
@@ -187,26 +217,7 @@ export function buildUdfXml(payload) {
     }
   }
 
-  // Subject and Body Text
-  let bodyParagraph = "";
-  let subjectStr = "";
-  const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
-  const izinEkStr = docType.includes('mazeret') ? "mazeret izninden" : "yıllık izninden";
-
-  if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
-    subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
-    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${izinEkStr} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
-  } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
-    subjectStr = "Göreve Başlama";
-    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
-  } else if (docType.includes('rapor_ayrilis')) {
-    subjectStr = `${personnelName}-Rapor İşlemi`;
-    bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
-  } else if (docType.includes('rapor_baslayis')) {
-    subjectStr = `${personnelName} Göreve Başlama`;
-    bodyParagraph = `İlgi sayılı yazımız ile ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
-  }
-
+  const { subjectStr, bodyParagraph } = getDocumentTextComponents(payload);
   const isBaslayis = docType.includes('baslayis');
   const isRaporAyrilis = docType.includes('rapor_ayrilis');
 

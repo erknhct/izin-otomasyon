@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupNavigation();
   setupThemeToggle();
   setupModalEvents();
+  setupLeavesTableFilters();
   await initStorage();
   renderDashboard();
   setupWizardForm();
@@ -139,7 +140,12 @@ function renderDashboard() {
   // Pending returns list
   const pendingContainer = document.getElementById('pending-returns-container');
   const pendingList = getPendingReturnRecords();
-  document.getElementById('pending-count-badge').textContent = `${pendingList.length} Kayıt`;
+  const dueList = pendingList.filter(r => r.isDue);
+  const upcomingList = pendingList.filter(r => !r.isDue);
+
+  document.getElementById('pending-count-badge').textContent = dueList.length > 0 
+    ? `${pendingList.length} Kayıt (${dueList.length} ACİL)` 
+    : `${pendingList.length} Kayıt`;
 
   if (pendingList.length === 0) {
     pendingContainer.innerHTML = `
@@ -151,56 +157,112 @@ function renderDashboard() {
     return;
   }
 
-  let html = `
-    <div class="table-container">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Personel</th>
-            <th>Sicil</th>
-            <th>İzin Türü</th>
-            <th>Ayrılış Tarihi</th>
-            <th>Süre</th>
-            <th>Tahmini Başlayış</th>
-            <th>İşlemler</th>
-          </tr>
-        </thead>
-        <tbody>
-  `;
+  let html = '';
 
-  pendingList.forEach(item => {
+  if (dueList.length > 0) {
     html += `
-      <tr>
-        <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${item.unvan}</small></td>
-        <td>${item.sicil}</td>
-        <td><span class="badge badge-info">${item.leaveTypeName}</span></td>
-        <td>${formatDateTR(item.ayrilisDate)}</td>
-        <td>${item.days} Gün</td>
-        <td><span class="badge ${item.isDue ? 'badge-warning' : 'badge-info'}">${formatDateTR(item.expectedReturnDate)}</span></td>
-        <td style="display: flex; gap: 0.4rem; align-items: center;">
-          <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}">
-            <i class="fa-solid fa-paper-plane"></i> Başlayış UDF Yaz
-          </button>
-          <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${item.id}">
-            <i class="fa-solid fa-trash"></i> Sil
-          </button>
-        </td>
-      </tr>
+      <div style="margin-bottom: 1.5rem; border: 2px solid var(--accent-danger); background: rgba(239, 68, 68, 0.08); padding: 1.25rem; border-radius: var(--radius-md);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="color: var(--accent-danger); font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+            <i class="fa-solid fa-triangle-exclamation"></i> 🚨 GÜNÜ GELEN / TARİHİ GEÇENLER (ACİL BAŞLAYIŞ YAZISI GEREKLİ)
+          </h3>
+          <span class="badge badge-danger">${dueList.length} Acil Personel</span>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Personel</th>
+                <th>Sicil</th>
+                <th>İzin Türü</th>
+                <th>Ayrılış Tarihi</th>
+                <th>Süre</th>
+                <th>Beklenen Başlayış</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${dueList.map(item => `
+                <tr style="background: rgba(239, 68, 68, 0.06);">
+                  <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${item.unvan}</small></td>
+                  <td>${item.sicil}</td>
+                  <td><span class="badge badge-danger">${item.leaveTypeName}</span></td>
+                  <td>${formatDateTR(item.ayrilisDate)}</td>
+                  <td>${item.days} Gün</td>
+                  <td><span class="badge badge-danger">${formatDateTR(item.expectedReturnDate)} (SÜRESİ DOLDU)</span></td>
+                  <td style="display: flex; gap: 0.4rem; align-items: center;">
+                    <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}" style="font-weight: 700;">
+                      <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
+                    </button>
+                    <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${item.id}">
+                      <i class="fa-solid fa-trash"></i> Sil
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
     `;
-  });
+  }
 
-  html += `</tbody></table></div>`;
+  if (upcomingList.length > 0) {
+    html += `
+      <div style="margin-top: 1rem;">
+        <h4 style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="fa-solid fa-calendar-days" style="color: var(--accent-primary);"></i> ⏳ DEVAM EDEN İZİNLER (Gelecek Başlayışlar)
+        </h4>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Personel</th>
+                <th>Sicil</th>
+                <th>İzin Türü</th>
+                <th>Ayrılış Tarihi</th>
+                <th>Süre</th>
+                <th>Tahmini Başlayış</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${upcomingList.map(item => `
+                <tr>
+                  <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${item.unvan}</small></td>
+                  <td>${item.sicil}</td>
+                  <td><span class="badge badge-info">${item.leaveTypeName}</span></td>
+                  <td>${formatDateTR(item.ayrilisDate)}</td>
+                  <td>${item.days} Gün</td>
+                  <td><span class="badge badge-info">${formatDateTR(item.expectedReturnDate)}</span></td>
+                  <td style="display: flex; gap: 0.4rem; align-items: center;">
+                    <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}">
+                      <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
+                    </button>
+                    <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${item.id}">
+                      <i class="fa-solid fa-trash"></i> Sil
+                    </button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
   pendingContainer.innerHTML = html;
 
   // Add click listeners
-  document.querySelectorAll('.btn-create-baslayis').forEach(btn => {
+  pendingContainer.querySelectorAll('.btn-create-baslayis').forEach(btn => {
     btn.addEventListener('click', () => {
       const recId = btn.getAttribute('data-record-id');
       startBaslayisWizardForRecord(recId);
     });
   });
 
-  document.querySelectorAll('.btn-delete-leave-record').forEach(btn => {
+  pendingContainer.querySelectorAll('.btn-delete-leave-record').forEach(btn => {
     btn.addEventListener('click', () => {
       const recId = btn.getAttribute('data-record-id');
       deleteLeaveRecord(recId);
@@ -268,7 +330,7 @@ function setupWizardForm() {
     groupAyrilis.style.display = isBaslayis ? 'none' : 'flex';
     groupBaslayis.style.display = 'flex';
     groupIlgi.style.display = isBaslayis ? 'flex' : 'none';
-    groupRapor.style.display = isRapor ? 'flex' : 'none';
+    groupRapor.style.display = 'none';
 
     if (isRapor) {
       aliciMakamSelect.value = 'bakanlik';
@@ -288,7 +350,7 @@ function setupWizardForm() {
   document.getElementById('btn-preview-xml')?.addEventListener('click', () => {
     const payload = getWizardPayload();
     const previewHtml = generateDocumentPreviewHtml(payload);
-    openModal('📄 UDF EVRAK ÖNİZLEME', previewHtml);
+    openModal('📄 ÖNİZLEME', previewHtml);
 
     document.getElementById('btn-modal-download-udf')?.addEventListener('click', async () => {
       const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
@@ -361,6 +423,9 @@ function getWizardPayload() {
   const signer = getSignatories().find(s => s.id === sId) || { name: 'Dr. Arif Naci SUCUOĞLU', title: 'Cumhuriyet Başsavcı Vekili' };
 
   const leaveCode = document.getElementById('wiz-leave-type').value;
+  const leaveTypes = getLeaveTypes();
+  const ltObj = leaveTypes.find(l => l.code === leaveCode || l.id === leaveCode) || { name: 'İzin' };
+
   const actionType = document.getElementById('wiz-action-type').value;
   const izinSuresi = parseInt(document.getElementById('wiz-izin-suresi').value, 10);
   const ayrilisTarihi = document.getElementById('wiz-ayrilis-tarih').value;
@@ -372,6 +437,10 @@ function getWizardPayload() {
   return {
     docType: docType,
     leaveType: leaveCode,
+    leaveTypeName: ltObj.name || 'İzin',
+    subjectText: ltObj.subjectText || '',
+    ayrilisPhrase: ltObj.ayrilisPhrase || '',
+    baslayisPhrase: ltObj.baslayisPhrase || '',
     actionType: actionType,
     personnelId: pId,
     personnelName: person.name,
@@ -419,17 +488,111 @@ function startBaslayisWizardForRecord(recId) {
   showToast(`${rec.personnelName} için göreve başlayış verileri otomatik bağlandı.`, 'info');
 }
 
-// 3. LEAVES TABLE
+// 3. LEAVES TABLE STATE & FILTERS & PAGINATION
+let leavesState = {
+  searchQuery: '',
+  typeFilter: '',
+  statusFilter: '',
+  currentPage: 1,
+  pageSize: 10
+};
+
+function setupLeavesTableFilters() {
+  const searchInput = document.getElementById('filter-leaves-search');
+  const typeSelect = document.getElementById('filter-leaves-type');
+  const statusSelect = document.getElementById('filter-leaves-status');
+  const pageSizeSelect = document.getElementById('leaves-page-size');
+  const prevBtn = document.getElementById('btn-leaves-prev-page');
+  const nextBtn = document.getElementById('btn-leaves-next-page');
+
+  searchInput?.addEventListener('input', (e) => {
+    leavesState.searchQuery = e.target.value;
+    leavesState.currentPage = 1;
+    renderLeavesTable();
+  });
+
+  typeSelect?.addEventListener('change', (e) => {
+    leavesState.typeFilter = e.target.value;
+    leavesState.currentPage = 1;
+    renderLeavesTable();
+  });
+
+  statusSelect?.addEventListener('change', (e) => {
+    leavesState.statusFilter = e.target.value;
+    leavesState.currentPage = 1;
+    renderLeavesTable();
+  });
+
+  pageSizeSelect?.addEventListener('change', (e) => {
+    leavesState.pageSize = parseInt(e.target.value, 10) || 10;
+    leavesState.currentPage = 1;
+    renderLeavesTable();
+  });
+
+  prevBtn?.addEventListener('click', () => {
+    if (leavesState.currentPage > 1) {
+      leavesState.currentPage--;
+      renderLeavesTable();
+    }
+  });
+
+  nextBtn?.addEventListener('click', () => {
+    leavesState.currentPage++;
+    renderLeavesTable();
+  });
+}
+
 function renderLeavesTable() {
   const records = getLeaveRecords();
   const tbody = document.querySelector('#table-leaves tbody');
-  
-  if (records.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Kayıtlı izin hareketi yok.</td></tr>`;
+  const typeSelect = document.getElementById('filter-leaves-type');
+
+  if (typeSelect && typeSelect.options.length <= 1) {
+    const leaveTypes = getLeaveTypes();
+    typeSelect.innerHTML = `<option value="">Tüm İzin Türleri</option>` + 
+      leaveTypes.map(l => `<option value="${l.code}">${l.name}</option>`).join('');
+  }
+
+  // Filtering
+  const filtered = records.filter(r => {
+    const search = leavesState.searchQuery.toLowerCase();
+    const matchesSearch = !search || 
+      r.personnelName.toLowerCase().includes(search) || 
+      (r.sicil && r.sicil.includes(search));
+    const matchesType = !leavesState.typeFilter || r.leaveType === leavesState.typeFilter;
+    const matchesStatus = !leavesState.statusFilter || r.status === leavesState.statusFilter;
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  // Pagination
+  const totalRecords = filtered.length;
+  const totalPages = Math.ceil(totalRecords / leavesState.pageSize) || 1;
+  if (leavesState.currentPage > totalPages) leavesState.currentPage = totalPages;
+  if (leavesState.currentPage < 1) leavesState.currentPage = 1;
+
+  const startIndex = (leavesState.currentPage - 1) * leavesState.pageSize;
+  const endIndex = Math.min(startIndex + leavesState.pageSize, totalRecords);
+  const paginated = filtered.slice(startIndex, endIndex);
+
+  // Update UI stats & page controls
+  const infoSpan = document.getElementById('leaves-pagination-info');
+  if (infoSpan) {
+    infoSpan.textContent = totalRecords === 0 ? '0-0 / 0 Kayıt' : `${startIndex + 1}-${endIndex} / ${totalRecords} Kayıt`;
+  }
+  const pageSpan = document.getElementById('leaves-current-page');
+  if (pageSpan) pageSpan.textContent = `Sayfa ${leavesState.currentPage} / ${totalPages}`;
+
+  const prevBtn = document.getElementById('btn-leaves-prev-page');
+  const nextBtn = document.getElementById('btn-leaves-next-page');
+  if (prevBtn) prevBtn.disabled = leavesState.currentPage <= 1;
+  if (nextBtn) nextBtn.disabled = leavesState.currentPage >= totalPages;
+
+  if (paginated.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Kriterlere uygun izin kaydı bulunamadı.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = records.map(r => `
+  tbody.innerHTML = paginated.map(r => `
     <tr>
       <td><strong>${r.personnelName}</strong><br><small style="color: var(--text-muted);">${r.unvan}</small></td>
       <td><span class="badge badge-info">${r.leaveTypeName}</span></td>
@@ -443,7 +606,7 @@ function renderLeavesTable() {
       </td>
       <td style="display: flex; gap: 0.4rem; align-items: center;">
         ${r.status === 'ayrilis_yapildi' 
-          ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}"><i class="fa-solid fa-file-pen"></i> Başlayış Yaz</button>`
+          ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}"><i class="fa-solid fa-file-pen"></i> BAŞLAYIŞ</button>`
           : `<small style="color: var(--text-muted);">Tamamlandı</small>`}
         <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${r.id}"><i class="fa-solid fa-trash"></i> Sil</button>
       </td>
@@ -661,14 +824,22 @@ function renderSettings() {
     });
   });
 
-  // Leave Types
+  // Leave Types & Dynamic Template Settings
   const leaveTypes = getLeaveTypes();
   document.getElementById('list-leavetypes').innerHTML = leaveTypes.map(l => `
-    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0; border-bottom: var(--border-color) 1px solid;">
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: var(--border-color) 1px solid;">
       <div>
-        <strong>${l.name}</strong>
+        <strong style="color: var(--text-main);">${l.name}</strong>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+          <span>Konu: <em>${l.subjectText || l.name}</em></span> | 
+          <span>Ayrılış: <em>${l.ayrilisPhrase || '-'}</em></span> | 
+          <span>Başlayış: <em>${l.baslayisPhrase || '-'}</em></span>
+        </div>
       </div>
-      <button class="btn btn-sm btn-danger btn-del-leavetype" data-id="${l.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+      <div style="display: flex; gap: 0.4rem;">
+        <button class="btn btn-sm btn-primary btn-edit-leavetype" data-id="${l.id}"><i class="fa-solid fa-pen"></i> Düzenle</button>
+        <button class="btn btn-sm btn-danger btn-del-leavetype" data-id="${l.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+      </div>
     </div>
   `).join('');
 
@@ -683,18 +854,83 @@ function renderSettings() {
     });
   });
 
+  document.querySelectorAll('.btn-edit-leavetype').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      const lt = getLeaveTypes().find(l => l.id === id);
+      if (!lt) return;
+
+      openModal('İzin Türü ve Şablon Düzenle', `
+        <form id="form-edit-leavetype" class="form-grid">
+          <div class="form-group full-width">
+            <label>İzin Türü Adı</label>
+            <input type="text" id="edit-lt-name" required value="${lt.name}" />
+          </div>
+          <div class="form-group full-width">
+            <label>Konu Metni (Evrak Üst Konu Başlığı)</label>
+            <input type="text" id="edit-lt-subject" required value="${lt.subjectText || lt.name}" placeholder="Örn: Babalık İzni, Yıllık İzin" />
+          </div>
+          <div class="form-group">
+            <label>Ayrılış Cümle Eki (UDF Ayrılış İfadesi)</label>
+            <input type="text" id="edit-lt-ayrilis" required value="${lt.ayrilisPhrase || ''}" placeholder="Örn: babalık izninden, evlilik izninden" />
+          </div>
+          <div class="form-group">
+            <label>Başlayış Cümle Eki (UDF Başlayış İfadesi)</label>
+            <input type="text" id="edit-lt-baslayis" required value="${lt.baslayisPhrase || ''}" placeholder="Örn: babalık iznini, evlilik iznini" />
+          </div>
+          <div class="form-group full-width" style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-success"><i class="fa-solid fa-save"></i> Güncelle ve Kaydet</button>
+          </div>
+        </form>
+      `);
+
+      document.getElementById('form-edit-leavetype')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let current = getLeaveTypes();
+        const index = current.findIndex(l => l.id === id);
+        if (index !== -1) {
+          current[index] = {
+            ...current[index],
+            name: document.getElementById('edit-lt-name').value,
+            subjectText: document.getElementById('edit-lt-subject').value,
+            ayrilisPhrase: document.getElementById('edit-lt-ayrilis').value,
+            baslayisPhrase: document.getElementById('edit-lt-baslayis').value
+          };
+          saveLeaveTypes(current);
+          closeModal();
+          renderSettings();
+          populateWizardOptions();
+          showToast('İzin türü şablonu güncellendi ve kaydedildi!', 'success');
+        }
+      });
+    });
+  });
+
   document.getElementById('btn-add-leavetype')?.addEventListener('click', () => {
-    openModal('Yeni İzin Türü Ekle', `
+    openModal('Yeni İzin Türü ve Şablon Ekle', `
       <form id="form-add-leavetype" class="form-grid">
         <div class="form-group full-width">
           <label>İzin Türü Adı</label>
-          <input type="text" id="lt-name" required placeholder="Örn: Evlilik İzni, Şua İzni" />
+          <input type="text" id="lt-name" required placeholder="Örn: Babalık İzni, Evlilik İzni" />
+        </div>
+        <div class="form-group full-width">
+          <label>Konu Metni (Evrak Üst Konu Başlığı)</label>
+          <input type="text" id="lt-subject" required placeholder="Örn: Babalık İzni" />
+        </div>
+        <div class="form-group">
+          <label>Ayrılış Cümle Eki (UDF Ayrılış İfadesi)</label>
+          <input type="text" id="lt-ayrilis" required placeholder="Örn: babalık izninden" />
+        </div>
+        <div class="form-group">
+          <label>Başlayış Cümle Eki (UDF Başlayış İfadesi)</label>
+          <input type="text" id="lt-baslayis" required placeholder="Örn: babalık iznini" />
         </div>
         <div class="form-group full-width" style="margin-top: 1rem; display: flex; justify-content: flex-end;">
           <button type="submit" class="btn btn-success"><i class="fa-solid fa-save"></i> Kaydet</button>
         </div>
       </form>
     `);
+
     document.getElementById('form-add-leavetype')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const current = getLeaveTypes();
@@ -703,13 +939,16 @@ function renderSettings() {
       current.push({
         id: Date.now().toString(),
         name: name,
-        code: code || 'izin'
+        code: code || 'izin',
+        subjectText: document.getElementById('lt-subject').value || name,
+        ayrilisPhrase: document.getElementById('lt-ayrilis').value || `${name.toLowerCase()}nden`,
+        baslayisPhrase: document.getElementById('lt-baslayis').value || `${name.toLowerCase()}ni`
       });
       saveLeaveTypes(current);
       closeModal();
       renderSettings();
       populateWizardOptions();
-      showToast('Yeni izin türü eklendi.', 'success');
+      showToast('Yeni izin türü şablonu eklendi ve kaydedildi.', 'success');
     });
   });
 

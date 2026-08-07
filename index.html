@@ -133,8 +133,8 @@
               <div class="form-group">
                 <label for="wiz-action-type"><i class="fa-solid fa-right-from-bracket"></i> 3. İşlem Tipi</label>
                 <select id="wiz-action-type" required style="font-weight: 600;">
-                  <option value="ayrilis">İzne Ayrılış (Ayrılış UDF Yaz)</option>
-                  <option value="baslayis">Göreve Başlayış (Başlayış UDF Yaz)</option>
+                  <option value="ayrilis">İzne Ayrılış</option>
+                  <option value="baslayis">Göreve Başlayış</option>
                 </select>
               </div>
 
@@ -194,10 +194,10 @@
 
             <div style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end; align-items: center;">
               <button type="button" class="btn btn-secondary" id="btn-preview-xml">
-                <i class="fa-solid fa-eye"></i> UDF Önizleme
+                <i class="fa-solid fa-eye"></i> Önizleme
               </button>
               <button type="submit" class="btn btn-success" id="btn-generate-udf" style="padding: 0.85rem 1.75rem; font-size: 1.05rem;">
-                <i class="fa-solid fa-download"></i> İZNİ KAYDET
+                <i class="fa-solid fa-save"></i> KAYDET
               </button>
             </div>
           </form>
@@ -225,9 +225,30 @@
         </div>
 
         <div class="glass-card">
-          <div class="card-title">
+          <div class="card-title" style="margin-bottom: 1rem;">
             <span>İzin Kayıtları Geçmişi</span>
           </div>
+
+          <!-- Leaves Table Filter Bar -->
+          <div class="filter-bar" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+            <div style="flex: 1; min-width: 200px;">
+              <input type="text" id="filter-leaves-search" placeholder="Personel Ara (Ad, Sicil)..." style="width: 100%;" />
+            </div>
+            <div style="width: 180px;">
+              <select id="filter-leaves-type">
+                <option value="">Tüm İzin Türleri</option>
+                <!-- Dynamically filled -->
+              </select>
+            </div>
+            <div style="width: 180px;">
+              <select id="filter-leaves-status">
+                <option value="">Tüm Durumlar</option>
+                <option value="ayrilis_yapildi">İznide (Ayrılış Yapıldı)</option>
+                <option value="baslayis_yapildi">Göreve Başladı</option>
+              </select>
+            </div>
+          </div>
+
           <div class="table-container">
             <table class="data-table" id="table-leaves">
               <thead>
@@ -245,6 +266,26 @@
                 <!-- Dynamically filled -->
               </tbody>
             </table>
+          </div>
+
+          <!-- Pagination Bar -->
+          <div class="pagination-bar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="font-size: 0.85rem; color: var(--text-muted);">Sayfa başı:</span>
+              <select id="leaves-page-size" style="width: 70px; padding: 0.25rem 0.5rem; font-size: 0.85rem;">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+              <span style="font-size: 0.85rem; color: var(--text-muted);" id="leaves-pagination-info">0-0 / 0 Kayıt</span>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <button class="btn btn-sm btn-secondary" id="btn-leaves-prev-page" disabled><i class="fa-solid fa-chevron-left"></i> Önceki</button>
+              <span id="leaves-current-page" style="font-weight: 600; font-size: 0.9rem; padding: 0 0.5rem;">Sayfa 1</span>
+              <button class="btn btn-sm btn-secondary" id="btn-leaves-next-page" disabled>Sonraki <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
           </div>
         </div>
       </section>
@@ -290,7 +331,7 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">İzin Türleri, Şablon ve Sistem Ayarları</h1>
-            <p class="page-description">İzin türleri ekleme/silme ve imza yetkilileri yönetimi</p>
+            <p class="page-description">İzin türleri ekleme/silme, şablon cümleleri ve imza yetkilileri yönetimi</p>
           </div>
         </div>
 
@@ -298,7 +339,7 @@
           <!-- Leave Types -->
           <div class="glass-card">
             <div class="card-title">
-              <span>İzin Türü Ekle / Sil</span>
+              <span>İzin Türleri & Dinamik Şablon Ayarları</span>
               <button class="btn btn-sm btn-primary" id="btn-add-leavetype"><i class="fa-solid fa-plus"></i> Yeni İzin Türü</button>
             </div>
             <div id="list-leavetypes">
@@ -330,6 +371,11 @@
           </div>
         </div>
       </section>
+
+      <!-- Footer -->
+      <footer class="app-footer" style="text-align: center; padding: 2rem 0 1rem 0; color: var(--text-muted); font-size: 0.85rem; border-top: 1px solid var(--border-color); margin-top: 3rem;">
+        &copy; 2026 ANKARA ADLİYESİ BİLGİ İŞLEM MÜDÜRÜ Erkan HACAT
+      </footer>
     </main>
   </div>
 
