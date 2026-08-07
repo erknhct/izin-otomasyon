@@ -301,7 +301,7 @@ export function generateDocumentPreviewHtml(payload) {
   return `
     <div style="margin-bottom: 1.25rem; display: flex; justify-content: flex-end;">
       <button class="btn btn-primary" id="btn-copy-udf-text" style="font-weight: 600;">
-        <i class="fa-solid fa-copy"></i> UYAP Metnini Kopyala
+        <i class="fa-solid fa-copy"></i> METNİ KOPYALA
       </button>
     </div>
     <div id="udf-preview-content" style="background: #ffffff; color: #1e293b; padding: 2.5rem; border-radius: 12px; font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.6; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid #cbd5e1; user-select: text;">
