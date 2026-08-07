@@ -54,6 +54,34 @@
 
     <!-- Main Content -->
     <main class="main-content">
+      <!-- Global Top App Bar -->
+      <header class="top-app-bar">
+        <div class="top-bar-left">
+          <span class="active-view-indicator" id="top-view-title"><i class="fa-solid fa-house" style="color: var(--accent-primary);"></i> Ana Sayfa</span>
+        </div>
+        <div class="top-bar-right">
+          <div class="notif-wrapper">
+            <button class="notif-bell-btn" id="notif-bell-btn" title="Günü Gelen / Tarihi Geçen Başlayış Bildirimleri">
+              <i class="fa-solid fa-bell"></i>
+              <span class="notif-badge" id="notif-bell-badge" style="display: none;">0</span>
+            </button>
+
+            <!-- Dropdown Menu for Notifications -->
+            <div class="notif-dropdown" id="notif-dropdown">
+              <div class="notif-header">
+                <h4 style="margin: 0; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; color: var(--accent-danger);">
+                  <i class="fa-solid fa-triangle-exclamation"></i> ACİL BAŞLAYIŞ BİLDİRİMLERİ
+                </h4>
+                <span class="notif-count-tag badge badge-danger" id="notif-count-tag">0 Acil</span>
+              </div>
+              <div class="notif-body" id="notif-dropdown-body">
+                <!-- Dynamically populated urgent items -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
       <!-- DASHBOARD & QUICK ENTRY VIEW -->
       <section id="view-dashboard" class="view-section active">
         <div class="page-header">

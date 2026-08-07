@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupThemeToggle();
   setupModalEvents();
   setupLeavesTableFilters();
+  setupNotificationBell();
   await initStorage();
   renderDashboard();
   setupWizardForm();
@@ -42,10 +43,11 @@ function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.innerHTML = `
-    <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
+    <i class="fa-solid ${type === 'success' ? 'fa-circle-check' : type === 'warning' ? 'fa-triangle-exclamation' : type === 'danger' ? 'fa-circle-xmark' : 'fa-circle-info'}"></i>
     <span>${message}</span>
   `;
   toastContainer.appendChild(toast);
+
   setTimeout(() => {
     toast.remove();
   }, 5000);
@@ -77,6 +79,17 @@ function switchView(viewName) {
       sec.classList.remove('active');
     }
   });
+
+  const viewTitles = {
+    dashboard: '<i class="fa-solid fa-house" style="color: var(--accent-primary);"></i> Ana Sayfa',
+    leaves: '<i class="fa-solid fa-calendar-check" style="color: var(--accent-primary);"></i> İzinler & Başlayış Takibi',
+    personnel: '<i class="fa-solid fa-users" style="color: var(--accent-primary);"></i> Personel Listesi (50)',
+    settings: '<i class="fa-solid fa-sliders" style="color: var(--accent-primary);"></i> Şablon & İzin Türü Ayarları'
+  };
+  const topTitle = document.getElementById('top-view-title');
+  if (topTitle && viewTitles[viewName]) {
+    topTitle.innerHTML = viewTitles[viewName];
+  }
 
   if (viewName === 'dashboard') renderDashboard();
   if (viewName === 'leaves') renderLeavesTable();
@@ -120,8 +133,82 @@ function closeModal() {
   modalOverlay.classList.remove('active');
 }
 
+// Notification Bell System
+function renderNotificationBell() {
+  const pendingList = getPendingReturnRecords();
+  const dueList = pendingList.filter(r => r.isDue);
+
+  const bellBadge = document.getElementById('notif-bell-badge');
+  const countTag = document.getElementById('notif-count-tag');
+  const dropdownBody = document.getElementById('notif-dropdown-body');
+
+  if (!bellBadge || !countTag || !dropdownBody) return;
+
+  if (dueList.length > 0) {
+    bellBadge.textContent = dueList.length;
+    bellBadge.style.display = 'flex';
+    countTag.textContent = `${dueList.length} Acil`;
+    countTag.className = 'notif-count-tag badge badge-danger';
+
+    dropdownBody.innerHTML = dueList.map(item => `
+      <div class="notif-item">
+        <div class="notif-item-header">
+          <strong>${item.personnelName}</strong>
+          <span class="badge badge-danger">${item.leaveTypeName}</span>
+        </div>
+        <div class="notif-item-sub">Sicil: ${item.sicil} | Ayrılış: ${formatDateTR(item.ayrilisDate)}</div>
+        <div class="notif-item-due"><i class="fa-solid fa-triangle-exclamation"></i> Beklenen: ${formatDateTR(item.expectedReturnDate)} (SÜRESİ DOLDU)</div>
+        <button class="btn btn-sm btn-success btn-notif-baslayis" data-record-id="${item.id}" style="width: 100%; margin-top: 0.4rem; font-weight: 700;">
+          <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ YAZISI ÇIKAR & TAMAMLA
+        </button>
+      </div>
+    `).join('');
+
+    dropdownBody.querySelectorAll('.btn-notif-baslayis').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const recId = btn.getAttribute('data-record-id');
+        const notifDropdown = document.getElementById('notif-dropdown');
+        if (notifDropdown) notifDropdown.style.display = 'none';
+        await startBaslayisWizardForRecord(recId);
+      });
+    });
+  } else {
+    bellBadge.style.display = 'none';
+    countTag.textContent = 'Acil Yok';
+    countTag.className = 'notif-count-tag badge badge-success';
+    dropdownBody.innerHTML = `
+      <div style="padding: 1.5rem 1rem; text-align: center; color: var(--text-muted);">
+        <i class="fa-solid fa-circle-check" style="font-size: 1.8rem; color: var(--accent-success); margin-bottom: 0.5rem;"></i>
+        <p style="font-size: 0.85rem; margin: 0;">Şu anda günü geçen veya acil başlayış bekleyen personel bulunmamaktadır.</p>
+      </div>
+    `;
+  }
+}
+
+function setupNotificationBell() {
+  const bellBtn = document.getElementById('notif-bell-btn');
+  const dropdown = document.getElementById('notif-dropdown');
+
+  if (bellBtn && dropdown) {
+    bellBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isVisible = dropdown.style.display === 'flex';
+      dropdown.style.display = isVisible ? 'none' : 'flex';
+    });
+
+    document.addEventListener('click', () => {
+      dropdown.style.display = 'none';
+    });
+
+    dropdown.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+}
+
 // 1. DASHBOARD
 function renderDashboard() {
+  renderNotificationBell();
   const stats = getDashboardStats();
   document.getElementById('stat-active-leaves').textContent = stats.totalActiveLeaves;
   document.getElementById('stat-pending-returns').textContent = stats.pendingReturnsCount;
@@ -573,6 +660,7 @@ async function startBaslayisWizardForRecord(recId) {
     showToast(`✅ ${rec.personnelName} için Göreve Başlayış UDF belgesi indirildi ve işlem tamamlandı!`, 'success');
     renderDashboard();
     renderLeavesTable();
+    renderNotificationBell();
   } catch (err) {
     console.error('Başlayış UDF oluşturma hatası:', err);
     showToast('Hata: ' + err.message, 'danger');
