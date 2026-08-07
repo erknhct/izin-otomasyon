@@ -14,7 +14,8 @@ let dbCache = {
   personnel: [],
   leaveTypes: [],
   signatories: [],
-  leaveRecords: []
+  leaveRecords: [],
+  appPassword: 'ankara2025'
 };
 
 /**
@@ -27,6 +28,7 @@ export async function initStorage() {
       const data = await res.json();
       if (data.personnel && Array.isArray(data.personnel)) {
         dbCache = data;
+        if (!dbCache.appPassword) dbCache.appPassword = 'ankara2025';
         // Sync to localStorage
         localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
         localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
@@ -44,6 +46,7 @@ export async function initStorage() {
   dbCache.leaveTypes = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_TYPES) || '[]');
   dbCache.signatories = JSON.parse(localStorage.getItem(STORAGE_KEYS.SIGNATORIES) || '[]');
   dbCache.leaveRecords = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_RECORDS) || '[]');
+  dbCache.appPassword = localStorage.getItem('udf_app_password') || 'ankara2025';
   return false;
 }
 
@@ -153,4 +156,14 @@ export function importDbJsonData(importedObject) {
     return true;
   }
   return false;
+}
+
+export function getAppPasswordStored() {
+  return dbCache.appPassword || localStorage.getItem('udf_app_password') || 'ankara2025';
+}
+
+export function setAppPasswordStored(newPassword) {
+  dbCache.appPassword = newPassword;
+  localStorage.setItem('udf_app_password', newPassword);
+  syncToDiskFile();
 }

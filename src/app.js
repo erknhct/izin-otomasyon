@@ -4,7 +4,8 @@ import {
   getPersonnelList, savePersonnelList,
   getLeaveTypes, saveLeaveTypes,
   getSignatories, saveSignatories,
-  getLeaveRecords, addLeaveRecord, updateLeaveRecord, deleteLeaveRecord
+  getLeaveRecords, addLeaveRecord, updateLeaveRecord, deleteLeaveRecord,
+  getAppPasswordStored, setAppPasswordStored
 } from './storage.js';
 import { calculateExpectedReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
 
@@ -31,7 +32,7 @@ const SESSION_KEY      = 'udf_session_auth';
 const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 saat (ms)
 
 function getStoredPassword() {
-  return localStorage.getItem('udf_app_password') || DEFAULT_PASSWORD;
+  return getAppPasswordStored();
 }
 
 function isSessionValid() {
@@ -93,11 +94,11 @@ window.changeAppPassword = function() {
     showToast('Yeni şifreler eşleşmiyor!', 'warning');
     return;
   }
-  localStorage.setItem('udf_app_password', newPw);
+  setAppPasswordStored(newPw);
   document.getElementById('sec-current-pw').value = '';
   document.getElementById('sec-new-pw').value = '';
   document.getElementById('sec-new-pw2').value = '';
-  showToast('✅ Şifre başarıyla güncellendi! Bir sonraki girişte yeni şifreyi kullanın.', 'success');
+  showToast('✅ Şifre başarıyla güncellendi! Yeni şifre ortak veritabanına kaydedildi.', 'success');
 };
 
 async function initApp() {
