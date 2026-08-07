@@ -521,12 +521,26 @@ input, select, textarea {
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);
   border: var(--border-color) 1px solid;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.8);
   color: var(--text-main);
   font-family: inherit;
   font-size: 0.95rem;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+select option {
+  background-color: #1e293b;
+  color: #f8fafc;
+  padding: 10px 14px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
 }
 
 [data-theme="light"] input,
@@ -535,9 +549,21 @@ input, select, textarea {
   background: #ffffff;
 }
 
+[data-theme="light"] select option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+[data-theme="light"] select option:hover,
+[data-theme="light"] select option:focus,
+[data-theme="light"] select option:checked {
+  background-color: #4f46e5 !important;
+  color: #ffffff !important;
+}
+
 input:focus, select:focus, textarea:focus {
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
 
 /* Data Tables */
