@@ -3,7 +3,7 @@ import {
   getPersonnelList, savePersonnelList,
   getLeaveTypes, saveLeaveTypes,
   getSignatories, saveSignatories,
-  getLeaveRecords, addLeaveRecord, updateLeaveRecord
+  getLeaveRecords, addLeaveRecord, updateLeaveRecord, deleteLeaveRecord
 } from './storage.js';
 import { calculateExpectedReturn, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
 
@@ -160,7 +160,7 @@ function renderDashboard() {
             <th>Ayrılış Tarihi</th>
             <th>Süre</th>
             <th>Tahmini Başlayış</th>
-            <th>İşlem</th>
+            <th>İşlemler</th>
           </tr>
         </thead>
         <tbody>
@@ -175,9 +175,12 @@ function renderDashboard() {
         <td>${formatDateTR(item.ayrilisDate)}</td>
         <td>${item.days} Gün</td>
         <td><span class="badge ${item.isDue ? 'badge-warning' : 'badge-info'}">${formatDateTR(item.expectedReturnDate)}</span></td>
-        <td>
+        <td style="display: flex; gap: 0.4rem; align-items: center;">
           <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}">
             <i class="fa-solid fa-paper-plane"></i> Başlayış UDF Yaz
+          </button>
+          <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${item.id}">
+            <i class="fa-solid fa-trash"></i> Sil
           </button>
         </td>
       </tr>
@@ -187,11 +190,21 @@ function renderDashboard() {
   html += `</tbody></table></div>`;
   pendingContainer.innerHTML = html;
 
-  // Add click listeners to "Başlayış UDF Yaz" buttons
+  // Add click listeners
   document.querySelectorAll('.btn-create-baslayis').forEach(btn => {
     btn.addEventListener('click', () => {
       const recId = btn.getAttribute('data-record-id');
       startBaslayisWizardForRecord(recId);
+    });
+  });
+
+  document.querySelectorAll('.btn-delete-leave-record').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const recId = btn.getAttribute('data-record-id');
+      deleteLeaveRecord(recId);
+      showToast('İzin kaydı silindi.', 'warning');
+      renderDashboard();
+      renderLeavesTable();
     });
   });
 }
@@ -418,10 +431,11 @@ function renderLeavesTable() {
           ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>' 
           : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İznide (Ayrılış Yapıldı)</span>'}
       </td>
-      <td>
+      <td style="display: flex; gap: 0.4rem; align-items: center;">
         ${r.status === 'ayrilis_yapildi' 
           ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}"><i class="fa-solid fa-file-pen"></i> Başlayış Yaz</button>`
           : `<small style="color: var(--text-muted);">Tamamlandı</small>`}
+        <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${r.id}"><i class="fa-solid fa-trash"></i> Sil</button>
       </td>
     </tr>
   `).join('');
@@ -429,6 +443,16 @@ function renderLeavesTable() {
   tbody.querySelectorAll('.btn-create-baslayis').forEach(btn => {
     btn.addEventListener('click', () => {
       startBaslayisWizardForRecord(btn.getAttribute('data-record-id'));
+    });
+  });
+
+  tbody.querySelectorAll('.btn-delete-leave-record').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const recId = btn.getAttribute('data-record-id');
+      deleteLeaveRecord(recId);
+      showToast('İzin kaydı silindi.', 'warning');
+      renderDashboard();
+      renderLeavesTable();
     });
   });
 }

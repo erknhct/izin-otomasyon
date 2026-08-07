@@ -145,7 +145,6 @@ export function saveContacts(contacts) {
 export function getLeaveRecords() {
   const data = localStorage.getItem(STORAGE_KEYS.LEAVE_RECORDS);
   if (!data) {
-    // Seed initial active leave records
     const initialRecords = [
       {
         id: 'rec-1',
@@ -158,10 +157,10 @@ export function getLeaveRecords() {
         days: 4,
         ayrilisDate: '2026-08-10',
         expectedReturnDate: '2026-08-14',
-        evrakNo: '2026/12494 Muh.',
+        evrakNo: '',
         evrakTarihi: '2026-08-10',
         aliciMakam: 'komisyon',
-        status: 'ayrilis_yapildi', // 'ayrilis_yapildi', 'baslayis_yapildi'
+        status: 'ayrilis_yapildi',
         baslayisEvrakNo: null,
         baslayisDate: null
       },
@@ -176,12 +175,12 @@ export function getLeaveRecords() {
         days: 11,
         ayrilisDate: '2026-05-18',
         expectedReturnDate: '2026-05-29',
-        evrakNo: '2026/7568 Muh.',
+        evrakNo: '',
         evrakTarihi: '2026-05-18',
         raporKurum: 'Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi',
         aliciMakam: 'bakanlik',
         status: 'baslayis_yapildi',
-        baslayisEvrakNo: '2026/8358 Muh.',
+        baslayisEvrakNo: '',
         baslayisDate: '2026-06-08'
       }
     ];
@@ -211,4 +210,10 @@ export function updateLeaveRecord(id, updates) {
     return records[index];
   }
   return null;
+}
+
+export function deleteLeaveRecord(id) {
+  let records = getLeaveRecords();
+  records = records.filter(r => r.id !== id);
+  saveLeaveRecords(records);
 }
