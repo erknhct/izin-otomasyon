@@ -34,7 +34,24 @@ export function formatDateTR(dateStr) {
 }
 
 /**
- * Generates HTML formatted specifically for RichText / UYAP Editor Clipboard
+ * Helper to center text with spaces for 80-char line width (UYAP Editor standard)
+ */
+function padCenter(str, width = 78) {
+  const trimmed = str.trim();
+  const padLength = Math.max(0, Math.floor((width - trimmed.length) / 2));
+  return ' '.repeat(padLength) + trimmed;
+}
+
+/**
+ * Helper to right-align text with spaces for 80-char line width (UYAP Editor standard)
+ */
+function padRight(str, targetCol = 48) {
+  const trimmed = str.trim();
+  return ' '.repeat(targetCol) + trimmed;
+}
+
+/**
+ * Generates HTML formatted specifically for UYAP Java Swing HTMLEditorKit
  */
 export function generateCopyableHtml(payload) {
   const {
@@ -104,38 +121,43 @@ export function generateCopyableHtml(payload) {
   const isBaslayis = docType.includes('baslayis');
   const isRaporAyrilis = docType.includes('rapor_ayrilis');
 
-  const destHtml = destTitleLines.map(l => `<p align="center" style="text-align: center; margin: 0; padding: 0;">${l}</p>`).join('');
+  const destHtml = destTitleLines.map(l => `<p align="center" style="text-align: center; margin:0;">${l}</p>`).join('');
 
-  return `
-    <div style="font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000; line-height: 1.5;">
-      <p style="margin-bottom: 24pt;">Konu : ${subjectStr}</p>
-      
-      <div style="text-align: center; margin-top: 36pt; margin-bottom: 24pt;">
-        ${destHtml}
-      </div>
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: 'Times New Roman', serif; font-size: 12pt; color: #000000;">
+  <p align="left" style="text-align: left; margin-bottom: 24pt;">Konu : ${subjectStr}</p>
+  
+  <br><br>
+  <div align="center" style="text-align: center; margin-top: 24pt; margin-bottom: 24pt;">
+    ${destHtml}
+  </div>
+  <br>
 
-      ${isBaslayis && ilgiEvrak && ilgiEvrak.trim() ? `<p style="margin-bottom: 12pt;">İlgi     : ${ilgiEvrak.trim()}</p>` : ''}
+  ${isBaslayis && ilgiEvrak && ilgiEvrak.trim() ? `<p align="left" style="margin-bottom: 12pt;">İlgi     : ${ilgiEvrak.trim()}</p>` : ''}
 
-      <p style="text-indent: 1.25cm; text-align: justify; margin-bottom: 12pt;">
-        ${bodyParagraph}
-      </p>
+  <p align="justify" style="text-indent: 1.25cm; text-align: justify; margin-bottom: 12pt;">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${bodyParagraph}
+  </p>
 
-      <p style="text-indent: 1.25cm; margin-bottom: 48pt;">
-        ${closingSentence}
-      </p>
+  <p align="justify" style="text-indent: 1.25cm; text-align: justify; margin-bottom: 36pt;">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${closingSentence}
+  </p>
+  <br><br>
 
-      <div style="text-align: right; margin-right: 20pt; line-height: 1.2;">
-        <p style="text-align: right; margin: 0;">${imzalayanAd}</p>
-        <p style="text-align: right; margin: 0;">${imzalayanUnvan}</p>
-      </div>
+  <div align="right" style="text-align: right; margin-right: 30pt;">
+    <p align="right" style="text-align: right; margin: 0;">${imzalayanAd}</p>
+    <p align="right" style="text-align: right; margin: 0;">${imzalayanUnvan}</p>
+  </div>
 
-      ${isRaporAyrilis ? `<p style="margin-top: 24pt;">Ek      : ${ekBelge}</p>` : ''}
-    </div>
-  `;
+  ${isRaporAyrilis ? `<p align="left" style="margin-top: 24pt;">Ek      : ${ekBelge}</p>` : ''}
+</body>
+</html>`;
 }
 
 /**
- * Generates plain text formatted for fallback copy
+ * Generates plain text with exact calculated space indents for UYAP Editor
  */
 export function generatePlainUdfText(payload) {
   const {
@@ -207,7 +229,7 @@ export function generatePlainUdfText(payload) {
 
   let text = `Konu : ${subjectStr}\n\n\n\n`;
   destTitleLines.forEach(l => {
-    text += `              ${l}\n`;
+    text += `${padCenter(l)}\n`;
   });
   text += `\n`;
 
@@ -215,10 +237,10 @@ export function generatePlainUdfText(payload) {
     text += `İlgi     : ${ilgiEvrak.trim()}\n\n`;
   }
 
-  text += `\t${bodyParagraph}\n`;
-  text += `\t${closingSentence}\n\n\n`;
-  text += `\t\t\t                                    ${imzalayanAd}\n`;
-  text += `\t\t\t                                   ${imzalayanUnvan}\n`;
+  text += `        ${bodyParagraph}\n`;
+  text += `        ${closingSentence}\n\n\n`;
+  text += `${padRight(imzalayanAd, 48)}\n`;
+  text += `${padRight(imzalayanUnvan, 47)}\n`;
 
   if (isRaporAyrilis) {
     text += `\nEk      : ${ekBelge}\n`;
