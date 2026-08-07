@@ -1,4 +1,4 @@
-import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, formatDateTR } from './udfGenerator.js';
+import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, generatePlainUdfText, formatDateTR } from './udfGenerator.js';
 import {
   initStorage, exportDbJsonFile, importDbJsonData,
   getPersonnelList, savePersonnelList,
@@ -289,6 +289,15 @@ function setupWizardForm() {
     const payload = getWizardPayload();
     const previewHtml = generateDocumentPreviewHtml(payload);
     openModal('📄 UDF EVRAK ÖNİZLEME', previewHtml);
+
+    document.getElementById('btn-copy-udf-text')?.addEventListener('click', () => {
+      const plainText = generatePlainUdfText(payload);
+      navigator.clipboard.writeText(plainText).then(() => {
+        showToast('📋 UYAP evrak metni panoya kopyalandı! UYAP Doküman Editörüne doğrudan yapıştırabilirsiniz.', 'success');
+      }).catch(() => {
+        showToast('Metin kopyalanamadı!', 'danger');
+      });
+    });
   });
 
   // Form Submit (Generate UDF)
