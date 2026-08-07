@@ -1,4 +1,4 @@
-import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, generateRtfText, generateCopyableHtml, generatePlainUdfText, formatDateTR } from './udfGenerator.js';
+import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, generatePlainUdfText, formatDateTR } from './udfGenerator.js';
 import {
   initStorage, exportDbJsonFile, importDbJsonData,
   getPersonnelList, savePersonnelList,
@@ -290,27 +290,19 @@ function setupWizardForm() {
     const previewHtml = generateDocumentPreviewHtml(payload);
     openModal('📄 UDF EVRAK ÖNİZLEME', previewHtml);
 
+    document.getElementById('btn-modal-download-udf')?.addEventListener('click', async () => {
+      const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
+      await downloadUdfFile(payload, filename);
+      showToast(`${filename} UDF olarak indirildi!`, 'success');
+    });
+
     document.getElementById('btn-copy-udf-text')?.addEventListener('click', async () => {
-      const rtfText = generateRtfText(payload);
-      const copyHtml = generateCopyableHtml(payload);
       const plainText = generatePlainUdfText(payload);
-
       try {
-        const blobRtf = new Blob([rtfText], { type: 'text/rtf' });
-        const blobHtml = new Blob([copyHtml], { type: 'text/html' });
-        const blobText = new Blob([plainText], { type: 'text/plain' });
-
-        const data = [new ClipboardItem({
-          'text/rtf': blobRtf,
-          'text/html': blobHtml,
-          'text/plain': blobText
-        })];
-        await navigator.clipboard.write(data);
-        showToast('📋 UYAP evrak metni, RTF ve hizalamaları panoya kopyalandı! UYAP Editörüne doğrudan yapıştırabilirsiniz.', 'success');
+        await navigator.clipboard.writeText(plainText);
+        showToast('📋 UYAP metni birebir tab yapısıyla kopyalandı! UYAP Editörüne yapıştırabilirsiniz.', 'success');
       } catch (err) {
-        navigator.clipboard.writeText(plainText).then(() => {
-          showToast('📋 Evrak metni kopyalandı!', 'success');
-        });
+        showToast('Kopyalama başarısız oldu.', 'danger');
       }
     });
   });
