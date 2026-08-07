@@ -477,7 +477,8 @@ function renderPersonnelTable() {
       <td>${p.title}</td>
       <td>${p.birim}</td>
       <td><span class="badge badge-success">Aktif</span></td>
-      <td>
+      <td style="display: flex; gap: 0.4rem; align-items: center;">
+        <button class="btn btn-sm btn-primary btn-edit-personnel" data-id="${p.id}"><i class="fa-solid fa-pen-to-square"></i> Düzenle</button>
         <button class="btn btn-sm btn-danger btn-delete-personnel" data-id="${p.id}"><i class="fa-solid fa-trash"></i> Sil</button>
       </td>
     </tr>
@@ -486,6 +487,7 @@ function renderPersonnelTable() {
   searchInput?.replaceWith(searchInput.cloneNode(true));
   document.getElementById('search-personnel')?.addEventListener('input', renderPersonnelTable);
 
+  // Add Personnel Listener
   document.getElementById('btn-add-personnel')?.addEventListener('click', () => {
     openModal('Yeni Personel Ekle', `
       <form id="form-add-personnel" class="form-grid">
@@ -530,6 +532,60 @@ function renderPersonnelTable() {
     });
   });
 
+  // Edit Personnel Listener
+  tbody.querySelectorAll('.btn-edit-personnel').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      const person = getPersonnelList().find(p => p.id === id);
+      if (!person) return;
+
+      openModal('Personel Bilgilerini Düzenle', `
+        <form id="form-edit-personnel" class="form-grid">
+          <div class="form-group">
+            <label>Adı Soyadı</label>
+            <input type="text" id="edit-p-name" required value="${person.name}" />
+          </div>
+          <div class="form-group">
+            <label>Sicil No</label>
+            <input type="text" id="edit-p-sicil" required value="${person.sicil}" />
+          </div>
+          <div class="form-group">
+            <label>Unvanı</label>
+            <input type="text" id="edit-p-title" required value="${person.title}" />
+          </div>
+          <div class="form-group">
+            <label>Çalıştığı Birim</label>
+            <input type="text" id="edit-p-birim" required value="${person.birim}" />
+          </div>
+          <div class="form-group full-width" style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-success"><i class="fa-solid fa-save"></i> Güncelle ve Kaydet</button>
+          </div>
+        </form>
+      `);
+
+      document.getElementById('form-edit-personnel')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let current = getPersonnelList();
+        const index = current.findIndex(p => p.id === id);
+        if (index !== -1) {
+          current[index] = {
+            ...current[index],
+            name: document.getElementById('edit-p-name').value,
+            sicil: document.getElementById('edit-p-sicil').value,
+            title: document.getElementById('edit-p-title').value,
+            birim: document.getElementById('edit-p-birim').value
+          };
+          savePersonnelList(current);
+          closeModal();
+          showToast(`${current[index].name} bilgileri güncellendi ve db.json dosyasına yazıldı!`, 'success');
+          renderPersonnelTable();
+          populateWizardOptions();
+        }
+      });
+    });
+  });
+
+  // Delete Personnel Listener
   tbody.querySelectorAll('.btn-delete-personnel').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
