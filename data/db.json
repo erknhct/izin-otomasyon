@@ -469,6 +469,23 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786138720798",
+      "personnelId": "39",
+      "personnelName": "Aslı CEYLAN",
+      "sicil": "437994",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 3,
+      "ayrilisDate": "2026-08-04",
+      "expectedReturnDate": "2026-08-07",
+      "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
+      "aliciMakam": "komisyon",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786138221110",
       "personnelId": "47",
       "personnelName": "Hande TAŞ",
@@ -481,9 +498,9 @@
       "expectedReturnDate": "2026-08-07",
       "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-07"
     },
     {
       "id": "rec-1786135806547",

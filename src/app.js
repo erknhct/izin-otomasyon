@@ -771,26 +771,39 @@ function renderLeavesTable() {
     return;
   }
 
-  tbody.innerHTML = paginated.map(r => `
-    <tr>
-      <td><strong>${r.personnelName}</strong><br><small style="color: var(--text-muted);">${r.unvan}</small></td>
-      <td><span class="badge badge-info">${r.leaveTypeName}</span></td>
-      <td>${r.days} Gün</td>
-      <td>${formatDateTR(r.ayrilisDate)}</td>
-      <td>${formatDateTR(r.expectedReturnDate)}</td>
-      <td>
-        ${r.status === 'baslayis_yapildi' 
-          ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>' 
-          : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İzinde (Ayrılış Yapıldı)</span>'}
-      </td>
-      <td style="display: flex; gap: 0.4rem; align-items: center;">
-        ${r.status === 'ayrilis_yapildi' 
-          ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}"><i class="fa-solid fa-file-pen"></i> BAŞLAYIŞ</button>`
-          : `<small style="color: var(--text-muted);">Tamamlandı</small>`}
-        <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${r.id}"><i class="fa-solid fa-trash"></i> Sil</button>
-      </td>
-    </tr>
-  `).join('');
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  tbody.innerHTML = paginated.map(r => {
+    const isDue = r.status === 'ayrilis_yapildi' && r.expectedReturnDate && r.expectedReturnDate <= todayStr;
+    const rowStyle = isDue ? 'background: rgba(239, 68, 68, 0.12); border-left: 4px solid #ef4444;' : '';
+    
+    return `
+      <tr style="${rowStyle}">
+        <td><strong>${r.personnelName}</strong><br><small style="color: var(--text-muted);">${r.unvan}</small></td>
+        <td><span class="badge ${isDue ? 'badge-danger' : 'badge-info'}">${r.leaveTypeName}</span></td>
+        <td>${r.days} Gün</td>
+        <td>${formatDateTR(r.ayrilisDate)}</td>
+        <td>
+          ${isDue 
+            ? `<span class="badge badge-danger" style="animation: pulseDanger 2s infinite;"><i class="fa-solid fa-clock"></i> ${formatDateTR(r.expectedReturnDate)} (SÜRESİ DOLDU)</span>` 
+            : formatDateTR(r.expectedReturnDate)}
+        </td>
+        <td>
+          ${r.status === 'baslayis_yapildi' 
+            ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>' 
+            : isDue
+              ? '<span class="badge badge-danger" style="animation: pulseDanger 2s infinite;"><i class="fa-solid fa-triangle-exclamation"></i> 🚨 GÜNÜ GELDİ (ACİL)</span>'
+              : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İzinde (Ayrılış Yapıldı)</span>'}
+        </td>
+        <td style="display: flex; gap: 0.4rem; align-items: center;">
+          ${r.status === 'ayrilis_yapildi' 
+            ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}" style="${isDue ? 'font-weight: 800; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);' : ''}"><i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ</button>`
+            : `<small style="color: var(--text-muted);">Tamamlandı</small>`}
+          <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${r.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
 
   tbody.querySelectorAll('.btn-create-baslayis').forEach(btn => {
     btn.addEventListener('click', async () => {
