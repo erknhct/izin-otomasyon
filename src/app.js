@@ -1,4 +1,4 @@
-import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, generateCopyableHtml, generatePlainUdfText, formatDateTR } from './udfGenerator.js';
+import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, generateRtfText, generateCopyableHtml, generatePlainUdfText, formatDateTR } from './udfGenerator.js';
 import {
   initStorage, exportDbJsonFile, importDbJsonData,
   getPersonnelList, savePersonnelList,
@@ -291,15 +291,22 @@ function setupWizardForm() {
     openModal('📄 UDF EVRAK ÖNİZLEME', previewHtml);
 
     document.getElementById('btn-copy-udf-text')?.addEventListener('click', async () => {
+      const rtfText = generateRtfText(payload);
       const copyHtml = generateCopyableHtml(payload);
       const plainText = generatePlainUdfText(payload);
 
       try {
+        const blobRtf = new Blob([rtfText], { type: 'text/rtf' });
         const blobHtml = new Blob([copyHtml], { type: 'text/html' });
         const blobText = new Blob([plainText], { type: 'text/plain' });
-        const data = [new ClipboardItem({ 'text/html': blobHtml, 'text/plain': blobText })];
+
+        const data = [new ClipboardItem({
+          'text/rtf': blobRtf,
+          'text/html': blobHtml,
+          'text/plain': blobText
+        })];
         await navigator.clipboard.write(data);
-        showToast('📋 UYAP evrak metni ve hizalamaları panoya kopyalandı! Doküman Editörüne doğrudan yapıştırabilirsiniz.', 'success');
+        showToast('📋 UYAP evrak metni, RTF ve hizalamaları panoya kopyalandı! UYAP Editörüne doğrudan yapıştırabilirsiniz.', 'success');
       } catch (err) {
         navigator.clipboard.writeText(plainText).then(() => {
           showToast('📋 Evrak metni kopyalandı!', 'success');

@@ -34,6 +34,118 @@ export function formatDateTR(dateStr) {
 }
 
 /**
+ * Converts unicode string to RTF Unicode escape format (\uN?)
+ */
+function toRtfUnicode(str) {
+  if (!str) return '';
+  return str.split('').map(char => {
+    const code = char.charCodeAt(0);
+    if (code > 127) {
+      return `\\u${code}?`;
+    }
+    return char;
+  }).join('');
+}
+
+/**
+ * Generates RTF (Rich Text Format) text for UYAP Editor Java Swing RTFEditorKit
+ */
+export function generateRtfText(payload) {
+  const {
+    docType,
+    personnelName,
+    sicilNo,
+    unvan,
+    birim = 'Bilgi İşlem Müdürlüğü',
+    tarih = formatDateTR(new Date().toISOString().split('T')[0]),
+    izinSuresi = 5,
+    ayrilisTarihi = tarih,
+    baslayisTarihi = tarih,
+    raporKurum = 'Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi',
+    ilgiEvrak = '',
+    aliciMakam = 'komisyon',
+    aliciMakamOzel = '',
+    imzalayanAd = 'Dr. Arif Naci SUCUOĞLU',
+    imzalayanUnvan = 'Cumhuriyet Başsavcı Vekili',
+    ekBelge = 'Rapor (1 Sayfa)',
+    donusNotu = ''
+  } = payload;
+
+  const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
+
+  let destTitleLines = [];
+  let closingSentence = "Bilgilerinize arz olunur.";
+
+  if (aliciMakam === 'komisyon') {
+    destTitleLines = [
+      "ANKARA ADLÎ YARGI",
+      "İLK DERECE MAHKEMESİ",
+      "ADALET KOMİSYONU BAŞKANLIĞI'NA"
+    ];
+    closingSentence = "Bilgilerinize arz olunur.";
+  } else if (aliciMakam === 'bakanlik') {
+    destTitleLines = [
+      "ANKARA CUMHURİYET BAŞSAVCILIĞI",
+      "Bakanlık Muhabere Bürosu'na"
+    ];
+    closingSentence = "Gereğini arz ederim.";
+  } else {
+    destTitleLines = aliciMakamOzel.split('\n').filter(l => l.trim());
+    if (destTitleLines.length === 0) {
+      destTitleLines = ["ANKARA ADLÎ YARGI", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
+    }
+  }
+
+  let bodyParagraph = "";
+  let subjectStr = "";
+  const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
+  const izinEkStr = docType.includes('mazeret') ? "mazeret izninden" : "yıllık izninden";
+
+  if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
+    subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
+    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${izinEkStr} ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+  } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
+    subjectStr = "Göreve Başlama";
+    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+  } else if (docType.includes('rapor_ayrilis')) {
+    subjectStr = `${personnelName}-Rapor İşlemi`;
+    bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+  } else if (docType.includes('rapor_baslayis')) {
+    subjectStr = `${personnelName} Göreve Başlama`;
+    bodyParagraph = `İlgi sayılı yazımız ile ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+  }
+
+  const isBaslayis = docType.includes('baslayis');
+  const isRaporAyrilis = docType.includes('rapor_ayrilis');
+
+  const subjectRtf = toRtfUnicode(`Konu : ${subjectStr}`);
+  const destRtfLines = destTitleLines.map(l => `\\pard\\qc\\f0\\fs24 ${toRtfUnicode(l)}\\par`).join('\n');
+  const bodyRtf = toRtfUnicode(bodyParagraph);
+  const closingRtf = toRtfUnicode(closingSentence);
+  const signerNameRtf = toRtfUnicode(imzalayanAd);
+  const signerTitleRtf = toRtfUnicode(imzalayanUnvan);
+  const ilgiRtf = toRtfUnicode(ilgiEvrak ? `İlgi     : ${ilgiEvrak.trim()}` : '');
+  const ekRtf = toRtfUnicode(ekBelge ? `Ek      : ${ekBelge}` : '');
+
+  return `{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\fnil\\fcharset0 Times New Roman;}}
+\\viewkind4\\uc1\\pard\\lang1055\\f0\\fs24 ${subjectRtf}\\par
+\\par
+\\par
+\\par
+${destRtfLines}
+\\par
+${isBaslayis && ilgiEvrak && ilgiEvrak.trim() ? `\\pard\\f0\\fs24 ${ilgiRtf}\\par\\par` : ''}
+\\pard\\qj\\fi708\\f0\\fs24 ${bodyRtf}\\par
+\\pard\\qj\\fi708\\f0\\fs24 ${closingRtf}\\par
+\\par
+\\par
+\\pard\\qr\\f0\\fs24 ${signerNameRtf}\\par
+\\pard\\qr\\f0\\fs24 ${signerTitleRtf}\\par
+${isRaporAyrilis ? `\\par\\pard\\f0\\fs24 ${ekRtf}\\par` : ''}
+}`;
+}
+
+/**
  * Helper to center text with spaces for 80-char line width (UYAP Editor standard)
  */
 function padCenter(str, width = 78) {
@@ -121,7 +233,7 @@ export function generateCopyableHtml(payload) {
   const isBaslayis = docType.includes('baslayis');
   const isRaporAyrilis = docType.includes('rapor_ayrilis');
 
-  const destHtml = destTitleLines.map(l => `<p align="center" style="text-align: center; margin:0;">${l}</p>`).join('');
+  const destHtml = destTitleLines.map(l => `<p align="center" style="text-align: center; margin: 0;">${l}</p>`).join('');
 
   return `<!DOCTYPE html>
 <html>
