@@ -316,6 +316,18 @@
               <!-- Dynamically filled -->
             </div>
           </div>
+
+          <!-- DB JSON Backup & Import Card -->
+          <div class="glass-card" style="grid-column: 1 / -1;">
+            <div class="card-title">
+              <span><i class="fa-solid fa-database" style="color: var(--accent-primary); margin-right: 8px;"></i> Veri Tabanı (db.json) Disk Dosyası ve Yedekleme</span>
+              <span class="badge badge-success">Kalıcı Dosya (data/db.json)</span>
+            </div>
+            <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.9rem;">
+              Tüm personel, izin kayıtları ve yetkili ayarlarınız proje klasöründeki <code>data/db.json</code> dosyasına doğrudan yazılmaktadır. İsterseniz buradan yedek .json indirebilir veya bilgisayarınızdaki bir yedek dosyasını geri yükleyebilirsiniz.
+            </p>
+            <div id="json-backup-container"></div>
+          </div>
         </div>
       </section>
     </main>

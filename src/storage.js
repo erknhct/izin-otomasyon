@@ -1,219 +1,156 @@
-// LocalStorage Data Management Module
+// Local JSON File & LocalStorage Persistence Manager
+
+const DB_API_URL = '/api/db';
 
 const STORAGE_KEYS = {
   PERSONNEL: 'udf_personnel_list_v1',
   LEAVE_TYPES: 'udf_leave_types_v1',
   SIGNATORIES: 'udf_signatories_v1',
-  CONTACTS: 'udf_contacts_v1',
-  LEAVE_RECORDS: 'udf_leave_records_v1',
-  DOC_TEMPLATES: 'udf_doc_templates_v1',
-  SETTINGS: 'udf_settings_v1'
+  LEAVE_RECORDS: 'udf_leave_records_v1'
 };
 
-// Seed Personnel List (50 Initial Personnel)
-const DEFAULT_PERSONNEL = [
-  { id: '1', name: 'Tuğba ALTUNTAŞ', sicil: '304581', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '2', name: 'Erdal ŞİMŞEK', sicil: '96214', title: 'Bilgisayar İşletmeni', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '3', name: 'Öznur YILDIRIM', sicil: '125768', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '4', name: 'Hasan KARAKOÇLAR', sicil: '142055', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '5', name: 'Emine SÖKMEN', sicil: '189420', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '6', name: 'Ahmet YILMAZ', sicil: '102345', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '7', name: 'Mehmet KAYA', sicil: '115678', title: 'Bilgisayar İşletmeni', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '8', name: 'Ayşe DEMİR', sicil: '128901', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '9', name: 'Fatma ÇELİK', sicil: '131234', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '10', name: 'Ali ÖZTÜRK', sicil: '144567', title: 'Programcı', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '11', name: 'Zeynep ARSLAN', sicil: '157890', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '12', name: 'Mustafa DOĞAN', sicil: '160123', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '13', name: 'Elif KILIÇ', sicil: '173456', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '14', name: 'Hüseyin ASLAN', sicil: '186789', title: 'Mühendis', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '15', name: 'Merve KARA', sicil: '199012', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '16', name: 'İbrahim ŞAHİN', sicil: '201345', title: 'Bilgisayar İşletmeni', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '17', name: 'Büşra KOÇ', sicil: '214678', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '18', name: 'Osman YILDIZ', sicil: '228001', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '19', name: 'Seda ÖZDEMİR', sicil: '231334', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '20', name: 'Ömer ERDOĞAN', sicil: '244667', title: 'Çözümleyici', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '21', name: 'Hatice AYDIN', sicil: '258000', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '22', name: 'Yusuf POLAT', sicil: '261333', title: 'Bilgisayar İşletmeni', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '23', name: 'Kübra YALÇIN', sicil: '274666', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '24', name: 'Murat ERGÜN', sicil: '287999', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '25', name: 'Esra AKSOY', sicil: '291332', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '26', name: 'Emre ÖZKAN', sicil: '304665', title: 'Mühendis', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '27', name: 'Yasemin GÜNEŞ', sicil: '317998', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '28', name: 'Serkan BULUT', sicil: '321331', title: 'Bilgisayar İşletmeni', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '29', name: 'Deniz KESKİN', sicil: '334664', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '30', name: 'Fatih ÜNAL', sicil: '347997', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '31', name: 'Tuğçe ŞEN', sicil: '351330', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '32', name: 'Hakan GÜL', sicil: '364663', title: 'Programcı', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '33', name: 'Sibel BOZKURT', sicil: '377996', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '34', name: 'Kaan AVCI', sicil: '381329', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '35', name: 'Gamze KORKMAZ', sicil: '394662', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '36', name: 'Burak ASLAN', sicil: '407995', title: 'Bilgisayar İşletmeni', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '37', name: 'Derya TEKİN', sicil: '411328', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '38', name: 'Volkan KAHRAMAN', sicil: '424661', title: 'Mühendis', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '39', name: 'Aslı CEYLAN', sicil: '437994', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '40', name: 'Sinan ŞAHİN', sicil: '441327', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '41', name: 'Gözde SOYLU', sicil: '454660', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '42', name: 'Uğur ÇAKIR', sicil: '467993', title: 'Bilgisayar İşletmeni', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '43', name: 'Berna COŞKUN', sicil: '471326', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '44', name: 'Onur YÜCEL', sicil: '484659', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '45', name: 'Ceren KILIÇ', sicil: '497992', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '46', name: 'Tolga EKER', sicil: '501325', title: 'Programcı', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '47', name: 'Hande TAŞ', sicil: '514658', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '48', name: 'Eren YILDIRIM', sicil: '527991', title: 'Bilgisayar İşletmeni', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '49', name: 'Gizem DURMAZ', sicil: '531324', title: 'Zabıt Katibi', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' },
-  { id: '50', name: 'Metin SARI', sicil: '544657', title: 'Teknisyen', birim: 'Bilgi İşlem Müdürlüğü', status: 'active' }
-];
+// In-Memory Database Cache
+let dbCache = {
+  personnel: [],
+  leaveTypes: [],
+  signatories: [],
+  leaveRecords: []
+};
 
-// Seed Leave Types
-const DEFAULT_LEAVE_TYPES = [
-  { id: 'yillik', name: 'Yıllık İzin', code: 'yillik' },
-  { id: 'rapor', name: 'İstirahat Raporu / Sağlık İzni', code: 'rapor' },
-  { id: 'mazeret', name: 'Mazeret İzni', code: 'mazeret' },
-  { id: 'sua', name: 'Şua İzni', code: 'sua' },
-  { id: 'babalik', name: 'Babalık İzni', code: 'babalik' },
-  { id: 'dogum', name: 'Doğum İzni', code: 'dogum' },
-  { id: 'vefat', name: 'Vefat İzni', code: 'vefat' },
-  { id: 'evlilik', name: 'Evlilik İzni', code: 'evlilik' }
-];
-
-// Seed Signatories
-const DEFAULT_SIGNATORIES = [
-  { id: '1', name: 'Dr. Arif Naci SUCUOĞLU', title: 'Cumhuriyet Başsavcı Vekili', default: true },
-  { id: '2', name: 'Cesur AYKUL', title: 'Cumhuriyet Savcısı', default: false },
-  { id: '3', name: 'Ahmet ÖZKAN', title: 'Bilgi İşlem Müdürü', default: false }
-];
-
-// Seed Contacts for Footer ("Ayrıntılı Bilgi İçin")
-const DEFAULT_CONTACTS = [
-  { id: '1', name: 'HASAN KARAKOÇLAR', default: true },
-  { id: '2', name: 'EMİNE SÖKMEN', default: false },
-  { id: '3', name: 'TUĞBA ALTUNTAŞ', default: false }
-];
-
-export function getPersonnelList() {
-  const data = localStorage.getItem(STORAGE_KEYS.PERSONNEL);
-  if (!data) {
-    localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(DEFAULT_PERSONNEL));
-    return DEFAULT_PERSONNEL;
+/**
+ * Initializes database by reading data/db.json from backend API
+ */
+export async function initStorage() {
+  try {
+    const res = await fetch(DB_API_URL);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.personnel && Array.isArray(data.personnel)) {
+        dbCache = data;
+        // Sync to localStorage
+        localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
+        localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
+        localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(dbCache.signatories));
+        localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(dbCache.leaveRecords));
+        return true;
+      }
+    }
+  } catch (err) {
+    console.warn('API db.json okunamadı, localStorage kullanılıyor:', err);
   }
-  return JSON.parse(data);
+
+  // Fallback to localStorage
+  dbCache.personnel = JSON.parse(localStorage.getItem(STORAGE_KEYS.PERSONNEL) || '[]');
+  dbCache.leaveTypes = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_TYPES) || '[]');
+  dbCache.signatories = JSON.parse(localStorage.getItem(STORAGE_KEYS.SIGNATORIES) || '[]');
+  dbCache.leaveRecords = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_RECORDS) || '[]');
+  return false;
+}
+
+/**
+ * Saves current in-memory dbCache to data/db.json on disk via POST /api/db
+ */
+export async function syncToDiskFile() {
+  // Always update localStorage
+  localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
+  localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
+  localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(dbCache.signatories));
+  localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(dbCache.leaveRecords));
+
+  // Write to data/db.json file
+  try {
+    await fetch(DB_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dbCache, null, 2)
+    });
+  } catch (err) {
+    console.error('db.json dosyasına yazılırken hata oluştu:', err);
+  }
+}
+
+// 1. PERSONNEL
+export function getPersonnelList() {
+  return dbCache.personnel;
 }
 
 export function savePersonnelList(list) {
-  localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(list));
+  dbCache.personnel = list;
+  syncToDiskFile();
 }
 
+// 2. LEAVE TYPES
 export function getLeaveTypes() {
-  const data = localStorage.getItem(STORAGE_KEYS.LEAVE_TYPES);
-  if (!data) {
-    localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(DEFAULT_LEAVE_TYPES));
-    return DEFAULT_LEAVE_TYPES;
-  }
-  return JSON.parse(data);
+  return dbCache.leaveTypes;
 }
 
 export function saveLeaveTypes(types) {
-  localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(types));
+  dbCache.leaveTypes = types;
+  syncToDiskFile();
 }
 
+// 3. SIGNATORIES
 export function getSignatories() {
-  const data = localStorage.getItem(STORAGE_KEYS.SIGNATORIES);
-  if (!data) {
-    localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(DEFAULT_SIGNATORIES));
-    return DEFAULT_SIGNATORIES;
-  }
-  return JSON.parse(data);
+  return dbCache.signatories;
 }
 
 export function saveSignatories(signers) {
-  localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(signers));
+  dbCache.signatories = signers;
+  syncToDiskFile();
 }
 
-export function getContacts() {
-  const data = localStorage.getItem(STORAGE_KEYS.CONTACTS);
-  if (!data) {
-    localStorage.setItem(STORAGE_KEYS.CONTACTS, JSON.stringify(DEFAULT_CONTACTS));
-    return DEFAULT_CONTACTS;
-  }
-  return JSON.parse(data);
-}
-
-export function saveContacts(contacts) {
-  localStorage.setItem(STORAGE_KEYS.CONTACTS, JSON.stringify(contacts));
-}
-
+// 4. LEAVE RECORDS
 export function getLeaveRecords() {
-  const data = localStorage.getItem(STORAGE_KEYS.LEAVE_RECORDS);
-  if (!data) {
-    const initialRecords = [
-      {
-        id: 'rec-1',
-        personnelId: '1',
-        personnelName: 'Tuğba ALTUNTAŞ',
-        sicil: '304581',
-        unvan: 'Zabıt Katibi',
-        leaveType: 'yillik',
-        leaveTypeName: 'Yıllık İzin',
-        days: 4,
-        ayrilisDate: '2026-08-10',
-        expectedReturnDate: '2026-08-14',
-        evrakNo: '',
-        evrakTarihi: '2026-08-10',
-        aliciMakam: 'komisyon',
-        status: 'ayrilis_yapildi',
-        baslayisEvrakNo: null,
-        baslayisDate: null
-      },
-      {
-        id: 'rec-2',
-        personnelId: '2',
-        personnelName: 'Erdal ŞİMŞEK',
-        sicil: '96214',
-        unvan: 'Bilgisayar İşletmeni',
-        leaveType: 'rapor',
-        leaveTypeName: 'İstirahat Raporu / Sağlık İzni',
-        days: 11,
-        ayrilisDate: '2026-05-18',
-        expectedReturnDate: '2026-05-29',
-        evrakNo: '',
-        evrakTarihi: '2026-05-18',
-        raporKurum: 'Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi',
-        aliciMakam: 'bakanlik',
-        status: 'baslayis_yapildi',
-        baslayisEvrakNo: '',
-        baslayisDate: '2026-06-08'
-      }
-    ];
-    localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(initialRecords));
-    return initialRecords;
-  }
-  return JSON.parse(data);
+  return dbCache.leaveRecords;
 }
 
 export function saveLeaveRecords(records) {
-  localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(records));
+  dbCache.leaveRecords = records;
+  syncToDiskFile();
 }
 
 export function addLeaveRecord(record) {
-  const records = getLeaveRecords();
-  records.unshift(record);
-  saveLeaveRecords(records);
+  dbCache.leaveRecords.unshift(record);
+  syncToDiskFile();
   return record;
 }
 
 export function updateLeaveRecord(id, updates) {
-  const records = getLeaveRecords();
-  const index = records.findIndex(r => r.id === id);
+  const index = dbCache.leaveRecords.findIndex(r => r.id === id);
   if (index !== -1) {
-    records[index] = { ...records[index], ...updates };
-    saveLeaveRecords(records);
-    return records[index];
+    dbCache.leaveRecords[index] = { ...dbCache.leaveRecords[index], ...updates };
+    syncToDiskFile();
+    return dbCache.leaveRecords[index];
   }
   return null;
 }
 
 export function deleteLeaveRecord(id) {
-  let records = getLeaveRecords();
-  records = records.filter(r => r.id !== id);
-  saveLeaveRecords(records);
+  dbCache.leaveRecords = dbCache.leaveRecords.filter(r => r.id !== id);
+  syncToDiskFile();
+}
+
+/**
+ * Direct Export of db.json as a downloadable file
+ */
+export function exportDbJsonFile() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dbCache, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `db_yedek_${new Date().toISOString().split('T')[0]}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+/**
+ * Direct Import of a db.json file
+ */
+export function importDbJsonData(importedObject) {
+  if (importedObject && Array.isArray(importedObject.personnel)) {
+    dbCache = importedObject;
+    syncToDiskFile();
+    return true;
+  }
+  return false;
 }

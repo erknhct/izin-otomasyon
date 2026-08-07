@@ -1,5 +1,6 @@
 import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, formatDateTR } from './udfGenerator.js';
 import {
+  initStorage, exportDbJsonFile, importDbJsonData,
   getPersonnelList, savePersonnelList,
   getLeaveTypes, saveLeaveTypes,
   getSignatories, saveSignatories,
@@ -23,10 +24,11 @@ document.documentElement.setAttribute('data-theme', currentTheme);
 updateThemeToggleUI();
 
 // Initialize App
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   setupNavigation();
   setupThemeToggle();
   setupModalEvents();
+  await initStorage();
   renderDashboard();
   setupWizardForm();
   renderPersonnelTable();
@@ -522,7 +524,7 @@ function renderPersonnelTable() {
       });
       savePersonnelList(current);
       closeModal();
-      showToast('Personel eklendi!', 'success');
+      showToast('Personel eklendi ve db.json dosyasına kaydedildi!', 'success');
       renderPersonnelTable();
       populateWizardOptions();
     });
@@ -534,7 +536,7 @@ function renderPersonnelTable() {
       let current = getPersonnelList();
       current = current.filter(p => p.id !== id);
       savePersonnelList(current);
-      showToast('Personel silindi.', 'warning');
+      showToast('Personel silindi ve db.json güncellendi.', 'warning');
       renderPersonnelTable();
       populateWizardOptions();
     });
@@ -648,6 +650,49 @@ function renderSettings() {
       showToast('Yeni izin türü eklendi.', 'success');
     });
   });
+
+  // DB Backup & Restore Section
+  const jsonBackupContainer = document.getElementById('json-backup-container');
+  if (jsonBackupContainer) {
+    jsonBackupContainer.innerHTML = `
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-secondary" id="btn-export-db"><i class="fa-solid fa-download"></i> db.json Yedeğini İndir</button>
+        <label class="btn btn-primary" style="cursor: pointer; margin: 0;">
+          <i class="fa-solid fa-upload"></i> db.json Dosyası Yükle
+          <input type="file" id="input-import-db" accept=".json" style="display: none;" />
+        </label>
+      </div>
+    `;
+
+    document.getElementById('btn-export-db')?.addEventListener('click', () => {
+      exportDbJsonFile();
+      showToast('db.json verileri bilgisayarınıza indirildi.', 'success');
+    });
+
+    document.getElementById('input-import-db')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const parsed = JSON.parse(evt.target.result);
+          if (importDbJsonData(parsed)) {
+            showToast('db.json verisi başarıyla yüklendi ve güncellendi!', 'success');
+            renderDashboard();
+            renderPersonnelTable();
+            renderLeavesTable();
+            renderSettings();
+            populateWizardOptions();
+          } else {
+            showToast('Geçersiz db.json dosyası!', 'danger');
+          }
+        } catch (err) {
+          showToast('JSON okuma hatası!', 'danger');
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
 }
 
 // Helper
