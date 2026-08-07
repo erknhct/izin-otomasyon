@@ -1351,6 +1351,7 @@ function renderReports() {
     let pYillikDays = 0;
     let pOtherCount = 0;
     let pOtherDays = 0;
+    let pOtherMap = {};
 
     pRecords.forEach(r => {
       const code = (r.leaveType || '').toLowerCase();
@@ -1366,6 +1367,10 @@ function renderReports() {
       } else {
         pOtherCount++;
         pOtherDays += days;
+        const typeTitle = r.leaveTypeName || 'Diğer İzin';
+        if (!pOtherMap[typeTitle]) pOtherMap[typeTitle] = { count: 0, days: 0 };
+        pOtherMap[typeTitle].count++;
+        pOtherMap[typeTitle].days += days;
       }
     });
 
@@ -1385,6 +1390,7 @@ function renderReports() {
       yillikDays: pYillikDays,
       otherCount: pOtherCount,
       otherDays: pOtherDays,
+      otherMap: pOtherMap,
       totalCount: pTotalCount,
       totalDays: pTotalDays,
       records: pRecords
@@ -1476,8 +1482,8 @@ function renderReports() {
               : `<small style="color: var(--text-muted);">0 Kez</small>`}
           </td>
           <td>
-            ${s.otherCount > 0 
-              ? `<span class="badge badge-warning" style="font-weight: 700;">${s.otherCount} Kez (${s.otherDays} Gün)</span>` 
+            ${Object.keys(s.otherMap).length > 0 
+              ? Object.entries(s.otherMap).map(([tName, tData]) => `<span class="badge badge-warning" style="font-weight: 700; margin: 1px 0; display: inline-block;"><i class="fa-solid fa-tag"></i> ${tName}: ${tData.count} Kez (${tData.days} Gün)</span>`).join('<br>')
               : `<small style="color: var(--text-muted);">0 Kez</small>`}
           </td>
           <td>
@@ -1632,6 +1638,7 @@ function exportReportsPdf() {
   const rowsHtml = personnelList.map((p, idx) => {
     const pRecords = allRecords.filter(r => r.personnelId === p.id);
     let rCount = 0, rDays = 0, yCount = 0, yDays = 0, oCount = 0, oDays = 0;
+    let pOtherMap = {};
 
     pRecords.forEach(r => {
       const code = (r.leaveType || '').toLowerCase();
@@ -1644,6 +1651,10 @@ function exportReportsPdf() {
         yCount++; yDays += days;
       } else {
         oCount++; oDays += days;
+        const typeTitle = r.leaveTypeName || 'Diğer İzin';
+        if (!pOtherMap[typeTitle]) pOtherMap[typeTitle] = { count: 0, days: 0 };
+        pOtherMap[typeTitle].count++;
+        pOtherMap[typeTitle].days += days;
       }
     });
 
@@ -1654,6 +1665,10 @@ function exportReportsPdf() {
     totalOtherDays += oDays;
     totalAllDays += pTotalDays;
 
+    const otherText = Object.keys(pOtherMap).length > 0
+      ? Object.entries(pOtherMap).map(([tName, tData]) => `${tName} (${tData.count} Kez / ${tData.days} Gün)`).join(', ')
+      : '-';
+
     return `
       <tr>
         <td style="text-align: center;">${idx + 1}</td>
@@ -1663,7 +1678,7 @@ function exportReportsPdf() {
         <td>${p.birim}</td>
         <td style="text-align: center; ${rDays > 0 ? 'color: #dc2626; font-weight: bold;' : ''}">${rCount > 0 ? `${rCount} Kez (${rDays} Gün)` : '-'}</td>
         <td style="text-align: center;">${yCount > 0 ? `${yCount} Kez (${yDays} Gün)` : '-'}</td>
-        <td style="text-align: center;">${oCount > 0 ? `${oCount} Kez (${oDays} Gün)` : '-'}</td>
+        <td style="text-align: center;">${otherText}</td>
         <td style="text-align: center; font-weight: bold;">${pTotalDays} Gün</td>
       </tr>
     `;
