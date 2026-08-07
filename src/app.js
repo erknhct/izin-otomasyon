@@ -5,7 +5,7 @@ import {
   getSignatories, saveSignatories,
   getLeaveRecords, addLeaveRecord, updateLeaveRecord, deleteLeaveRecord
 } from './storage.js';
-import { calculateExpectedReturn, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
+import { calculateExpectedReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
 
 // DOM Elements
 const navItems = document.querySelectorAll('.nav-item');
@@ -301,7 +301,7 @@ function setupWizardForm() {
       const conflict = checkLeaveConflict(payload.personnelId, payload.ayrilisTarihi, expReturn);
       
       if (conflict) {
-        showToast(`⚠️ ${payload.personnelName} için ${formatDateTR(conflict.ayrilisDate)} - ${formatDateTR(conflict.expectedReturnDate)} tarihleri arasında zaten active (${conflict.leaveTypeName}) kaydı mevcuttur! Aynı personel için çakışan tarihte 2. bir izin kaydı oluşturulamaz.`, 'danger');
+        showToast(`⚠️ ${payload.personnelName} için ${formatDateTR(conflict.ayrilisDate)} - ${formatDateTR(conflict.expectedReturnDate)} tarihleri arasında zaten aktif (${conflict.leaveTypeName}) kaydı mevcuttur! Aynı personel için çakışan tarihte 2. bir izin kaydı oluşturulamaz.`, 'danger');
         return;
       }
     }
@@ -354,9 +354,12 @@ function getWizardPayload() {
 
   const leaveCode = document.getElementById('wiz-leave-type').value;
   const actionType = document.getElementById('wiz-action-type').value;
+  const izinSuresi = parseInt(document.getElementById('wiz-izin-suresi').value, 10);
+  const ayrilisTarihi = document.getElementById('wiz-ayrilis-tarih').value;
 
   let docType = `${leaveCode}_${actionType}`;
   const todayStr = new Date().toISOString().split('T')[0];
+  const donusNotu = getReturnReasonNotu(ayrilisTarihi, izinSuresi);
 
   return {
     docType: docType,
@@ -368,8 +371,8 @@ function getWizardPayload() {
     unvan: person.title,
     birim: person.birim || 'Bilgi İşlem Müdürlüğü',
     tarih: formatDateTR(todayStr),
-    izinSuresi: parseInt(document.getElementById('wiz-izin-suresi').value, 10),
-    ayrilisTarihi: document.getElementById('wiz-ayrilis-tarih').value,
+    izinSuresi: izinSuresi,
+    ayrilisTarihi: ayrilisTarihi,
     baslayisTarihi: document.getElementById('wiz-baslayis-tarih').value,
     ilgiEvrak: document.getElementById('wiz-ilgi-evrak').value,
     raporKurum: document.getElementById('wiz-rapor-kurum').value,
@@ -377,6 +380,7 @@ function getWizardPayload() {
     aliciMakamOzel: document.getElementById('wiz-alici-makam-ozel').value,
     imzalayanAd: signer.name,
     imzalayanUnvan: signer.title,
+    donusNotu: donusNotu,
     linkedRecordId: document.getElementById('form-udf-wizard').dataset.linkedRecordId || null
   };
 }

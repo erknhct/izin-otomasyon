@@ -54,7 +54,7 @@ export function generateDocumentPreviewHtml(payload) {
     imzalayanAd = 'Dr. Arif Naci SUCUOĞLU',
     imzalayanUnvan = 'Cumhuriyet Başsavcı Vekili',
     ekBelge = 'Rapor (1 Sayfa)',
-    donusNotu = 'hafta sonunu müteakip'
+    donusNotu = ''
   } = payload;
 
   const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
@@ -84,19 +84,20 @@ export function generateDocumentPreviewHtml(payload) {
 
   let bodyParagraph = "";
   let subjectStr = "";
+  const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
 
   if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
     subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
     bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${subjectStr.toLowerCase()}nden ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
   } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
     subjectStr = "Göreve Başlama";
-    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük izinini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${donusNotu} ${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
   } else if (docType.includes('rapor_ayrilis')) {
     subjectStr = `${personnelName}-Rapor İşlemi`;
     bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
   } else if (docType.includes('rapor_baslayis')) {
     subjectStr = `${personnelName} Göreve Başlama`;
-    bodyParagraph = `İlgi sayılı yazımız ile ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} (${sicilNo}) ${personnelName} ${donusNotu} ${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+    bodyParagraph = `İlgi sayılı yazımız ile ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
   }
 
   const isBaslayis = docType.includes('baslayis');
@@ -151,7 +152,7 @@ export function buildUdfXml(payload) {
     imzalayanAd = 'Dr. Arif Naci SUCUOĞLU',
     imzalayanUnvan = 'Cumhuriyet Başsavcı Vekili',
     ekBelge = 'Rapor (1 Sayfa)',
-    donusNotu = 'hafta sonunu müteakip'
+    donusNotu = ''
   } = payload;
 
   const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
@@ -183,19 +184,20 @@ export function buildUdfXml(payload) {
   // Subject and Body Text
   let bodyParagraph = "";
   let subjectStr = "";
+  const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
 
   if (docType.includes('yillik_ayrilis') || docType.includes('mazeret_ayrilis') || (!docType.includes('baslayis') && !docType.includes('rapor'))) {
     subjectStr = docType.includes('mazeret') ? "Mazeret İzni" : "Yıllık İzin";
-    bodyParagraph = `Bilgi İşlem Müdürlüğümüzde görevli ${unvan} ${personnelName} (${sicilNo}) ${subjectStr.toLowerCase()}nden ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+    bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${subjectStr.toLowerCase()}nden ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
   } else if (docType.includes('yillik_baslayis') || docType.includes('mazeret_baslayis')) {
     subjectStr = "Göreve Başlama";
-    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük izinini kullanmak üzere görevinden ayrılışını bildirdiğimiz Bilgi İşlem Müdürlüğümüzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${donusNotu} ${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+    bodyParagraph = `İlgi sayılı yazımız ile ${gunMetni} günlük iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) bu iznini kullanarak ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
   } else if (docType.includes('rapor_ayrilis')) {
     subjectStr = `${personnelName}-Rapor İşlemi`;
-    bodyParagraph = `Bilgi İşlem Müdürlüğümüzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+    bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
   } else if (docType.includes('rapor_baslayis')) {
     subjectStr = `${personnelName} Göreve Başlama`;
-    bodyParagraph = `İlgi sayılı yazımız ile ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz Bilgi İşlem Müdürlüğümüzde görev yapan ${unvan} (${sicilNo}) ${personnelName} ${donusNotu} ${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
+    bodyParagraph = `İlgi sayılı yazımız ile ${raporKurum} tarafından verilen ${gunMetni} günlük istirahat raporuyla görevinden ayrılışını bildirdiğimiz ${birim}müzde görev yapan ${unvan} ${personnelName} (${sicilNo}) ${notuPart}${formatDateTR(baslayisTarihi)} tarihinde görevine başlamıştır.`;
   }
 
   const isBaslayis = docType.includes('baslayis');
@@ -256,7 +258,7 @@ export function buildUdfXml(payload) {
     const lineLen = text.length + 1;
     const boldStr = bold ? 'true' : 'false';
 
-    elementsXml += `<paragraph resolver="hvl-default" Alignment="${align}" FirstLineIndent="${indent}" SpaceBelow="1.0" LineSpacing="0.0" RightIndent="0.0" LeftIndent="0.0" SpaceAbove="1.0"><content resolver="hvl-default" family="Times New Roman" size="${size}" bold="${boldStr}" startOffset="${currentOffset}" length="${lineLen}" /></paragraph>\n`;
+    elementsXml += `<paragraph resolver="hvl-default" Alignment="${align}" FirstLineIndent="${indent}" SpaceBelow="1.0" LineSpacing="0.0" RightIndent="0.0" LeftIndent="0.0" SpaceAbove="0.0"><content resolver="hvl-default" family="Times New Roman" size="${size}" bold="${boldStr}" startOffset="${currentOffset}" length="${lineLen}" /></paragraph>\n`;
     
     currentOffset += lineLen;
   });

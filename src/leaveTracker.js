@@ -42,6 +42,38 @@ export function isWeekendOrHoliday(date) {
 }
 
 /**
+ * Determines whether the return shift was caused by a Public Holiday or a Weekend
+ * Returns 'resmi tatili müteakiben', 'hafta sonunu müteakip', or ''
+ */
+export function getReturnReasonNotu(startDateStr, days) {
+  if (!startDateStr || !days) return 'hafta sonunu müteakip';
+  const d = new Date(startDateStr);
+  if (isNaN(d.getTime())) return 'hafta sonunu müteakip';
+
+  d.setDate(d.getDate() + parseInt(days, 10));
+
+  let hitHoliday = false;
+  let hitWeekend = false;
+
+  while (isWeekendOrHoliday(d)) {
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      hitWeekend = true;
+    } else {
+      hitHoliday = true; // Weekday public holiday
+    }
+    d.setDate(d.getDate() + 1);
+  }
+
+  if (hitHoliday) {
+    return 'resmi tatili müteakiben';
+  } else if (hitWeekend) {
+    return 'hafta sonunu müteakip';
+  }
+  return '';
+}
+
+/**
  * Calculates expected return date based on start date and number of days.
  * Automatically shifts return date past Weekends AND Official Public Holidays to the first working day.
  */
