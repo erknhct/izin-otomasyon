@@ -34,7 +34,7 @@ export function formatDateTR(dateStr) {
 }
 
 /**
- * Generates Plain Text with exact space padding to match UYAP page centering & right-alignment when pasted
+ * Generates Plain Text with exact UYAP Tab stops (\t) for recipient centering and signature right alignment
  */
 export function generatePlainUdfText(payload) {
   const {
@@ -104,16 +104,11 @@ export function generatePlainUdfText(payload) {
   const isBaslayis = docType.includes('baslayis');
   const isRaporAyrilis = docType.includes('rapor_ayrilis');
 
-  // Page width target for UYAP Editor ~68 chars
-  const UYAP_LINE_WIDTH = 68;
-
   let text = `Konu : ${subjectStr}\n\n\n\n`;
 
-  // Center recipient title lines with leading spaces
+  // 4 Tabs (\t\t\t\t) = 5.0 cm tab stop in UYAP Editor for recipient title centering
   destTitleLines.forEach(l => {
-    const trimmed = l.trim();
-    const padLen = Math.max(0, Math.floor((UYAP_LINE_WIDTH - trimmed.length) / 2));
-    text += ' '.repeat(padLen) + trimmed + '\n';
+    text += `\t\t\t\t${l.trim()}\n`;
   });
   text += '\n';
 
@@ -121,18 +116,13 @@ export function generatePlainUdfText(payload) {
     text += `İlgi     : ${ilgiEvrak.trim()}\n\n`;
   }
 
-  // Paragraph indents: 8 spaces (1.25 cm)
-  text += `        ${bodyParagraph}\n`;
-  text += `        ${closingSentence}\n\n\n`;
+  // 1 Tab (\t) = 1.25 cm tab stop in UYAP Editor for paragraph first line indent
+  text += `\t${bodyParagraph}\n`;
+  text += `\t${closingSentence}\n\n\n`;
 
-  // Right-align signature block
-  const nameTrimmed = imzalayanAd.trim();
-  const titleTrimmed = imzalayanUnvan.trim();
-  const namePad = Math.max(0, UYAP_LINE_WIDTH - nameTrimmed.length - 2);
-  const titlePad = Math.max(0, UYAP_LINE_WIDTH - titleTrimmed.length - 2);
-
-  text += ' '.repeat(namePad) + nameTrimmed + '\n';
-  text += ' '.repeat(titlePad) + titleTrimmed + '\n';
+  // 8 Tabs + spaces for signature right-alignment in UYAP Editor
+  text += `\t\t\t\t\t\t\t\t          ${imzalayanAd.trim()}\n`;
+  text += `\t\t\t\t\t\t\t\t         ${imzalayanUnvan.trim()}\n`;
 
   if (isRaporAyrilis) {
     text += `\nEk      : ${ekBelge}\n`;
