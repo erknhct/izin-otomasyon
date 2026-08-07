@@ -34,7 +34,7 @@ export function formatDateTR(dateStr) {
 }
 
 /**
- * Generates Plain Text with exact UYAP Tab stops (\t) for recipient centering and signature right alignment
+ * Generates exact UYAP template CDATA text matching original UYAP XML files
  */
 export function generatePlainUdfText(payload) {
   const {
@@ -64,8 +64,8 @@ export function generatePlainUdfText(payload) {
 
   if (aliciMakam === 'komisyon') {
     destTitleLines = [
-      "ANKARA ADLÎ YARGI",
-      "İLK DERECE MAHKEMESİ",
+      "ANKARA ADLÎ YARGI ",
+      "İLK DERECE MAHKEMESİ ",
       "ADALET KOMİSYONU BAŞKANLIĞI'NA"
     ];
     closingSentence = "Bilgilerinize arz olunur.";
@@ -78,7 +78,7 @@ export function generatePlainUdfText(payload) {
   } else {
     destTitleLines = aliciMakamOzel.split('\n').filter(l => l.trim());
     if (destTitleLines.length === 0) {
-      destTitleLines = ["ANKARA ADLÎ YARGI", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
+      destTitleLines = ["ANKARA ADLÎ YARGI ", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
     }
   }
 
@@ -105,24 +105,16 @@ export function generatePlainUdfText(payload) {
   const isRaporAyrilis = docType.includes('rapor_ayrilis');
 
   let text = `Konu : ${subjectStr}\n\n\n\n`;
-
-  // 4 Tabs (\t\t\t\t) = 5.0 cm tab stop in UYAP Editor for recipient title centering
-  destTitleLines.forEach(l => {
-    text += `\t\t\t\t${l.trim()}\n`;
-  });
-  text += '\n';
+  text += destTitleLines.join('\n') + '\n\t\n';
 
   if (isBaslayis && ilgiEvrak && ilgiEvrak.trim()) {
     text += `İlgi     : ${ilgiEvrak.trim()}\n\n`;
   }
 
-  // 1 Tab (\t) = 1.25 cm tab stop in UYAP Editor for paragraph first line indent
   text += `\t${bodyParagraph}\n`;
-  text += `\t${closingSentence}\n\n\n`;
-
-  // 8 Tabs + spaces for signature right-alignment in UYAP Editor
-  text += `\t\t\t\t\t\t\t\t          ${imzalayanAd.trim()}\n`;
-  text += `\t\t\t\t\t\t\t\t         ${imzalayanUnvan.trim()}\n`;
+  text += `\t${closingSentence}\n\t\t\t\n\t\t\t\n`;
+  text += `\t\t\t                                    ${imzalayanAd}\n`;
+  text += `\t\t\t                                   ${imzalayanUnvan}\n`;
 
   if (isRaporAyrilis) {
     text += `\nEk      : ${ekBelge}\n`;
