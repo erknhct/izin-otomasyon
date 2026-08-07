@@ -1,4 +1,4 @@
-import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, generatePlainUdfText, formatDateTR } from './udfGenerator.js';
+import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, formatDateTR } from './udfGenerator.js';
 import {
   initStorage, exportDbJsonFile, importDbJsonData,
   getPersonnelList, savePersonnelList,
@@ -294,16 +294,6 @@ function setupWizardForm() {
       const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
       await downloadUdfFile(payload, filename);
       showToast(`${filename} UDF olarak indirildi!`, 'success');
-    });
-
-    document.getElementById('btn-copy-udf-text')?.addEventListener('click', async () => {
-      const plainText = generatePlainUdfText(payload);
-      try {
-        await navigator.clipboard.writeText(plainText);
-        showToast('📋 UYAP metni birebir tab yapısıyla kopyalandı! UYAP Editörüne yapıştırabilirsiniz.', 'success');
-      } catch (err) {
-        showToast('Kopyalama başarısız oldu.', 'danger');
-      }
     });
   });
 
