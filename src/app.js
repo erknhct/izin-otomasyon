@@ -1737,7 +1737,7 @@ function exportReportsPdf() {
       <div class="kpi-container">
         <div class="kpi-box" style="border-left: 4px solid #ef4444;">
           <div class="kpi-val" style="color: #dc2626;">${totalRaporDays} Gün</div>
-          <div class="kpi-lbl">Toplam Sıhhi İzin / Rapor (${totalRaporCount} Kez)</div>
+          <div class="kpi-lbl">Toplam İstirahat İzni / Rapor (${totalRaporCount} Kez)</div>
         </div>
         <div class="kpi-box" style="border-left: 4px solid #4f46e5;">
           <div class="kpi-val">${totalYillikDays} Gün</div>
