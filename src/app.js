@@ -23,8 +23,84 @@ let currentTheme = localStorage.getItem('udf_theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 updateThemeToggleUI();
 
-// Initialize App
-document.addEventListener('DOMContentLoaded', async () => {
+// =============================================
+// GÜVENLİK - GİRİŞ SİSTEMİ
+// =============================================
+const DEFAULT_PASSWORD = 'ankara2025';   // Varsayılan şifre (Ayarlar'dan değiştirilebilir)
+const SESSION_KEY      = 'udf_session_auth';
+const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 saat (ms)
+
+function getStoredPassword() {
+  return localStorage.getItem('udf_app_password') || DEFAULT_PASSWORD;
+}
+
+function isSessionValid() {
+  const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+  if (!session) return false;
+  return (Date.now() - session.ts) < SESSION_DURATION;
+}
+
+function createSession() {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ ts: Date.now() }));
+}
+
+function destroySession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
+window.handleLogin = function() {
+  const input = document.getElementById('login-password-input');
+  const errEl = document.getElementById('login-error');
+  if (input.value === getStoredPassword()) {
+    createSession();
+    const loginScreen = document.getElementById('login-screen');
+    loginScreen.style.opacity = '0';
+    loginScreen.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => {
+      loginScreen.style.display = 'none';
+      initApp(); // Şifre doğrulandı → Uygulamayı başlat
+    }, 400);
+    input.value = '';
+    errEl.style.display = 'none';
+  } else {
+    errEl.style.display = 'block';
+    input.value = '';
+    input.focus();
+    input.style.borderColor = 'rgba(239,68,68,0.6)';
+    setTimeout(() => input.style.borderColor = 'rgba(255,255,255,0.15)', 1500);
+  }
+};
+
+window.logoutApp = function() {
+  destroySession();
+  location.reload();
+};
+
+window.changeAppPassword = function() {
+  const current = document.getElementById('sec-current-pw')?.value || '';
+  const newPw   = document.getElementById('sec-new-pw')?.value || '';
+  const newPw2  = document.getElementById('sec-new-pw2')?.value || '';
+
+  if (current !== getStoredPassword()) {
+    showToast('Mevcut şifre hatalı!', 'danger');
+    return;
+  }
+  if (newPw.length < 6) {
+    showToast('Yeni şifre en az 6 karakter olmalıdır!', 'warning');
+    return;
+  }
+  if (newPw !== newPw2) {
+    showToast('Yeni şifreler eşleşmiyor!', 'warning');
+    return;
+  }
+  localStorage.setItem('udf_app_password', newPw);
+  document.getElementById('sec-current-pw').value = '';
+  document.getElementById('sec-new-pw').value = '';
+  document.getElementById('sec-new-pw2').value = '';
+  showToast('✅ Şifre başarıyla güncellendi! Bir sonraki girişte yeni şifreyi kullanın.', 'success');
+};
+
+async function initApp() {
   setupNavigation();
   setupThemeToggle();
   setupModalEvents();
@@ -46,6 +122,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       exportReportsPdf();
     }
   });
+}
+
+// Initialize App
+document.addEventListener('DOMContentLoaded', async () => {
+  const loginScreen = document.getElementById('login-screen');
+  if (!isSessionValid()) {
+    loginScreen.style.display = 'flex';
+    setTimeout(() => document.getElementById('login-password-input').focus(), 100);
+    return;
+  }
+  if (loginScreen) loginScreen.style.display = 'none';
+  await initApp();
 });
 
 // Toast System
