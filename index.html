@@ -15,8 +15,10 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="brand-header">
-        <img src="/logo.png" class="brand-logo" alt="Ankara Adliyesi Bilgi İşlem Müdürlüğü" />
-        <div>
+        <div class="brand-logo-wrapper">
+          <img src="/logo.png" class="brand-logo" alt="Ankara Adliyesi Bilgi İşlem Müdürlüğü" />
+        </div>
+        <div class="brand-info">
           <div class="brand-title">İZİN TAKİP OTOMASYONU</div>
           <div class="brand-subtitle">Ankara Adliyesi Bilgi İşlem Müdürlüğü</div>
         </div>
@@ -24,20 +26,20 @@
 
       <nav class="nav-menu">
         <a class="nav-item active" data-view="dashboard">
-          <i class="fa-solid fa-chart-line"></i>
+          <div class="nav-icon"><i class="fa-solid fa-chart-line"></i></div>
           <span>Ana Sayfa</span>
         </a>
         <a class="nav-item" data-view="leaves">
-          <i class="fa-solid fa-calendar-check"></i>
+          <div class="nav-icon"><i class="fa-solid fa-calendar-check"></i></div>
           <span>İzinler & Başlayış Takibi</span>
           <span class="nav-badge" id="nav-pending-badge" style="display: none;">0</span>
         </a>
         <a class="nav-item" data-view="personnel">
-          <i class="fa-solid fa-users"></i>
+          <div class="nav-icon"><i class="fa-solid fa-users"></i></div>
           <span>Personel Listesi (50)</span>
         </a>
         <a class="nav-item" data-view="settings">
-          <i class="fa-solid fa-sliders"></i>
+          <div class="nav-icon"><i class="fa-solid fa-sliders"></i></div>
           <span>Şablon & İzin Türü Ayarları</span>
         </a>
       </nav>
