@@ -84,6 +84,7 @@ function switchView(viewName) {
     dashboard: '<i class="fa-solid fa-house" style="color: var(--accent-primary);"></i> Ana Sayfa',
     leaves: '<i class="fa-solid fa-calendar-check" style="color: var(--accent-primary);"></i> İzin Kayıtları Geçmişi',
     personnel: '<i class="fa-solid fa-users" style="color: var(--accent-primary);"></i> Personel Listesi (50)',
+    reports: '<i class="fa-solid fa-chart-pie" style="color: var(--accent-primary);"></i> Raporlar & Analizler',
     settings: '<i class="fa-solid fa-sliders" style="color: var(--accent-primary);"></i> Şablon & İzin Türü Ayarları'
   };
   const topTitle = document.getElementById('top-view-title');
@@ -94,6 +95,7 @@ function switchView(viewName) {
   if (viewName === 'dashboard') renderDashboard();
   if (viewName === 'leaves') renderLeavesTable();
   if (viewName === 'personnel') renderPersonnelTable();
+  if (viewName === 'reports') renderReports();
   if (viewName === 'settings') renderSettings();
 }
 
@@ -1299,6 +1301,369 @@ function renderSettings() {
       reader.readAsText(file);
     });
   }
+}
+
+// 6. REPORTS & ANALYTICS
+function renderReports() {
+  const personnelList = getPersonnelList();
+  const allRecords = getLeaveRecords();
+  const leaveTypes = getLeaveTypes();
+
+  // Populate report type filter dropdown
+  const typeFilterSelect = document.getElementById('report-type-filter');
+  if (typeFilterSelect && typeFilterSelect.options.length <= 1) {
+    typeFilterSelect.innerHTML = `<option value="">Tüm İzin Türleri</option>` +
+      leaveTypes.map(l => `<option value="${l.code}">${l.name}</option>`).join('');
+  }
+
+  // Attach search and filter event listeners
+  const searchInput = document.getElementById('report-search-personnel');
+  if (searchInput && !searchInput.dataset.hasListener) {
+    searchInput.dataset.hasListener = "true";
+    searchInput.addEventListener('input', renderReports);
+  }
+
+  if (typeFilterSelect && !typeFilterSelect.dataset.hasListener) {
+    typeFilterSelect.dataset.hasListener = "true";
+    typeFilterSelect.addEventListener('change', renderReports);
+  }
+
+  const exportBtn = document.getElementById('btn-export-reports-csv');
+  if (exportBtn && !exportBtn.dataset.hasListener) {
+    exportBtn.dataset.hasListener = "true";
+    exportBtn.addEventListener('click', exportReportsCsv);
+  }
+
+  const printBtn = document.getElementById('btn-print-reports');
+  if (printBtn && !printBtn.dataset.hasListener) {
+    printBtn.dataset.hasListener = "true";
+    printBtn.addEventListener('click', () => {
+      window.print();
+    });
+  }
+
+  const searchQuery = (searchInput?.value || '').toLowerCase();
+  const typeFilter = typeFilterSelect?.value || '';
+
+  let totalRaporCount = 0;
+  let totalRaporDays = 0;
+  let totalYillikDays = 0;
+  let totalAllDays = 0;
+
+  const personStats = personnelList.map(p => {
+    const pRecords = allRecords.filter(r => r.personnelId === p.id);
+
+    let pRaporCount = 0;
+    let pRaporDays = 0;
+    let pYillikCount = 0;
+    let pYillikDays = 0;
+    let pOtherCount = 0;
+    let pOtherDays = 0;
+
+    pRecords.forEach(r => {
+      const code = (r.leaveType || '').toLowerCase();
+      const name = (r.leaveTypeName || '').toLowerCase();
+      const days = parseInt(r.days || 0, 10);
+
+      if (code === 'rapor' || name.includes('rapor') || name.includes('sağlık')) {
+        pRaporCount++;
+        pRaporDays += days;
+      } else if (code === 'yillik' || name.includes('yıllık') || name.includes('yillik')) {
+        pYillikCount++;
+        pYillikDays += days;
+      } else {
+        pOtherCount++;
+        pOtherDays += days;
+      }
+    });
+
+    const pTotalCount = pRaporCount + pYillikCount + pOtherCount;
+    const pTotalDays = pRaporDays + pYillikDays + pOtherDays;
+
+    totalRaporCount += pRaporCount;
+    totalRaporDays += pRaporDays;
+    totalYillikDays += pYillikDays;
+    totalAllDays += pTotalDays;
+
+    return {
+      person: p,
+      raporCount: pRaporCount,
+      raporDays: pRaporDays,
+      yillikCount: pYillikCount,
+      yillikDays: pYillikDays,
+      otherCount: pOtherCount,
+      otherDays: pOtherDays,
+      totalCount: pTotalCount,
+      totalDays: pTotalDays,
+      records: pRecords
+    };
+  });
+
+  // KPI Cards Rendering
+  const kpiGrid = document.getElementById('reports-kpi-grid');
+  if (kpiGrid) {
+    const raporAlanPersonelSayisi = personStats.filter(s => s.raporCount > 0).length;
+    const maxRaporPerson = [...personStats].sort((a,b) => b.raporDays - a.raporDays)[0];
+
+    kpiGrid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-icon danger">
+          <i class="fa-solid fa-stethoscope"></i>
+        </div>
+        <div>
+          <div class="stat-value" style="color: #ef4444;">${totalRaporDays} Gün</div>
+          <div class="stat-label">Toplam Rapor Süresi (${raporAlanPersonelSayisi} Personel - ${totalRaporCount} Kez)</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon primary">
+          <i class="fa-solid fa-umbrella-beach"></i>
+        </div>
+        <div>
+          <div class="stat-value">${totalYillikDays} Gün</div>
+          <div class="stat-label">Toplam Kullanılan Yıllık İzin</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon warning">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div>
+          <div class="stat-value">${totalAllDays} Gün</div>
+          <div class="stat-label">Genel İzin & Rapor Gün Toplamı</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon info">
+          <i class="fa-solid fa-user-ninja"></i>
+        </div>
+        <div>
+          <div class="stat-value" style="font-size: 1.05rem; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px;">
+            ${maxRaporPerson && maxRaporPerson.raporDays > 0 ? maxRaporPerson.person.name : 'Rapor Yok'}
+          </div>
+          <div class="stat-label">En Çok Rapor Alan (${maxRaporPerson ? maxRaporPerson.raporDays : 0} Gün / ${maxRaporPerson ? maxRaporPerson.raporCount : 0} Kez)</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Filtered Person Stats Table
+  const filteredPersonStats = personStats.filter(s => {
+    const matchesSearch = !searchQuery || 
+      s.person.name.toLowerCase().includes(searchQuery) || 
+      s.person.sicil.includes(searchQuery);
+    
+    if (!matchesSearch) return false;
+    if (typeFilter === 'rapor') return s.raporCount > 0;
+    if (typeFilter === 'yillik') return s.yillikCount > 0;
+    if (typeFilter) return s.otherCount > 0;
+    return true;
+  }).sort((a,b) => b.totalDays - a.totalDays);
+
+  const tbody = document.querySelector('#table-reports tbody');
+  if (tbody) {
+    if (filteredPersonStats.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Arama kriterlerine uygun personel kaydı bulunamadı.</td></tr>`;
+    } else {
+      tbody.innerHTML = filteredPersonStats.map(s => `
+        <tr>
+          <td><strong>${s.person.name}</strong></td>
+          <td>${s.person.sicil}</td>
+          <td><small style="color: var(--text-muted);">${s.person.title}</small></td>
+          <td>
+            ${s.raporCount > 0 
+              ? `<span class="badge badge-danger" style="font-weight: 700;"><i class="fa-solid fa-stethoscope"></i> ${s.raporCount} Kez (${s.raporDays} Gün)</span>` 
+              : `<small style="color: var(--text-muted);">0 Kez</small>`}
+          </td>
+          <td>
+            ${s.yillikCount > 0 
+              ? `<span class="badge badge-info" style="font-weight: 700;"><i class="fa-solid fa-umbrella-beach"></i> ${s.yillikCount} Kez (${s.yillikDays} Gün)</span>` 
+              : `<small style="color: var(--text-muted);">0 Kez</small>`}
+          </td>
+          <td>
+            ${s.otherCount > 0 
+              ? `<span class="badge badge-warning" style="font-weight: 700;">${s.otherCount} Kez (${s.otherDays} Gün)</span>` 
+              : `<small style="color: var(--text-muted);">0 Kez</small>`}
+          </td>
+          <td>
+            <strong>${s.totalDays} Gün</strong> <small style="color: var(--text-muted);">(${s.totalCount} Kez)</small>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-primary btn-view-person-history" data-person-id="${s.person.id}">
+              <i class="fa-solid fa-list-check"></i> Detay Geçmiş (${s.records.length})
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('.btn-view-person-history').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const personId = btn.getAttribute('data-person-id');
+          openPersonHistoryModal(personId);
+        });
+      });
+    }
+  }
+
+  // Type Distribution Bars
+  const typeDistContainer = document.getElementById('reports-type-distribution');
+  if (typeDistContainer) {
+    const typeMap = {};
+    allRecords.forEach(r => {
+      const typeName = r.leaveTypeName || 'Diğer';
+      const days = parseInt(r.days || 0, 10);
+      if (!typeMap[typeName]) typeMap[typeName] = { count: 0, days: 0 };
+      typeMap[typeName].count++;
+      typeMap[typeName].days += days;
+    });
+
+    const typeList = Object.entries(typeMap).sort((a,b) => b[1].days - a[1].days);
+
+    typeDistContainer.innerHTML = typeList.map(([name, data]) => {
+      const percentage = totalAllDays > 0 ? Math.round((data.days / totalAllDays) * 100) : 0;
+      return `
+        <div style="margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.35rem;">
+            <strong>${name}</strong>
+            <span><strong>${data.days} Gün</strong> (${data.count} İzin / %${percentage})</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; overflow: hidden;">
+            <div style="width: ${percentage}%; height: 100%; background: linear-gradient(90deg, var(--accent-primary), #a855f7); border-radius: 4px;"></div>
+          </div>
+        </div>
+      `;
+    }).join('') || '<p style="color: var(--text-muted);">Henüz izin verisi yok.</p>';
+  }
+
+  // Top 5 Users List
+  const topUsersContainer = document.getElementById('reports-top-users');
+  if (topUsersContainer) {
+    const top5 = [...personStats].filter(s => s.totalDays > 0).sort((a,b) => b.totalDays - a.totalDays).slice(0, 5);
+
+    topUsersContainer.innerHTML = top5.map((s, idx) => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="width: 26px; height: 26px; border-radius: 50%; background: ${idx === 0 ? '#f59e0b' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : 'rgba(255,255,255,0.1)'}; color: #fff; font-weight: 800; font-size: 0.8rem; display: flex; align-items: center; justify-content: center;">${idx + 1}</span>
+          <div>
+            <strong>${s.person.name}</strong><br>
+            <small style="color: var(--text-muted);">${s.person.title} | ${s.raporCount} Rapor (${s.raporDays} Gün)</small>
+          </div>
+        </div>
+        <span class="badge badge-info" style="font-size: 0.85rem; font-weight: 800;">${s.totalDays} Gün İzin</span>
+      </div>
+    `).join('') || '<p style="color: var(--text-muted);">Henüz izin alan personel yok.</p>';
+  }
+}
+
+function openPersonHistoryModal(personId) {
+  const person = getPersonnelList().find(p => p.id === personId);
+  if (!person) return;
+
+  const records = getLeaveRecords().filter(r => r.personnelId === personId).sort((a,b) => (a.ayrilisDate < b.ayrilisDate ? 1 : -1));
+
+  let totalDays = 0;
+  let totalRaporDays = 0;
+  records.forEach(r => {
+    const days = parseInt(r.days || 0, 10);
+    totalDays += days;
+    const code = (r.leaveType || '').toLowerCase();
+    const name = (r.leaveTypeName || '').toLowerCase();
+    if (code === 'rapor' || name.includes('rapor') || name.includes('sağlık')) {
+      totalRaporDays += days;
+    }
+  });
+
+  const rows = records.map(r => `
+    <tr>
+      <td><span class="badge badge-info">${r.leaveTypeName}</span></td>
+      <td><strong>${r.days} Gün</strong></td>
+      <td>${formatDateTR(r.ayrilisDate)}</td>
+      <td>${formatDateTR(r.expectedReturnDate)}</td>
+      <td>${r.baslayisDate ? formatDateTR(r.baslayisDate) : '-'}</td>
+      <td>
+        ${r.status === 'baslayis_yapildi' 
+          ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>' 
+          : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İzinde (Ayrılış Yapıldı)</span>'}
+      </td>
+    </tr>
+  `).join('');
+
+  const modalHtml = `
+    <div style="padding: 0.5rem 0;">
+      <div style="display: flex; gap: 1rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); padding: 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem;">
+        <div>
+          <h4 style="margin: 0 0 0.25rem 0; font-size: 1.05rem;">${person.name} (${person.sicil})</h4>
+          <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;">${person.title} - ${person.birim}</p>
+        </div>
+        <div style="margin-left: auto; text-align: right;">
+          <span class="badge badge-danger" style="font-size: 0.85rem; font-weight: 700;">Rapor: ${totalRaporDays} Gün</span>
+          <span class="badge badge-info" style="font-size: 0.85rem; font-weight: 700; margin-left: 0.3rem;">Genel Toplam: ${totalDays} Gün</span>
+        </div>
+      </div>
+
+      <div class="table-container" style="max-height: 350px; overflow-y: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>İzin Türü</th>
+              <th>Süre</th>
+              <th>Ayrılış Tarihi</th>
+              <th>Tahmini Başlayış</th>
+              <th>Fiili Başlayış</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${records.length > 0 ? rows : '<tr><td colspan="6" style="text-align:center; padding:1rem; color:var(--text-muted);">Bu personele ait geçmiş izin kaydı bulunmamaktadır.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  openModal(`📊 ${person.name} - İzin & Rapor Geçmişi Detayı`, modalHtml);
+}
+
+function exportReportsCsv() {
+  const personnelList = getPersonnelList();
+  const allRecords = getLeaveRecords();
+
+  let csvContent = "\uFEFFSicil No,Adı Soyadı,Unvanı,Birim,Rapor Sayısı,Toplam Rapor Günü,Yıllık İzin Sayısı,Toplam Yıllık İzin Günü,Diğer İzin Sayısı,Diğer İzin Günü,Genel İzin Gün Toplamı\n";
+
+  personnelList.forEach(p => {
+    const pRecords = allRecords.filter(r => r.personnelId === p.id);
+    let rCount = 0, rDays = 0, yCount = 0, yDays = 0, oCount = 0, oDays = 0;
+
+    pRecords.forEach(r => {
+      const code = (r.leaveType || '').toLowerCase();
+      const name = (r.leaveTypeName || '').toLowerCase();
+      const days = parseInt(r.days || 0, 10);
+
+      if (code === 'rapor' || name.includes('rapor')) {
+        rCount++; rDays += days;
+      } else if (code === 'yillik' || name.includes('yıllık')) {
+        yCount++; yDays += days;
+      } else {
+        oCount++; oDays += days;
+      }
+    });
+
+    const totalDays = rDays + yDays + oDays;
+    csvContent += `"${p.sicil}","${p.name}","${p.title}","${p.birim}",${rCount},${rDays},${yCount},${yDays},${oCount},${oDays},${totalDays}\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `Personel_Izin_ve_Rapor_Analiz_Raporu_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  showToast('📊 Personel İzin & Rapor Analiz Raporu Excel/CSV olarak indirildi.', 'success');
 }
 
 // Helper

@@ -38,6 +38,10 @@
           <div class="nav-icon"><i class="fa-solid fa-users"></i></div>
           <span>Personel Listesi (50)</span>
         </a>
+        <a class="nav-item" data-view="reports">
+          <div class="nav-icon"><i class="fa-solid fa-chart-pie"></i></div>
+          <span>Raporlar & Analizler</span>
+        </a>
         <a class="nav-item" data-view="settings">
           <div class="nav-icon"><i class="fa-solid fa-sliders"></i></div>
           <span>Şablon & İzin Türü Ayarları</span>
@@ -350,6 +354,84 @@
                 <!-- Dynamically filled -->
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- REPORTS & ANALYTICS VIEW -->
+      <section id="view-reports" class="view-section">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">İzin & Rapor İstatistikleri Analiz Paneli</h1>
+            <p class="page-description">Personel bazlı izin/rapor kullanım sayıları, gün toplamları ve kurumsal dökümler</p>
+          </div>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="btn btn-secondary" id="btn-export-reports-csv">
+              <i class="fa-solid fa-file-excel" style="color: #10b981;"></i> Excel / CSV İndir
+            </button>
+            <button class="btn btn-primary" id="btn-print-reports">
+              <i class="fa-solid fa-print"></i> Raporu Yazdır
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. KPI Cards -->
+        <div class="stats-grid" id="reports-kpi-grid">
+          <!-- Filled dynamically -->
+        </div>
+
+        <!-- 2. Filters & Personnel Analysis Table -->
+        <div class="glass-card">
+          <div class="card-title" style="flex-wrap: wrap; gap: 1rem;">
+            <span><i class="fa-solid fa-user-gear" style="color: var(--accent-primary); margin-right: 8px;"></i> Personel İzin & Rapor Kullanım Analizi</span>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+              <input type="text" id="report-search-personnel" placeholder="Personel Adı / Sicil Ara..." style="width: 220px;" />
+              <select id="report-type-filter" style="width: 180px;">
+                <option value="">Tüm İzin Türleri</option>
+                <!-- Filled dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="table-reports">
+              <thead>
+                <tr>
+                  <th>Personel</th>
+                  <th>Sicil No</th>
+                  <th>Unvan</th>
+                  <th><i class="fa-solid fa-stethoscope" style="color: #ef4444;"></i> Rapor (Kez / Gün)</th>
+                  <th><i class="fa-solid fa-umbrella-beach" style="color: var(--accent-primary);"></i> Yıllık İzin (Kez / Gün)</th>
+                  <th><i class="fa-solid fa-calendar-minus" style="color: var(--accent-warning);"></i> Diğer İzinler</th>
+                  <th>Toplam Kullanılan</th>
+                  <th>İşlem</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Filled dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. Leave Type Summary & Distribution Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+          <div class="glass-card">
+            <div class="card-title">
+              <span><i class="fa-solid fa-chart-bar" style="color: var(--accent-warning); margin-right: 8px;"></i> İzin Türlerine Göre Genel Dağılım</span>
+            </div>
+            <div id="reports-type-distribution">
+              <!-- Dynamic bar list -->
+            </div>
+          </div>
+
+          <div class="glass-card">
+            <div class="card-title">
+              <span><i class="fa-solid fa-user-clock" style="color: var(--accent-success); margin-right: 8px;"></i> En Çok İzin & Rapor Kullananlar (Top 5)</span>
+            </div>
+            <div id="reports-top-users">
+              <!-- Dynamic list -->
+            </div>
           </div>
         </div>
       </section>
