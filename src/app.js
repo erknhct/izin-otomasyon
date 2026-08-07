@@ -1754,16 +1754,14 @@ function exportReportsPdf() {
         </thead>
         <tbody>
           ${rowsHtml}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="5" style="text-align: right;">TOPLAM KURUMSAL KULLANIM:</td>
-            <td style="text-align: center; color: #dc2626;">${totalRaporDays} Gün</td>
-            <td style="text-align: center;">${totalYillikDays} Gün</td>
-            <td style="text-align: center;">${totalOtherDays} Gün</td>
-            <td style="text-align: center; color: #be123c; font-size: 11pt;">${totalAllDays} Gün</td>
+          <tr style="background: #f1f5f9; font-weight: 800; border-top: 2px solid #0f172a;">
+            <td colspan="5" style="text-align: right; padding: 10px 6px;">TOPLAM KURUMSAL KULLANIM:</td>
+            <td style="text-align: center; color: #dc2626; padding: 10px 6px;">${totalRaporDays} Gün</td>
+            <td style="text-align: center; padding: 10px 6px;">${totalYillikDays} Gün</td>
+            <td style="text-align: center; padding: 10px 6px;">${totalOtherDays} Gün</td>
+            <td style="text-align: center; color: #be123c; font-size: 11pt; padding: 10px 6px;">${totalAllDays} Gün</td>
           </tr>
-        </tfoot>
+        </tbody>
       </table>
 
       <div class="signature-area">
@@ -1773,19 +1771,39 @@ function exportReportsPdf() {
           <div class="signature-name">Erkan HACAT</div>
         </div>
       </div>
-
-      <script>
-        window.onload = function() {
-          window.print();
-        };
-      </script>
     </body>
     </html>
   `;
 
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(pdfHtml);
-  printWindow.document.close();
+  // Use hidden iframe to avoid blocking parent window event loop
+  let printIframe = document.getElementById('report-print-iframe');
+  if (printIframe) {
+    printIframe.remove();
+  }
+  printIframe = document.createElement('iframe');
+  printIframe.id = 'report-print-iframe';
+  printIframe.style.position = 'fixed';
+  printIframe.style.right = '0';
+  printIframe.style.bottom = '0';
+  printIframe.style.width = '0';
+  printIframe.style.height = '0';
+  printIframe.style.border = '0';
+  printIframe.style.visibility = 'hidden';
+  document.body.appendChild(printIframe);
+
+  const iframeDoc = printIframe.contentWindow.document;
+  iframeDoc.open();
+  iframeDoc.write(pdfHtml);
+  iframeDoc.close();
+
+  setTimeout(() => {
+    try {
+      printIframe.contentWindow.focus();
+      printIframe.contentWindow.print();
+    } catch (e) {
+      console.error(e);
+    }
+  }, 250);
 }
 
 // Helper
