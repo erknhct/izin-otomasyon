@@ -481,9 +481,9 @@
       "expectedReturnDate": "2026-08-24",
       "raporKurum": "Sağlık Bakanlığı Ankara Etlik Şehir Hastanesi",
       "aliciMakam": "bakanlik",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-24"
     },
     {
       "id": "rec-1786134596080",

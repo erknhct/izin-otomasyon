@@ -561,3 +561,39 @@ input:focus, select:focus, textarea:focus {
   from { transform: translateX(100%); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+/* Footer Professional Layout */
+.app-footer {
+  text-align: center;
+  padding: 2.25rem 1rem 1.5rem 1rem;
+  margin-top: 3.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.footer-copyright {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  letter-spacing: 0.08em;
+}
+
+.footer-institution {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: 0.02em;
+}
+
+.footer-author {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.footer-author strong {
+  color: inherit;
+  font-weight: 700;
+}
