@@ -1427,10 +1427,7 @@ function renderReports() {
     typeFilterSelect.addEventListener('change', renderReports);
   }
 
-  const exportPdfBtn = document.getElementById('btn-export-reports-pdf');
-  if (exportPdfBtn) {
-    exportPdfBtn.onclick = exportReportsPdf;
-  }
+
 
   const searchQuery = (searchInput?.value || '').toLowerCase();
   const typeFilter = typeFilterSelect?.value || '';

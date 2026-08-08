@@ -477,6 +477,23 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786147105736",
+      "personnelId": "19",
+      "personnelName": "Seda ÖZDEMİR",
+      "sicil": "231334",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "rapor",
+      "leaveTypeName": "İstirahat Raporu / Sağlık İzni",
+      "days": 4,
+      "ayrilisDate": "2026-08-07",
+      "expectedReturnDate": "2026-08-11",
+      "raporKurum": "",
+      "aliciMakam": "bakanlik",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786143389611",
       "personnelId": "4",
       "personnelName": "Hasan KARAKOÇLAR",
@@ -680,5 +697,6 @@
       "baslayisEvrakNo": null,
       "baslayisDate": "2026-08-10"
     }
-  ]
+  ],
+  "appPassword": "ankara2025"
 }
