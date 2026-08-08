@@ -1,0 +1,84 @@
+=========================================================
+      İZİN VE MESAİ OTOMASYONU - İLK KURULUM REHBERİ
+=========================================================
+
+Bu rehber, otomasyon sistemini ister tek başınıza kendi bilgisayarınızda, 
+isterseniz ofisteki/kalemdeki 3-4 farklı bilgisayarda ortaklaşa nasıl 
+kullanacağınızı adım adım anlatmaktadır.
+
+---------------------------------------------------------
+DURUM 1: SADECE KENDİ BİLGİSAYARIMDA (TEK KULLANICI)
+---------------------------------------------------------
+Eğer sistemi sadece kendi bilgisayarınızda kullanacaksanız, herhangi bir 
+uzak sunucu kurmanıza veya karmaşık ayarlara ihtiyacınız yoktur. Kendi 
+bilgisayarınız bir nevi "yerel sunucu" (localhost) gibi çalışır.
+
+Adım 1: Çalıştırma Kısayolu (BAŞLAT.bat)
+1. Proje klasörünün içinde (D:\izin-otomasyon) boş bir yere sağ tıklayıp 
+   Yeni -> Metin Belgesi deyin.
+2. Adını "BAŞLAT.bat" yapın (sonundaki .txt silinmelidir).
+3. Bu dosyaya sağ tıklayıp "Düzenle" diyerek içine şu iki satırı yapıştırın:
+   @echo off
+   npm run dev
+4. Dosyayı kaydedip kapatın. Artık uygulamayı başlatmak için sadece 
+   bu BAŞLAT.bat dosyasına çift tıklamanız yeterlidir. Siyah bir ekran (terminal)
+   açılacak ve arka planda çalışmaya başlayacaktır.
+
+Adım 2: Uygulamaya Özel Simge (İkon) ve Masaüstü Kısayolu Ekleme
+Uygulamanın profesyonel bir program gibi görünmesi için ona bir simge atayabilirsiniz.
+1. "BAŞLAT.bat" dosyasına sağ tıklayın -> "Gönder" -> "Masaüstüne Kısayol Oluştur" tıklayın.
+2. Masaüstüne gelen bu kısayola sağ tıklayıp "Yeniden Adlandır" deyin ve adını 
+   "İzin Otomasyonu" (veya ne isterseniz) yapın.
+3. Kısayola tekrar sağ tıklayıp -> Özellikler -> Simge Değiştir (Change Icon) butonuna tıklayın.
+4. Çıkan uyarıya Tamam deyip, bilgisayarınızdan beğendiğiniz bir .ico uzantılı 
+   ikon dosyasını seçip uygulayın. Artık masaüstünüzde şık bir ikonla çalışan 
+   bir programınız var!
+5. Uygulamaya girmek için masaüstündeki ikona tıklayın, siyah ekran açıldıktan sonra 
+   tarayıcınızı açıp adres çubuğuna şunu yazın: http://localhost:5173 
+   (Bunu da Chrome'da yer imi / sık kullanılanlar olarak kaydedebilirsiniz).
+
+
+---------------------------------------------------------
+DURUM 2: 3-4 KİŞİ ORTAK KULLANIM (AYNI AĞ ÜZERİNDEN)
+---------------------------------------------------------
+Sistemi ofisteki diğer personelle ortak kullanmak çok kolaydır. Bu durumda, 
+bilgisayarlardan birisi "Ana Bilgisayar (Sunucu)", diğerleri ise "İstemci (Kullanıcı)" 
+olacaktır. Tüm veriler ana bilgisayarda (sizin bilgisayarınızda) toplanır, böylece 
+kim değişiklik yaparsa yapsın herkes anında aynı güncel veriyi görür.
+
+Adım 1: Ana Bilgisayarı (Sizin Bilgisayarınızı) Hazırlama
+1. Yine proje klasörü içinde "AGA_YAYINLA.bat" isimli yeni bir metin belgesi oluşturun.
+2. İçerisine şu kodları yapıştırın:
+   @echo off
+   npm run start
+   (Not: npm run start komutu, sistemi sadece size değil, ağınızdaki herkese açar).
+3. Bu dosyayı masaüstüne kısayol olarak gönderip, yukarıdaki gibi ona da bir 
+   ikon atayabilirsiniz. Sistemi diğer bilgisayarlara açmak istediğinizde 
+   her sabah bu AGA_YAYINLA.bat dosyasına tıklayıp arka planda açık bırakmalısınız.
+
+Adım 2: Ana Bilgisayarın IP Adresini Öğrenme
+Diğer bilgisayarların size bağlanabilmesi için sizin yerel IP adresinizi bilmesi gerekir.
+1. Başlat menüsüne "cmd" yazıp Enter'a basın (Siyah Komut İstemi açılır).
+2. Oraya "ipconfig" yazıp Enter'a basın.
+3. Çıkan yazılarda "IPv4 Address" karşısında yazan rakamı not edin. 
+   (Örn: 192.168.1.55)
+
+Adım 3: Diğer Bilgisayarların Sisteme Girmesi
+Sizin bilgisayarınızda "AGA_YAYINLA.bat" açık olduğu sürece (siyah ekran çalışıyorken):
+1. Kalemdeki/Ofisteki diğer bilgisayarlara geçin. Hiçbir şey kurmanıza gerek YOKTUR.
+2. Sadece Google Chrome'u açın.
+3. Adres çubuğuna Ana Bilgisayarın IP adresini ve portunu şu şekilde yazın:
+   http://192.168.1.55:5173
+   (Buradaki 192.168.1.55 yerine Adım 2'de not ettiğiniz kendi IP adresinizi yazın).
+4. Enter'a bastıklarında sistem anında karşılarında açılacaktır! 
+
+Adım 4: Diğer Bilgisayarlar İçin Masaüstü Kısayolu (İkon)
+Diğer kullanıcıların her seferinde IP yazmaması için onlara da kısayol yapın:
+1. Diğer bilgisayarların masaüstünde boş bir yere sağ tıklayın -> Yeni -> Kısayol.
+2. Konum kısmına az önceki adresi (Örn: http://192.168.1.55:5173) yapıştırın ve İleri deyin.
+3. İsim olarak "İzin Otomasyonu" yazıp Bitir deyin.
+4. Artık onların masaüstünde de bir ikon oldu. (Yine Özellikler -> Simge Değiştir diyerek 
+   onlara da güzel bir ikon atayabilirsiniz). 
+
+İşte hepsi bu kadar! Güle güle kullanın.
+=========================================================

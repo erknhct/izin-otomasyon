@@ -1,0 +1,65 @@
+=========================================================
+      OTOMATİK BAŞLATMA VE ARKA PLAN KURULUM REHBERİ
+=========================================================
+
+Sorunuzun Cevabı: Evet, normalde bilgisayarınız açıldığında 
+bir kullanıcının şifresini girip masaüstünü görmesi gerekir ki 
+programlar çalışmaya başlasın. ANCAK, Windows'un "Görev Zamanlayıcı" 
+(Task Scheduler) özelliğini kullanarak sistemi "Kullanıcı oturum 
+açmasa bile çalıştır" şeklinde ayarlayabiliriz!
+
+Bunun için size iki dosya hazırladım:
+1. AGA_YAYINLA.bat (Buna tıklarsanız siyah ekran görünerek çalışır)
+2. ARKA_PLANDA_YAYINLA.vbs (Buna tıklarsanız SİYAH EKRAN ÇIKMAZ, 
+   tamamen gizli ve hayalet gibi arka planda çalışır).
+
+Şimdi bilgisayarınızın düğmesine bastığınız anda, siz şifre girip 
+oturum açmasanız dahi (sadece fişi takılı ve açık olması yeterli) 
+sistemin otomatik başlaması için şu adımları yapmalıyız:
+
+ADIM 1: GÖREV ZAMANLAYICIYI AÇIN
+1. Başlat menüsüne tıklayın ve "Görev Zamanlayıcı" (İngilizceyse: 
+   Task Scheduler) yazıp açın.
+
+ADIM 2: YENİ GÖREV OLUŞTURUN
+1. Sağ taraftaki menüden "Temel Görev Oluştur" DEĞİL, 
+   hemen altındaki "Görev Oluştur..." (Create Task...) seçeneğine tıklayın.
+2. Karşınıza detaylı bir pencere çıkacak.
+3. Ad (Name) kısmına: "Izin Otomasyonu Server" yazın.
+4. En önemli kısım: Alt taraftaki güvenlik seçeneklerinden 
+   "Kullanıcı oturum açmış olsa da olmasa da çalıştır" 
+   (Run whether user is logged on or not) seçeneğini işaretleyin.
+5. Hemen altındaki "En yüksek ayrıcalıklarla çalıştır" 
+   (Run with highest privileges) kutucuğunu da İŞARETLEYİN.
+
+ADIM 3: TETİKLEYİCİ (TRİGGER) AYARLAMA
+1. Üstteki "Tetikleyiciler" (Triggers) sekmesine geçin.
+2. "Yeni" (New) butonuna tıklayın.
+3. Görevi başlat (Begin the task) açılır menüsünden 
+   "Başlangıçta" (At startup) seçeneğini seçin.
+4. Tamam deyip bu pencereyi kapatın.
+
+ADIM 4: EYLEM (ACTION) AYARLAMA
+1. Üstteki "Eylemler" (Actions) sekmesine geçin.
+2. "Yeni" (New) butonuna tıklayın.
+3. Eylem türü "Program başlat" kalacak.
+4. "Gözat" (Browse) butonuna tıklayın ve D:\izin-otomasyon\ klasöründeki
+   "ARKA_PLANDA_YAYINLA.vbs" dosyasını seçin (BAT olanı değil, VBS olanı seçin
+   ki siyah ekran çıkmasın).
+5. (Çok Önemli!) Hemen altındaki "Başlama yeri" (Start in) kutusuna, 
+   projenin yolunu tırnaksız olarak yazın:
+   D:\izin-otomasyon\
+6. Tamam deyip kapatın.
+
+ADIM 5: KAYDETME VE BİTİRİŞ
+1. Ayarlar (Settings) sekmesine gidip, "Görevi 3 günten uzun çalışıyorsa durdur" 
+   gibi seçenekler varsa İPTAL EDİN (tikini kaldırın). Çünkü sunucu hep açık kalmalı.
+2. En alttaki "Tamam" butonuna basarak görevi kaydedin.
+3. Sizden bilgisayarınızın (Windows) şifresini isteyecektir. Kendi Windows 
+   şifrenizi girin. (Bu şifre, sistem siz girmeden çalışabilsin diye istenir).
+
+BİTTİ! 🎉
+Artık bilgisayarınızın güç düğmesine bastığınız anda, siz daha Windows 
+şifrenizi girmeden arka planda Node.js sunucusu hayalet modda başlayacak. 
+Diğer odalardaki personeliniz, sizin bilgisayarınızın kasası açık olduğu 
+sürece sisteme sorunsuzca erişebilecektir!
