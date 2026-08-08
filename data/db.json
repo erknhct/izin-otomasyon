@@ -477,6 +477,22 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786204460093",
+      "personnelId": "47",
+      "personnelName": "Hande TAŞ",
+      "sicil": "514658",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 19,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-09-07",
+      "aliciMakam": "komisyon",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786198645259",
       "personnelId": "1786144743643",
       "personnelName": "Erkan HACAT",
@@ -633,9 +649,9 @@
       "ayrilisDate": "2026-04-30",
       "expectedReturnDate": "2026-05-11",
       "aliciMakam": "bakanlik",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-08"
     },
     {
       "id": "rec-1786141552735",

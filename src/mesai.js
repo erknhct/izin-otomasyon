@@ -379,8 +379,7 @@ export function renderMesaiTable(y, m) {
   }
 
   headHtml += `
-    <th style="width:70px; padding:6px 4px; border:1px solid var(--border-color); font-weight:800;">TOPLAM</th>
-    <th style="width:70px; padding:6px 4px; border:1px solid var(--border-color);">KALAN KOTA</th>`;
+    <th style="width:70px; padding:6px 4px; border:1px solid var(--border-color); font-weight:800;">TOPLAM</th>`;
 
   headerRow.innerHTML = headHtml;
 
@@ -431,7 +430,6 @@ export function renderMesaiTable(y, m) {
 
     bodyHtml += `
       <td style="text-align:center; padding:4px; border:1px solid var(--border-color); ${totalStyle}">${monthTotal > 0 ? monthTotal + ' s' : '—'}</td>
-      <td style="text-align:center; padding:4px; border:1px solid var(--border-color); font-size:0.75rem; color:${remaining < 50 ? '#f59e0b' : 'var(--text-muted)'};">${remaining} s</td>
     </tr>`;
   });
 
