@@ -11,7 +11,7 @@ import {
 import { calculateExpectedReturn, calculateDaysFromReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
 import {
   generateMesaiForMonth, renderMesaiTable, clearMesaiForMonth,
-  getMesaiSignatories, saveMesaiSignatories,
+  getMesaiSignatories, saveMesaiSignatories, hasMesaiDataForMonth,
   updateMesaiCell, exportMesaiToExcelFile, printMesaiView
 } from './mesai.js';
 
@@ -2240,10 +2240,14 @@ function syncMesaiSelects() {
   if (ySel) ySel.value = String(mesaiCurrentYear);
 }
 
-function renderMesaiView() {
+function renderMesaiView(forceRebuild = false) {
   const targetEl = document.getElementById('mesai-global-target');
   const globalTarget = targetEl ? parseInt(targetEl.value, 10) : 45;
-  generateMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth, globalTarget);
+
+  if (forceRebuild || !hasMesaiDataForMonth(mesaiCurrentYear, mesaiCurrentMonth)) {
+    generateMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth, globalTarget);
+  }
+
   renderMesaiTable(mesaiCurrentYear, mesaiCurrentMonth);
 }
 
@@ -2293,8 +2297,7 @@ window.generateMesaiCetveli = function() {
     confirmText: '⚡ Cetveli Oluştur',
     cancelText: 'Vazgeç',
     onConfirm: () => {
-      generateMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth, globalTarget);
-      renderMesaiView();
+      renderMesaiView(true);
       showToast(`⚡ ${monthName} ${mesaiCurrentYear} mesai cetveli başarıyla oluşturuldu!`, 'success');
     }
   });

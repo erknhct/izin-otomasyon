@@ -295,6 +295,11 @@ export function generateMesaiForMonth(y, m, globalTarget) {
   saveMesaiData(mesaiData);
 }
 
+export function hasMesaiDataForMonth(y, m) {
+  const prefix = dateToStr(y, m, 1).substring(0, 7) + '-';
+  return Object.keys(mesaiData.mesaiShifts).some(k => k.startsWith(prefix));
+}
+
 // ─────────────────────────────────────────────────────────
 // MANUEL HÜCRE GÜNCELLEMESİ
 // ─────────────────────────────────────────────────────────
