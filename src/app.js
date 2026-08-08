@@ -2465,22 +2465,22 @@ function initMesaiView() {
     if (mesaiCurrentMonth === 1) { mesaiCurrentMonth = 12; mesaiCurrentYear--; }
     else mesaiCurrentMonth--;
     syncMesaiSelects();
-    renderMesaiView();
+    renderMesaiView(true);
   });
   if (nextBtn) nextBtn.addEventListener('click', () => {
     if (mesaiCurrentMonth === 12) { mesaiCurrentMonth = 1; mesaiCurrentYear++; }
     else mesaiCurrentMonth++;
     syncMesaiSelects();
-    renderMesaiView();
+    renderMesaiView(true);
   });
 
   if (mSel) mSel.addEventListener('change', () => {
     mesaiCurrentMonth = parseInt(mSel.value, 10);
-    renderMesaiView();
+    renderMesaiView(true);
   });
   if (ySel) ySel.addEventListener('change', () => {
     mesaiCurrentYear = parseInt(ySel.value, 10);
-    renderMesaiView();
+    renderMesaiView(true);
   });
   const targetEl = document.getElementById('mesai-global-target');
   if (targetEl) {
@@ -2490,7 +2490,7 @@ function initMesaiView() {
     }
     targetEl.addEventListener('change', () => {
       localStorage.setItem('mesai_target_hours', targetEl.value);
-      renderMesaiView();
+      renderMesaiView(true);
     });
   }
 
