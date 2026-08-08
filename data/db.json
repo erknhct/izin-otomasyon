@@ -477,6 +477,22 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786190440346",
+      "personnelId": "11",
+      "personnelName": "Zeynep ARSLAN",
+      "sicil": "157890",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 3,
+      "ayrilisDate": "2026-08-04",
+      "expectedReturnDate": "2026-08-07",
+      "aliciMakam": "komisyon",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786148340330",
       "personnelId": "3",
       "personnelName": "Öznur YILDIRIM",
@@ -617,9 +633,9 @@
       "ayrilisDate": "2026-01-29",
       "expectedReturnDate": "2026-02-06",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-08"
     },
     {
       "id": "rec-1786141476463",

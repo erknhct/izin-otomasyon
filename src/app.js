@@ -404,6 +404,17 @@ function renderNotificationBell() {
       </div>
     `;
   }
+
+  // Sync left sidebar nav badge with dueList count
+  const navBadge = document.getElementById('nav-pending-badge');
+  if (navBadge) {
+    if (dueList.length > 0) {
+      navBadge.textContent = dueList.length;
+      navBadge.style.display = 'inline-block';
+    } else {
+      navBadge.style.display = 'none';
+    }
+  }
 }
 
 function setupNotificationBell() {
@@ -436,20 +447,22 @@ function renderDashboard() {
   document.getElementById('stat-completed-returns').textContent = stats.completedCount;
   document.getElementById('stat-total-personnel').textContent = getPersonnelList().length;
 
-  // Pending returns badge
+  // Pending returns badge on sidebar nav
+  const pendingList = getPendingReturnRecords();
+  const dueList = pendingList.filter(r => r.isDue);
   const badge = document.getElementById('nav-pending-badge');
-  if (stats.pendingReturnsCount > 0) {
-    badge.textContent = stats.pendingReturnsCount;
-    badge.style.display = 'inline-block';
-  } else {
-    badge.style.display = 'none';
+  if (badge) {
+    if (dueList.length > 0) {
+      badge.textContent = dueList.length;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
   }
 
   // Pending and Completed returns list
   const pendingContainer = document.getElementById('pending-returns-container');
   const allRecords = getLeaveRecords();
-  const pendingList = getPendingReturnRecords();
-  const dueList = pendingList.filter(r => r.isDue);
   const upcomingList = pendingList.filter(r => !r.isDue);
   const completedList = allRecords.filter(r => r.status === 'baslayis_yapildi' && !r.hiddenFromDashboard);
 
