@@ -406,7 +406,8 @@
       "sicil": "155118",
       "title": "Bilgi İşlem Müdürü",
       "birim": "Bilgi İşlem Müdürlüğü",
-      "status": "active"
+      "status": "active",
+      "tcNo": "10021104212"
     }
   ],
   "leaveTypes": [

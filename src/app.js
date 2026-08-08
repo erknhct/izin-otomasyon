@@ -1144,6 +1144,10 @@ function renderPersonnelTable() {
           <input type="text" id="p-sicil" required placeholder="Örn: 123456" />
         </div>
         <div class="form-group">
+          <label>T.C. Kimlik No</label>
+          <input type="text" id="p-tc" placeholder="İsteğe bağlı" maxlength="11" />
+        </div>
+        <div class="form-group">
           <label>Unvanı</label>
           <input type="text" id="p-title" required value="Zabıt Katibi" />
         </div>
@@ -1164,6 +1168,7 @@ function renderPersonnelTable() {
         id: Date.now().toString(),
         name: document.getElementById('p-name').value,
         sicil: document.getElementById('p-sicil').value,
+        tcNo: document.getElementById('p-tc').value,
         title: document.getElementById('p-title').value,
         birim: document.getElementById('p-birim').value,
         status: 'active'
@@ -1195,6 +1200,10 @@ function renderPersonnelTable() {
             <input type="text" id="edit-p-sicil" required value="${person.sicil}" />
           </div>
           <div class="form-group">
+            <label>T.C. Kimlik No</label>
+            <input type="text" id="edit-p-tc" placeholder="İsteğe bağlı" maxlength="11" value="${person.tcNo || person.tc || ''}" />
+          </div>
+          <div class="form-group">
             <label>Unvanı</label>
             <input type="text" id="edit-p-title" required value="${person.title}" />
           </div>
@@ -1217,6 +1226,7 @@ function renderPersonnelTable() {
             ...current[index],
             name: document.getElementById('edit-p-name').value,
             sicil: document.getElementById('edit-p-sicil').value,
+            tcNo: document.getElementById('edit-p-tc').value,
             title: document.getElementById('edit-p-title').value,
             birim: document.getElementById('edit-p-birim').value
           };
