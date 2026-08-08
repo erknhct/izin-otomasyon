@@ -127,6 +127,10 @@ async function initApp() {
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
+  // 1. Veri tabanını (db.json) ilk olarak yükle
+  await initStorage();
+
+  // 2. Güvenlik ve oturum kontrolü
   const loginScreen = document.getElementById('login-screen');
   if (!isSessionValid()) {
     loginScreen.style.display = 'flex';

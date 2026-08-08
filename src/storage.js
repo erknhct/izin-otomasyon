@@ -37,6 +37,7 @@ export async function initStorage() {
         localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
         localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(dbCache.signatories));
         localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(dbCache.leaveRecords));
+        localStorage.setItem('udf_app_password', dbCache.appPassword);
         return true;
       }
     }

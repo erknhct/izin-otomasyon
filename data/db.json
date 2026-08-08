@@ -477,6 +477,22 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786148340330",
+      "personnelId": "3",
+      "personnelName": "Öznur YILDIRIM",
+      "sicil": "125768",
+      "unvan": "Teknisyen",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 4,
+      "ayrilisDate": "2026-07-27",
+      "expectedReturnDate": "2026-07-31",
+      "aliciMakam": "komisyon",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786147720491",
       "personnelId": "44",
       "personnelName": "Onur YÜCEL",
@@ -584,9 +600,9 @@
       "ayrilisDate": "2026-03-30",
       "expectedReturnDate": "2026-04-06",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-08"
     },
     {
       "id": "rec-1786141874565",
@@ -717,5 +733,5 @@
       "baslayisDate": "2026-08-10"
     }
   ],
-  "appPassword": "ankara2025"
+  "appPassword": "Ankara2026"
 }
