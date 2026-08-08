@@ -5,7 +5,8 @@ import {
   getLeaveTypes, saveLeaveTypes,
   getSignatories, saveSignatories,
   getLeaveRecords, addLeaveRecord, updateLeaveRecord, deleteLeaveRecord,
-  getAppPasswordStored, setAppPasswordStored
+  getAdminPasswordStored, setAdminPasswordStored,
+  getStaffPasswordStored, setStaffPasswordStored
 } from './storage.js';
 import { calculateExpectedReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
 
@@ -25,15 +26,10 @@ document.documentElement.setAttribute('data-theme', currentTheme);
 updateThemeToggleUI();
 
 // =============================================
-// GÜVENLİK - GİRİŞ SİSTEMİ
+// GÜVENLİK & ROL TABANLI GİRİŞ SİSTEMİ
 // =============================================
-const DEFAULT_PASSWORD = 'ankara2025';   // Varsayılan şifre (Ayarlar'dan değiştirilebilir)
 const SESSION_KEY      = 'udf_session_auth';
 const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 saat (ms)
-
-function getStoredPassword() {
-  return getAppPasswordStored();
-}
 
 function isSessionValid() {
   const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
@@ -41,34 +37,72 @@ function isSessionValid() {
   return (Date.now() - session.ts) < SESSION_DURATION;
 }
 
-function createSession() {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ ts: Date.now() }));
+function createSession(role = 'staff') {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ ts: Date.now(), role }));
 }
 
 function destroySession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
+function getCurrentRole() {
+  const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+  return session?.role || 'staff';
+}
+
+function isAdmin() {
+  return getCurrentRole() === 'admin';
+}
+
+function updateUserRoleUI() {
+  const badgeEl = document.getElementById('user-role-badge');
+  if (!badgeEl) return;
+
+  if (isAdmin()) {
+    badgeEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Sistem Yöneticisi';
+    badgeEl.style.background = 'rgba(245, 158, 11, 0.15)';
+    badgeEl.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+    badgeEl.style.color = '#f59e0b';
+  } else {
+    badgeEl.innerHTML = '<i class="fa-solid fa-user-gear" style="color: #3b82f6;"></i> Yönetici';
+    badgeEl.style.background = 'rgba(59, 130, 246, 0.15)';
+    badgeEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
+    badgeEl.style.color = '#3b82f6';
+  }
+}
+
 window.handleLogin = function() {
   const input = document.getElementById('login-password-input');
   const errEl = document.getElementById('login-error');
-  if (input.value === getStoredPassword()) {
-    createSession();
-    const loginScreen = document.getElementById('login-screen');
-    loginScreen.style.opacity = '0';
-    loginScreen.style.transition = 'opacity 0.4s ease';
-    setTimeout(() => {
-      loginScreen.style.display = 'none';
-      initApp(); // Şifre doğrulandı → Uygulamayı başlat
-    }, 400);
-    input.value = '';
-    errEl.style.display = 'none';
+  const enteredPw = (input.value || '').trim();
+
+  const adminPw = getAdminPasswordStored();
+  const staffPw = getStaffPasswordStored();
+
+  if (enteredPw === adminPw) {
+    createSession('admin');
+    completeLogin();
+  } else if (enteredPw === staffPw) {
+    createSession('staff');
+    completeLogin();
   } else {
     errEl.style.display = 'block';
     input.value = '';
     input.focus();
     input.style.borderColor = 'rgba(239,68,68,0.6)';
     setTimeout(() => input.style.borderColor = 'rgba(255,255,255,0.15)', 1500);
+  }
+
+  function completeLogin() {
+    const loginScreen = document.getElementById('login-screen');
+    loginScreen.style.opacity = '0';
+    loginScreen.style.transition = 'opacity 0.4s ease';
+    setTimeout(() => {
+      loginScreen.style.display = 'none';
+      initApp();
+    }, 400);
+    input.value = '';
+    errEl.style.display = 'none';
   }
 };
 
@@ -78,27 +112,40 @@ window.logoutApp = function() {
 };
 
 window.changeAppPassword = function() {
+  const targetRole = document.getElementById('sec-target-role')?.value || 'admin';
   const current = document.getElementById('sec-current-pw')?.value || '';
   const newPw   = document.getElementById('sec-new-pw')?.value || '';
   const newPw2  = document.getElementById('sec-new-pw2')?.value || '';
 
-  if (current !== getStoredPassword()) {
-    showToast('Mevcut şifre hatalı!', 'danger');
+  const activeRolePw = isAdmin() ? getAdminPasswordStored() : getStaffPasswordStored();
+  if (current !== activeRolePw) {
+    showToast('Mevcut oturum şifreniz hatalı!', 'danger');
     return;
   }
-  if (newPw.length < 6) {
-    showToast('Yeni şifre en az 6 karakter olmalıdır!', 'warning');
+  if (!isAdmin() && targetRole === 'admin') {
+    showToast('Yönetici şifresini değiştirmek için Sistem Yöneticisi olarak giriş yapmalısınız!', 'danger');
+    return;
+  }
+  if (newPw.length < 4) {
+    showToast('Yeni şifre en az 4 karakter olmalıdır!', 'warning');
     return;
   }
   if (newPw !== newPw2) {
     showToast('Yeni şifreler eşleşmiyor!', 'warning');
     return;
   }
-  setAppPasswordStored(newPw);
+
+  if (targetRole === 'admin') {
+    setAdminPasswordStored(newPw);
+    showToast('✅ Sistem Yöneticisi (Admin) şifresi başarıyla güncellendi!', 'success');
+  } else {
+    setStaffPasswordStored(newPw);
+    showToast('✅ Yönetici şifresi başarıyla güncellendi!', 'success');
+  }
+
   document.getElementById('sec-current-pw').value = '';
   document.getElementById('sec-new-pw').value = '';
   document.getElementById('sec-new-pw2').value = '';
-  showToast('✅ Şifre başarıyla güncellendi! Yeni şifre ortak veritabanına kaydedildi.', 'success');
 };
 
 async function initApp() {
@@ -108,6 +155,7 @@ async function initApp() {
   setupLeavesTableFilters();
   setupNotificationBell();
   await initStorage();
+  updateUserRoleUI();
   renderDashboard();
   setupWizardForm();
   renderPersonnelTable();
@@ -938,7 +986,7 @@ function renderLeavesTable() {
           ${r.status === 'ayrilis_yapildi' 
             ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}" style="${isDue ? 'font-weight: 800; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);' : ''}"><i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ</button>`
             : `<small style="color: var(--text-muted);">Tamamlandı</small>`}
-          <button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${r.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+          ${isAdmin() ? `<button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${r.id}"><i class="fa-solid fa-trash"></i> Sil</button>` : ''}
         </td>
       </tr>
     `;
@@ -952,6 +1000,10 @@ function renderLeavesTable() {
 
   tbody.querySelectorAll('.btn-delete-leave-record').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (!isAdmin()) {
+        showToast('Silme işlemi için Sistem Yöneticisi yetkisi gereklidir!', 'danger');
+        return;
+      }
       const recId = btn.getAttribute('data-record-id');
       const rec = getLeaveRecords().find(r => r.id === recId);
       const name = rec ? rec.personnelName : 'Seçili';
@@ -991,7 +1043,7 @@ function renderPersonnelTable() {
       <td><span class="badge badge-success">Aktif</span></td>
       <td style="display: flex; gap: 0.4rem; align-items: center;">
         <button class="btn btn-sm btn-primary btn-edit-personnel" data-id="${p.id}"><i class="fa-solid fa-pen-to-square"></i> Düzenle</button>
-        <button class="btn btn-sm btn-danger btn-delete-personnel" data-id="${p.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+        ${isAdmin() ? `<button class="btn btn-sm btn-danger btn-delete-personnel" data-id="${p.id}"><i class="fa-solid fa-trash"></i> Sil</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -1130,7 +1182,7 @@ function renderSettings() {
       <div>
         <strong>${s.name}</strong><br><small style="color: var(--text-muted);">${s.title}</small>
       </div>
-      <button class="btn btn-sm btn-danger btn-del-signer" data-id="${s.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+      ${isAdmin() ? `<button class="btn btn-sm btn-danger btn-del-signer" data-id="${s.id}"><i class="fa-solid fa-trash"></i> Sil</button>` : ''}
     </div>
   `).join('');
 
@@ -1201,7 +1253,7 @@ function renderSettings() {
       </div>
       <div style="display: flex; gap: 0.4rem;">
         <button class="btn btn-sm btn-primary btn-edit-leavetype" data-id="${l.id}"><i class="fa-solid fa-pen"></i> Düzenle</button>
-        <button class="btn btn-sm btn-danger btn-del-leavetype" data-id="${l.id}"><i class="fa-solid fa-trash"></i> Sil</button>
+        ${isAdmin() ? `<button class="btn btn-sm btn-danger btn-del-leavetype" data-id="${l.id}"><i class="fa-solid fa-trash"></i> Sil</button>` : ''}
       </div>
     </div>
   `).join('');

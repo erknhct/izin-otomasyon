@@ -509,22 +509,6 @@
       "baslayisDate": null
     },
     {
-      "id": "rec-1786147458604",
-      "personnelId": "1786144743643",
-      "personnelName": "Erkan HACAT",
-      "sicil": "155118",
-      "unvan": "Bilgi İşlem Müdürü",
-      "leaveType": "rapor",
-      "leaveTypeName": "İstirahat Raporu / Sağlık İzni",
-      "days": 11,
-      "ayrilisDate": "2026-08-08",
-      "expectedReturnDate": "2026-08-19",
-      "aliciMakam": "bakanlik",
-      "status": "ayrilis_yapildi",
-      "baslayisEvrakNo": null,
-      "baslayisDate": null
-    },
-    {
       "id": "rec-1786147105736",
       "personnelId": "19",
       "personnelName": "Seda ÖZDEMİR",
@@ -733,5 +717,7 @@
       "baslayisDate": "2026-08-10"
     }
   ],
-  "appPassword": "Ankara2026"
+  "appPassword": "Ankara2026",
+  "adminPassword": "Ankara2026",
+  "staffPassword": "yazi2026"
 }

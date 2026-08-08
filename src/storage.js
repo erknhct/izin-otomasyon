@@ -15,7 +15,8 @@ let dbCache = {
   leaveTypes: [],
   signatories: [],
   leaveRecords: [],
-  appPassword: 'ankara2025'
+  adminPassword: 'ankara2025',
+  staffPassword: 'yazi2025'
 };
 
 /**
@@ -28,7 +29,8 @@ export async function initStorage() {
       const data = await res.json();
       if (data.personnel && Array.isArray(data.personnel)) {
         dbCache = data;
-        if (!dbCache.appPassword) dbCache.appPassword = 'ankara2025';
+        if (!dbCache.adminPassword) dbCache.adminPassword = dbCache.appPassword || 'ankara2025';
+        if (!dbCache.staffPassword) dbCache.staffPassword = 'yazi2025';
         if (dbCache.leaveRecords && Array.isArray(dbCache.leaveRecords)) {
           dbCache.leaveRecords.forEach(r => delete r.raporKurum);
         }
@@ -37,7 +39,8 @@ export async function initStorage() {
         localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
         localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(dbCache.signatories));
         localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(dbCache.leaveRecords));
-        localStorage.setItem('udf_app_password', dbCache.appPassword);
+        localStorage.setItem('udf_admin_password', dbCache.adminPassword);
+        localStorage.setItem('udf_staff_password', dbCache.staffPassword);
         return true;
       }
     }
@@ -53,7 +56,8 @@ export async function initStorage() {
   if (dbCache.leaveRecords && Array.isArray(dbCache.leaveRecords)) {
     dbCache.leaveRecords.forEach(r => delete r.raporKurum);
   }
-  dbCache.appPassword = localStorage.getItem('udf_app_password') || 'ankara2025';
+  dbCache.adminPassword = localStorage.getItem('udf_admin_password') || localStorage.getItem('udf_app_password') || 'ankara2025';
+  dbCache.staffPassword = localStorage.getItem('udf_staff_password') || 'yazi2025';
   return false;
 }
 
@@ -66,6 +70,8 @@ export async function syncToDiskFile() {
   localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
   localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(dbCache.signatories));
   localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(dbCache.leaveRecords));
+  localStorage.setItem('udf_admin_password', dbCache.adminPassword);
+  localStorage.setItem('udf_staff_password', dbCache.staffPassword);
 
   // Write to data/db.json file
   try {
@@ -159,18 +165,40 @@ export function exportDbJsonFile() {
 export function importDbJsonData(importedObject) {
   if (importedObject && Array.isArray(importedObject.personnel)) {
     dbCache = importedObject;
+    if (!dbCache.adminPassword) dbCache.adminPassword = dbCache.appPassword || 'ankara2025';
+    if (!dbCache.staffPassword) dbCache.staffPassword = 'yazi2025';
     syncToDiskFile();
     return true;
   }
   return false;
 }
 
+export function getAdminPasswordStored() {
+  return dbCache.adminPassword || localStorage.getItem('udf_admin_password') || 'ankara2025';
+}
+
+export function setAdminPasswordStored(newPassword) {
+  dbCache.adminPassword = newPassword;
+  localStorage.setItem('udf_admin_password', newPassword);
+  syncToDiskFile();
+}
+
+export function getStaffPasswordStored() {
+  return dbCache.staffPassword || localStorage.getItem('udf_staff_password') || 'yazi2025';
+}
+
+export function setStaffPasswordStored(newPassword) {
+  dbCache.staffPassword = newPassword;
+  localStorage.setItem('udf_staff_password', newPassword);
+  syncToDiskFile();
+}
+
+// Backward compatibility getters/setters
 export function getAppPasswordStored() {
-  return dbCache.appPassword || localStorage.getItem('udf_app_password') || 'ankara2025';
+  return getAdminPasswordStored();
 }
 
 export function setAppPasswordStored(newPassword) {
-  dbCache.appPassword = newPassword;
-  localStorage.setItem('udf_app_password', newPassword);
-  syncToDiskFile();
+  setAdminPasswordStored(newPassword);
 }
+

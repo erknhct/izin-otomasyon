@@ -89,6 +89,9 @@
           <span class="active-view-indicator" id="top-view-title"><i class="fa-solid fa-house" style="color: var(--accent-primary);"></i> Ana Sayfa</span>
         </div>
         <div class="top-bar-right">
+          <div id="user-role-badge" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.85rem; border-radius: 30px; font-size: 0.82rem; font-weight: 700; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: var(--accent-primary); margin-right: 0.5rem;">
+            <!-- Dynamic role badge -->
+          </div>
           <div class="notif-wrapper">
             <button class="notif-bell-btn" id="notif-bell-btn" title="Günü Gelen / Tarihi Geçen Başlayış Bildirimleri">
               <i class="fa-solid fa-bell"></i>
@@ -508,20 +511,27 @@
           <!-- Security Card -->
           <div class="glass-card" style="grid-column: 1 / -1; border: 1px solid rgba(239,68,68,0.2);">
             <div class="card-title">
-              <span><i class="fa-solid fa-shield-halved" style="color: #ef4444; margin-right: 8px;"></i> Güvenlik & Sistem Şifresi</span>
+              <span><i class="fa-solid fa-shield-halved" style="color: #ef4444; margin-right: 8px;"></i> Güvenlik & Rol Şifresi Yönetimi</span>
               <button class="btn btn-sm btn-danger" onclick="logoutApp()"><i class="fa-solid fa-right-from-bracket"></i> Oturumu Kapat</button>
             </div>
             <p style="color: var(--text-muted); margin-bottom: 1rem; font-size: 0.88rem;">
-              Sistem şifresi değiştirilebilir. Şifreyi bilen herkes aynı ağdan uygulamaya erişebilir; güçlü bir şifre seçin.
+              Sistem Yöneticisi (Admin) ve Yönetici şifrelerini buradan güncelleyebilirsiniz. Yönetici şifresiyle girenler izin kaydı silemez.
             </p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; align-items: end;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; align-items: end;">
               <div class="form-group">
-                <label>Mevcut Şifre</label>
+                <label>Değiştirilecek Şifre Rolü</label>
+                <select id="sec-target-role">
+                  <option value="admin">👑 Sistem Yöneticisi (Admin) Şifresi</option>
+                  <option value="staff">👔 Yönetici Şifresi</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Mevcut Oturum Şifreniz</label>
                 <input type="password" id="sec-current-pw" placeholder="Mevcut şifreniz..." />
               </div>
               <div class="form-group">
                 <label>Yeni Şifre</label>
-                <input type="password" id="sec-new-pw" placeholder="Yeni şifre (min 6 karakter)" />
+                <input type="password" id="sec-new-pw" placeholder="Yeni şifre (min 4 karakter)" />
               </div>
               <div class="form-group">
                 <label>Yeni Şifre (Tekrar)</label>
