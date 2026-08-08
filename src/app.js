@@ -587,7 +587,6 @@ function setupWizardForm() {
   const groupAyrilis = document.getElementById('group-ayrilis-tarih');
   const groupBaslayis = document.getElementById('group-baslayis-tarih');
   const groupIlgi = document.getElementById('group-ilgi-evrak');
-  const groupRapor = document.getElementById('group-rapor-kurum');
   const aliciMakamSelect = document.getElementById('wiz-alici-makam');
   const groupAliciOzel = document.getElementById('group-alici-makam-ozel');
   const izinSuresiInput = document.getElementById('wiz-izin-suresi');
@@ -613,7 +612,6 @@ function setupWizardForm() {
     groupAyrilis.style.display = isBaslayis ? 'none' : 'flex';
     groupBaslayis.style.display = 'flex';
     groupIlgi.style.display = isBaslayis ? 'flex' : 'none';
-    groupRapor.style.display = 'none';
 
     if (isRapor) {
       aliciMakamSelect.value = 'bakanlik';
@@ -686,7 +684,6 @@ function setupWizardForm() {
           days: payload.izinSuresi,
           ayrilisDate: payload.ayrilisTarihi,
           expectedReturnDate: expReturn,
-          raporKurum: payload.raporKurum,
           aliciMakam: payload.aliciMakam,
           status: 'ayrilis_yapildi',
           baslayisEvrakNo: null,
@@ -753,7 +750,6 @@ function getWizardPayload() {
     ayrilisTarihi: ayrilisTarihi,
     baslayisTarihi: baslayisTarihi,
     ilgiEvrak: document.getElementById('wiz-ilgi-evrak')?.value || '',
-    raporKurum: document.getElementById('wiz-rapor-kurum')?.value || '',
     aliciMakam: document.getElementById('wiz-alici-makam')?.value || 'komisyon',
     aliciMakamOzel: document.getElementById('wiz-alici-makam-ozel')?.value || '',
     imzalayanAd: signer.name,
