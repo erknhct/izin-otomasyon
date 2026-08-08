@@ -579,6 +579,14 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
       const shiftCount = personnel.length > 1 ? personnel.length - 1 : 0;
       
       if (shiftCount > 0) {
+        // ExcelJS'in paylaşılan (shared) formülleri kopyalarken dosyayı bozmasını engelle
+        for(let c = 1; c <= 50; c++) {
+          const cell = ws.getCell(8, c);
+          if (cell.value && cell.value.shareType === 'shared') {
+            cell.value = { formula: cell.value.formula };
+          }
+        }
+
         // Eski merge'leri (birleştirmeleri) bul ve güvenli bir şekilde iptal et (unMerge)
         const oldMerges = [];
         if (ws.model && Array.isArray(ws.model.merges)) {
@@ -604,6 +612,13 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
             try { ws.mergeCells(newMerge); } catch(e) {}
           }
         });
+
+        // Yazdırma alanını (Print Area) dinamik olarak genişlet (Eksik çıkmasını önlemek için)
+        if (ws.pageSetup && typeof ws.pageSetup.printArea === 'string') {
+          ws.pageSetup.printArea = ws.pageSetup.printArea.replace(/\d+$/, (match) => {
+            return parseInt(match, 10) + shiftCount;
+          });
+        }
       }
 
       // ── Çoğaltılan Satırların İçeriğini Temizle ──
