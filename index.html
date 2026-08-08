@@ -211,12 +211,12 @@
                 </select>
               </div>
 
-              <!-- 3. İşlem Tipi (Ayrılış / Başlayış) -->
+              <!-- 3. İşlem Tipi (Sadece Ayrılış yapılabilir, Başlayış otomatiktir) -->
               <div class="form-group">
-                <label for="wiz-action-type"><i class="fa-solid fa-right-from-bracket"></i> 3. İşlem Tipi</label>
-                <select id="wiz-action-type" required style="font-weight: 600;">
-                  <option value="ayrilis">İzne Ayrılış</option>
-                  <option value="baslayis">Göreve Başlayış</option>
+                <label for="wiz-action-type"><i class="fa-solid fa-lock" style="color:var(--text-muted);"></i> 3. İşlem Tipi</label>
+                <select id="wiz-action-type" required style="font-weight: 700; appearance: none; -webkit-appearance: none; background-color: rgba(0,0,0,0.03); color: var(--text-muted); cursor: not-allowed; border: 1px dashed var(--border-color);" disabled title="Bu ekrandan sadece İzne Ayrılış yapılabilir. Başlayış işlemleri pano üzerinden otomatik yapılır.">
+                  <option value="ayrilis" selected>İzne Ayrılış</option>
+                  <option value="baslayis" style="display:none;">Göreve Başlayış</option>
                 </select>
               </div>
 

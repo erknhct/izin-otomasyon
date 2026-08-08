@@ -939,6 +939,9 @@ async function startBaslayisWizardForRecord(recId) {
     });
 
     delete document.getElementById('form-udf-wizard').dataset.linkedRecordId;
+    actionTypeSelect.value = 'ayrilis';
+    actionTypeSelect.dispatchEvent(new Event('change'));
+    
     showToast(`✅ ${rec.personnelName} için Göreve Başlayış UDF belgesi indirildi ve işlem tamamlandı!`, 'success');
     renderDashboard();
     renderLeavesTable();
