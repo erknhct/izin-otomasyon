@@ -575,27 +575,40 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
         cell.value = d <= dim ? d : '';
       }
 
-      // ── Satır 8 ve sonrasındaki eski birleştirilmiş hücreleri (merge) unmerge yap ──
-      if (ws.model && ws.model.merges && Array.isArray(ws.model.merges)) {
-        const mergesToUnmerge = [...ws.model.merges];
-        mergesToUnmerge.forEach(rangeStr => {
-          try {
-            const match = rangeStr.match(/\d+/g);
-            if (match && match.length >= 1) {
-              const startRow = parseInt(match[0], 10);
-              if (startRow >= 8) {
-                ws.unmergeCells(rangeStr);
-              }
-            }
-          } catch (e) {
-            // sessizce geç
+      // ── Yeni Personeller İçin Satır Ekle (Şablonun Düzenini Bozmamak İçin) ──
+      const shiftCount = personnel.length > 1 ? personnel.length - 1 : 0;
+      
+      if (shiftCount > 0) {
+        // Eski merge'leri (birleştirmeleri) bul ve güvenli bir şekilde iptal et (unMerge)
+        const oldMerges = [];
+        if (ws.model && Array.isArray(ws.model.merges)) {
+          oldMerges.push(...ws.model.merges);
+        }
+        oldMerges.forEach(m => {
+          try { ws.unMergeCells(m); } catch(e) {}
+        });
+
+        // 8. satırı personeller için çoğalt
+        ws.duplicateRow(8, shiftCount, true);
+        
+        // Merge'leri (birleştirmeleri) yeni satır numaralarıyla tekrar oluştur
+        oldMerges.forEach(mStr => {
+          const match = mStr.match(/([a-zA-Z]+)(\d+):([a-zA-Z]+)(\d+)/);
+          if (match) {
+            let r1 = parseInt(match[2], 10);
+            let r2 = parseInt(match[4], 10);
+            // "Sayfa Toplamı", "Genel Toplam" ve "İmzalar" 9. satır ve sonrasındadır
+            if (r1 >= 9) r1 += shiftCount;
+            if (r2 >= 9) r2 += shiftCount;
+            const newMerge = `${match[1]}${r1}:${match[3]}${r2}`;
+            try { ws.mergeCells(newMerge); } catch(e) {}
           }
         });
       }
 
-      // ── Mevcut Personel Verilerini Temizle (satır 8'den 60'a kadar) ──
-      // Sadece değerleri siliyoruz, stilleri bozmuyoruz.
-      for (let r = 8; r <= 60; r++) {
+      // ── Çoğaltılan Satırların İçeriğini Temizle ──
+      // template'den gelen "1" vb. kalıntıları silmek için değerleri null yapıyoruz (stiller kalır)
+      for (let r = 8; r < 8 + (personnel.length || 1); r++) {
         for (let c = 1; c <= 40; c++) {
           ws.getCell(r, c).value = null;
         }
@@ -604,15 +617,6 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
       // ── Personel Verilerini Yaz ──
       personnel.forEach((p, idx) => {
         const rowNum = 8 + idx;
-
-        // Otomatik Stil Çoğaltma: Sadece 8. satırı (ilk personel satırını) tasarlamanız yeterli.
-        // Sonraki tüm personeller için (9, 10, 11...) 8. satırın tasarımını, kenarlıklarını ve yazı tiplerini otomatik kopyalıyoruz.
-        if (rowNum > 8) {
-          for (let c = 1; c <= 38; c++) { // A'dan AL'ye (1-38)
-            ws.getCell(rowNum, c).style = ws.getCell(8, c).style;
-          }
-        }
-
         const sicilVal = p.sicil || p.sicilNo || '';
         const parsedSicil = parseInt(sicilVal, 10);
 
@@ -644,18 +648,15 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
         ws.getCell('AL' + rowNum).value = { formula: `SUM(G${rowNum}:AK${rowNum})` };
       });
 
-      // ── İmza Alanlarını Dinamik Yaz ──
-      const lastRow = 8 + personnel.length;
-      const signRow1 = lastRow + 3;
-      const signRow2 = lastRow + 4;
-      const signRow3 = lastRow + 5;
+      // ── İmza Alanlarını Dinamik Yaz (Şablondaki Kendi Konumlarına) ──
+      const signNameRow = 12 + shiftCount;
+      const signTitleRow = 13 + shiftCount;
 
-      ws.getCell('T' + signRow1).value = 'DÜZENLEYEN';
-      ws.getCell('AD' + signRow1).value = 'TASDİK EDEN';
-      ws.getCell('T' + signRow2).value = duzenleyenAd || '';
-      ws.getCell('AD' + signRow2).value = tasdikAd || '';
-      ws.getCell('T' + signRow3).value = duzenleyenUnvan || '';
-      ws.getCell('AD' + signRow3).value = tasdikUnvan || '';
+      ws.getCell('K' + signNameRow).value = duzenleyenAd || '';
+      ws.getCell('K' + signTitleRow).value = duzenleyenUnvan || '';
+      
+      ws.getCell('AE' + signNameRow).value = tasdikAd || '';
+      ws.getCell('AE' + signTitleRow).value = tasdikUnvan || '';
 
       // Sayfa adını güncelle
       ws.name = `${titleMonth}-${y}`;
