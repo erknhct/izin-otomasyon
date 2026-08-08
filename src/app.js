@@ -1110,14 +1110,16 @@ function renderPersonnelTable() {
 
   const filtered = list.filter(p => p.name.toLowerCase().includes(query) || p.sicil.includes(query) || p.title.toLowerCase().includes(query));
 
-  tbody.innerHTML = filtered.map(p => `
-    <tr>
+  const isFiltering = query !== '';
+  tbody.innerHTML = filtered.map((p, index) => `
+    <tr ${!isFiltering ? 'draggable="true"' : ''} data-index="${index}" class="personnel-row">
       <td><code>${p.sicil}</code></td>
       <td><strong>${p.name}</strong></td>
       <td>${p.title}</td>
       <td>${p.birim}</td>
       <td><span class="badge badge-success">Aktif</span></td>
       <td style="display: flex; gap: 0.4rem; align-items: center;">
+        ${!isFiltering ? `<span style="cursor: grab; color: #aaa; margin-right: 0.5rem;" title="Sürükle bırak ile taşı"><i class="fa-solid fa-grip-vertical"></i></span>` : ''}
         <button class="btn btn-sm btn-primary btn-edit-personnel" data-id="${p.id}"><i class="fa-solid fa-pen-to-square"></i> Düzenle</button>
         ${isAdmin() ? `<button class="btn btn-sm btn-danger btn-delete-personnel" data-id="${p.id}"><i class="fa-solid fa-trash"></i> Sil</button>` : ''}
       </td>
@@ -1261,6 +1263,49 @@ function renderPersonnelTable() {
         }
       });
     });
+  });
+
+  // Drag and Drop Ordering
+  let draggedIndex = null;
+
+  tbody.querySelectorAll('.personnel-row').forEach(row => {
+    if (row.getAttribute('draggable') === 'true') {
+      row.addEventListener('dragstart', (e) => {
+        draggedIndex = parseInt(row.getAttribute('data-index'), 10);
+        e.dataTransfer.effectAllowed = 'move';
+        row.style.opacity = '0.5';
+      });
+
+      row.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        row.style.borderTop = '2px dashed var(--accent-main)';
+      });
+
+      row.addEventListener('dragleave', (e) => {
+        row.style.borderTop = '';
+      });
+
+      row.addEventListener('dragend', (e) => {
+        row.style.opacity = '1';
+        tbody.querySelectorAll('.personnel-row').forEach(r => r.style.borderTop = '');
+      });
+
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        row.style.borderTop = '';
+        const targetIndex = parseInt(row.getAttribute('data-index'), 10);
+        
+        if (draggedIndex !== null && draggedIndex !== targetIndex) {
+          let current = getPersonnelList();
+          const draggedItem = current.splice(draggedIndex, 1)[0];
+          current.splice(targetIndex, 0, draggedItem);
+          savePersonnelList(current);
+          renderPersonnelTable();
+          populateWizardOptions();
+        }
+      });
+    }
   });
 }
 
