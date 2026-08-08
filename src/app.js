@@ -55,19 +55,42 @@ function isAdmin() {
 }
 
 function updateUserRoleUI() {
-  const badgeEl = document.getElementById('user-role-badge');
-  if (!badgeEl) return;
+  const avatarEl = document.getElementById('sidebar-user-avatar');
+  const roleEl   = document.getElementById('sidebar-user-role');
+  const badgeEl  = document.getElementById('user-role-badge');
 
   if (isAdmin()) {
-    badgeEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Sistem Yöneticisi';
-    badgeEl.style.background = 'rgba(245, 158, 11, 0.15)';
-    badgeEl.style.border = '1px solid rgba(245, 158, 11, 0.3)';
-    badgeEl.style.color = '#f59e0b';
+    if (avatarEl) {
+      avatarEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #f59e0b;"></i>';
+      avatarEl.style.background = 'rgba(245, 158, 11, 0.2)';
+      avatarEl.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+    }
+    if (roleEl) {
+      roleEl.textContent = 'Sistem Yöneticisi';
+      roleEl.style.color = '#f59e0b';
+    }
+    if (badgeEl) {
+      badgeEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Sistem Yöneticisi';
+      badgeEl.style.background = 'rgba(245, 158, 11, 0.15)';
+      badgeEl.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+      badgeEl.style.color = '#f59e0b';
+    }
   } else {
-    badgeEl.innerHTML = '<i class="fa-solid fa-user-gear" style="color: #3b82f6;"></i> Yönetici';
-    badgeEl.style.background = 'rgba(59, 130, 246, 0.15)';
-    badgeEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
-    badgeEl.style.color = '#3b82f6';
+    if (avatarEl) {
+      avatarEl.innerHTML = '<i class="fa-solid fa-user-gear" style="color: #3b82f6;"></i>';
+      avatarEl.style.background = 'rgba(59, 130, 246, 0.2)';
+      avatarEl.style.border = '1px solid rgba(59, 130, 246, 0.4)';
+    }
+    if (roleEl) {
+      roleEl.textContent = 'Yönetici';
+      roleEl.style.color = '#3b82f6';
+    }
+    if (badgeEl) {
+      badgeEl.innerHTML = '<i class="fa-solid fa-user-gear" style="color: #3b82f6;"></i> Yönetici';
+      badgeEl.style.background = 'rgba(59, 130, 246, 0.15)';
+      badgeEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
+      badgeEl.style.color = '#3b82f6';
+    }
   }
 }
 
@@ -212,6 +235,10 @@ function setupNavigation() {
       switchView(viewName);
     });
   });
+
+  document.getElementById('top-settings-btn')?.addEventListener('click', () => {
+    switchView('settings');
+  });
 }
 
 function switchView(viewName) {
@@ -222,6 +249,19 @@ function switchView(viewName) {
       nav.classList.remove('active');
     }
   });
+
+  const topSettingsBtn = document.getElementById('top-settings-btn');
+  if (topSettingsBtn) {
+    if (viewName === 'settings') {
+      topSettingsBtn.style.background = 'rgba(99, 102, 241, 0.3)';
+      topSettingsBtn.style.borderColor = 'rgba(99, 102, 241, 0.6)';
+      topSettingsBtn.style.boxShadow = '0 0 12px rgba(99, 102, 241, 0.35)';
+    } else {
+      topSettingsBtn.style.background = 'rgba(99, 102, 241, 0.12)';
+      topSettingsBtn.style.borderColor = 'rgba(99, 102, 241, 0.3)';
+      topSettingsBtn.style.boxShadow = 'none';
+    }
+  }
 
   viewSections.forEach(sec => {
     if (sec.id === `view-${viewName}`) {
