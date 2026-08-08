@@ -258,14 +258,6 @@
       "status": "active"
     },
     {
-      "id": "32",
-      "name": "Hakan GÜL",
-      "sicil": "364663",
-      "title": "Programcı",
-      "birim": "Bilgi İşlem Müdürlüğü",
-      "status": "active"
-    },
-    {
       "id": "33",
       "name": "Sibel BOZKURT",
       "sicil": "377996",
@@ -398,14 +390,6 @@
       "name": "Gizem DURMAZ",
       "sicil": "531324",
       "title": "Zabıt Katibi",
-      "birim": "Bilgi İşlem Müdürlüğü",
-      "status": "active"
-    },
-    {
-      "id": "50",
-      "name": "Metin SARI",
-      "sicil": "544657",
-      "title": "Teknisyen",
       "birim": "Bilgi İşlem Müdürlüğü",
       "status": "active"
     }

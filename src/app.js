@@ -15,6 +15,14 @@ import {
   updateMesaiCell, exportMesaiToExcelFile, printMesaiView
 } from './mesai.js';
 
+// Custom Search Normalizer for Turkish Characters
+function normalizeSearch(str) {
+  if (!str) return '';
+  return str.toLocaleLowerCase('tr-TR')
+    .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c');
+}
+
 // DOM Elements
 const navItems = document.querySelectorAll('.nav-item');
 const viewSections = document.querySelectorAll('.view-section');
@@ -992,6 +1000,45 @@ function setupLeavesTableFilters() {
     leavesState.currentPage++;
     renderLeavesTable();
   });
+
+  const startDateInput = document.getElementById('leaves-global-start');
+  const endDateInput = document.getElementById('leaves-global-end');
+  const btnThisMonth = document.getElementById('btn-leaves-filter-this-month');
+  const btnThisYear = document.getElementById('btn-leaves-filter-this-year');
+  const clearDatesBtn = document.getElementById('btn-leaves-clear-dates');
+
+  if (startDateInput) startDateInput.addEventListener('change', () => { leavesState.currentPage = 1; renderLeavesTable(); });
+  if (endDateInput) endDateInput.addEventListener('change', () => { leavesState.currentPage = 1; renderLeavesTable(); });
+
+  if (btnThisMonth) {
+    btnThisMonth.addEventListener('click', () => {
+      const fmt = (d) => { const pad = n => n<10?'0'+n:n; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+      const now = new Date();
+      if (startDateInput) startDateInput.value = fmt(new Date(now.getFullYear(), now.getMonth(), 1));
+      if (endDateInput) endDateInput.value = fmt(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+      leavesState.currentPage = 1;
+      renderLeavesTable();
+    });
+  }
+
+  if (btnThisYear) {
+    btnThisYear.addEventListener('click', () => {
+      const now = new Date();
+      if (startDateInput) startDateInput.value = `${now.getFullYear()}-01-01`;
+      if (endDateInput) endDateInput.value = `${now.getFullYear()}-12-31`;
+      leavesState.currentPage = 1;
+      renderLeavesTable();
+    });
+  }
+
+  if (clearDatesBtn) {
+    clearDatesBtn.addEventListener('click', () => {
+      if (startDateInput) startDateInput.value = '';
+      if (endDateInput) endDateInput.value = '';
+      leavesState.currentPage = 1;
+      renderLeavesTable();
+    });
+  }
 }
 
 function renderLeavesTable() {
@@ -1005,15 +1052,44 @@ function renderLeavesTable() {
       leaveTypes.map(l => `<option value="${l.code}">${l.name}</option>`).join('');
   }
 
+  const startDateInput = document.getElementById('leaves-global-start');
+  const endDateInput = document.getElementById('leaves-global-end');
+  
+  // Highlight buttons logic
+  const btnThisMonth = document.getElementById('btn-leaves-filter-this-month');
+  const btnThisYear = document.getElementById('btn-leaves-filter-this-year');
+  const clearDatesBtn = document.getElementById('btn-leaves-clear-dates');
+  
+  if (startDateInput && endDateInput && btnThisMonth && btnThisYear && clearDatesBtn) {
+    const fmtStr = (d) => { const pad = n => n<10?'0'+n:n; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+    const currN = new Date();
+    const ms = fmtStr(new Date(currN.getFullYear(), currN.getMonth(), 1));
+    const me = fmtStr(new Date(currN.getFullYear(), currN.getMonth() + 1, 0));
+    const ys = `${currN.getFullYear()}-01-01`;
+    const ye = `${currN.getFullYear()}-12-31`;
+
+    const cs = startDateInput.value;
+    const ce = endDateInput.value;
+
+    btnThisMonth.className = (cs === ms && ce === me) ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+    btnThisYear.className = (cs === ys && ce === ye) ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+    clearDatesBtn.className = (!cs && !ce) ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+  }
+
   // Filtering
   const filtered = records.filter(r => {
-    const search = leavesState.searchQuery.toLowerCase();
+    const search = normalizeSearch(leavesState.searchQuery);
     const matchesSearch = !search || 
-      r.personnelName.toLowerCase().includes(search) || 
+      normalizeSearch(r.personnelName).includes(search) || 
       (r.sicil && r.sicil.includes(search));
     const matchesType = !leavesState.typeFilter || r.leaveType === leavesState.typeFilter;
     const matchesStatus = !leavesState.statusFilter || r.status === leavesState.statusFilter;
-    return matchesSearch && matchesType && matchesStatus;
+    
+    let matchesDate = true;
+    if (startDateInput && startDateInput.value && r.ayrilisDate < startDateInput.value) matchesDate = false;
+    if (endDateInput && endDateInput.value && r.ayrilisDate > endDateInput.value) matchesDate = false;
+    
+    return matchesSearch && matchesType && matchesStatus && matchesDate;
   });
 
   // Pagination
@@ -1116,9 +1192,9 @@ function renderPersonnelTable() {
   const list = getPersonnelList();
   const tbody = document.querySelector('#table-personnel tbody');
   const searchInput = document.getElementById('search-personnel');
-  const query = (searchInput?.value || '').toLowerCase();
+  const query = normalizeSearch(searchInput?.value || '');
 
-  const filtered = list.filter(p => p.name.toLowerCase().includes(query) || p.sicil.includes(query) || p.title.toLowerCase().includes(query));
+  const filtered = list.filter(p => normalizeSearch(p.name).includes(query) || p.sicil.includes(query) || normalizeSearch(p.title).includes(query));
 
   const isFiltering = query !== '';
   tbody.innerHTML = filtered.map((p, index) => `
@@ -1702,7 +1778,7 @@ function renderReports() {
     allRecords = allRecords.filter(r => r.ayrilisDate <= endDateInput.value);
   }
 
-  const searchQuery = (searchInput?.value || '').toLowerCase();
+  const searchQuery = normalizeSearch(searchInput?.value || '');
   const typeFilter = typeFilterSelect?.value || '';
 
   let totalRaporCount = 0;
@@ -1819,7 +1895,7 @@ function renderReports() {
   // Filtered Person Stats Table
   const filteredPersonStats = personStats.filter(s => {
     const matchesSearch = !searchQuery || 
-      s.person.name.toLowerCase().includes(searchQuery) || 
+      normalizeSearch(s.person.name).includes(searchQuery) || 
       s.person.sicil.includes(searchQuery);
     
     if (!matchesSearch) return false;
@@ -2037,7 +2113,7 @@ function exportReportsPdf() {
   const searchInput = document.getElementById('report-search-personnel');
   const typeFilterSelect = document.getElementById('report-type-filter');
 
-  const searchQuery = (searchInput?.value || '').toLowerCase();
+  const searchQuery = normalizeSearch(searchInput?.value || '');
   const typeFilter = typeFilterSelect?.value || '';
 
   // Calculate PDF Filter Text
@@ -2127,7 +2203,7 @@ function exportReportsPdf() {
 
   const filteredPersonStats = personStats.filter(s => {
     const matchesSearch = !searchQuery || 
-      s.person.name.toLowerCase().includes(searchQuery) || 
+      normalizeSearch(s.person.name).includes(searchQuery) || 
       s.person.sicil.includes(searchQuery);
     
     if (!matchesSearch) return false;
@@ -2407,7 +2483,16 @@ function initMesaiView() {
     renderMesaiView();
   });
   const targetEl = document.getElementById('mesai-global-target');
-  if (targetEl) targetEl.addEventListener('change', renderMesaiView);
+  if (targetEl) {
+    const savedTarget = localStorage.getItem('mesai_target_hours');
+    if (savedTarget) {
+      targetEl.value = savedTarget;
+    }
+    targetEl.addEventListener('change', () => {
+      localStorage.setItem('mesai_target_hours', targetEl.value);
+      renderMesaiView();
+    });
+  }
 
   // İmza alanı değerleri localStorage'dan yükle
   const sigs = getMesaiSignatories();
@@ -2437,7 +2522,7 @@ function syncMesaiSelects() {
 
 function renderMesaiView(forceRebuild = false) {
   const targetEl = document.getElementById('mesai-global-target');
-  const globalTarget = targetEl ? parseInt(targetEl.value, 10) : 45;
+  const globalTarget = targetEl ? parseInt(targetEl.value, 10) : 50;
 
   if (forceRebuild || !hasMesaiDataForMonth(mesaiCurrentYear, mesaiCurrentMonth)) {
     generateMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth, globalTarget);

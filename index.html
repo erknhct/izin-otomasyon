@@ -306,6 +306,23 @@
             <span>İzin Kayıtları Geçmişi</span>
           </div>
 
+          <!-- Global Date Filter (Leaves) -->
+          <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; background: rgba(255,255,255,0.02); padding: 1rem 1.25rem; border-radius: var(--radius-lg); border: 1px solid var(--border-color); flex-wrap: wrap;">
+            <strong style="color: var(--text-main); font-size: 0.9rem;"><i class="fa-solid fa-calendar-days" style="color: var(--accent-primary);"></i> Dönem Filtresi:</strong>
+            
+            <div style="display: flex; gap: 0.4rem; border-right: 1px solid var(--border-color); padding-right: 1rem;">
+              <button class="btn btn-sm btn-secondary" id="btn-leaves-filter-this-month" style="font-size: 0.8rem;">Bu Ay</button>
+              <button class="btn btn-sm btn-secondary" id="btn-leaves-filter-this-year" style="font-size: 0.8rem;">Bu Yıl</button>
+              <button class="btn btn-sm btn-secondary" id="btn-leaves-clear-dates" style="font-size: 0.8rem;">Tüm Zamanlar</button>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+              <input type="date" id="leaves-global-start" class="form-control" style="width: auto; cursor: pointer;">
+              <span style="color: var(--text-muted); font-weight: 600;">-</span>
+              <input type="date" id="leaves-global-end" class="form-control" style="width: auto; cursor: pointer;">
+            </div>
+          </div>
+
           <!-- Leaves Table Filter Bar -->
           <div class="filter-bar" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; margin-bottom: 1.25rem;">
             <div style="flex: 1 1 240px; min-width: 200px;">
@@ -618,7 +635,7 @@
             <!-- Aylık Hedef Saat -->
             <div style="display: flex; align-items: center; gap: 0.5rem;">
               <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Aylık Hedef (Saat):</label>
-              <input type="number" id="mesai-global-target" class="form-control" value="45" min="1" max="50" style="width: 70px; font-weight: 700; text-align: center;">
+              <input type="number" id="mesai-global-target" class="form-control" value="50" min="1" max="50" style="width: 70px; font-weight: 700; text-align: center;">
             </div>
 
             <!-- Aksiyon Butonları -->
