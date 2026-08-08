@@ -2269,22 +2269,50 @@ function getMesaiSigs() {
   };
 }
 
+const monthNamesList = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+
 // Global mesai action functions (called from inline onclick in index.html)
 window.generateMesaiCetveli = function() {
   const targetEl = document.getElementById('mesai-global-target');
   const globalTarget = targetEl ? parseInt(targetEl.value, 10) : 45;
-  if (!confirm(`${['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][mesaiCurrentMonth-1]} ${mesaiCurrentYear} aylık fazla çalışma cetveli otomatik oluşturulsun mu?\n\n• İzin takip sistemindeki tüm izinler otomatik X olarak işlenir\n• Resmi tatil ve bayramlara X işlenir\n• Hafta içi günlük max 4 saat, hafta sonu max 8 saat\n• Aylık max ${Math.min(50, globalTarget)} saat, yıllık max 300 saat\n\n⚠️ Mevcut cetvel üzerine yazılacaktır.`)) return;
+  const monthName = monthNamesList[mesaiCurrentMonth - 1];
 
-  generateMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth, globalTarget);
-  renderMesaiView();
-  showToast(`⚡ ${['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][mesaiCurrentMonth-1]} ${mesaiCurrentYear} mesai cetveli başarıyla oluşturuldu!`, 'success');
+  showConfirmModal({
+    title: '⚡ Otomatik Mesai Cetveli Oluştur',
+    message: `
+      <div style="text-align: center; margin-bottom: 1rem;">
+        <strong>${monthName} ${mesaiCurrentYear}</strong> ayına ait fazla çalışma cetveli tüm izinler taranarak otomatik oluşturulsun mu?
+      </div>
+      <div style="text-align: left; font-size: 0.82rem; background: rgba(255,255,255,0.04); padding: 0.85rem 1.1rem; border-radius: 10px; border: 1px solid var(--border-color); line-height: 1.6; color: var(--text-main);">
+        • İzin takip sistemindeki tüm izin kayıtlarına otomatik <strong style="color:#ef4444;">X</strong> işlenir.<br>
+        • Resmi tatil ve bayram günlerine <strong style="color:#ef4444;">X</strong> işlenir.<br>
+        • Hafta içi günlük max 4 saat, hafta sonu max 8 saat atanır.<br>
+        • Aylık max <strong>${Math.min(50, globalTarget)} saat</strong>, yıllık max 300 saat kota uygulanır.
+      </div>
+    `,
+    confirmText: '⚡ Cetveli Oluştur',
+    cancelText: 'Vazgeç',
+    onConfirm: () => {
+      generateMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth, globalTarget);
+      renderMesaiView();
+      showToast(`⚡ ${monthName} ${mesaiCurrentYear} mesai cetveli başarıyla oluşturuldu!`, 'success');
+    }
+  });
 };
 
 window.clearMesaiMonth = function() {
-  if (!confirm(`${['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][mesaiCurrentMonth-1]} ${mesaiCurrentYear} ayına ait tüm mesai saatleri silinsin mi?`)) return;
-  clearMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth);
-  renderMesaiView();
-  showToast('🗑️ Aylık mesai verileri temizlendi.', 'info');
+  const monthName = monthNamesList[mesaiCurrentMonth - 1];
+  showConfirmModal({
+    title: '🗑️ Aylık Mesai Verilerini Temizle',
+    message: `<strong>${monthName} ${mesaiCurrentYear}</strong> ayına ait kaydedilmiş tüm mesai verilerini silmek istediğinizden emin misiniz?`,
+    confirmText: 'Evet, Verileri Sil',
+    cancelText: 'Vazgeç',
+    onConfirm: () => {
+      clearMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth);
+      renderMesaiView();
+      showToast('🗑️ Aylık mesai verileri temizlendi.', 'info');
+    }
+  });
 };
 
 window.exportMesaiExcel = async function() {
@@ -2306,12 +2334,62 @@ window.printMesaiCetveli = function() {
 
 window.mesaiCellEdit = function(pid, y, m, d, tdEl) {
   const currentVal = tdEl.querySelector('span')?.textContent?.trim() || 'X';
-  const newVal = prompt(
-    `📝 ${tdEl.title || ''}\n\nMesai saatini girin (0–8 saat) ya da boş bırakırsanız X işlenir:`,
-    currentVal === 'X' ? '' : currentVal
-  );
-  if (newVal === null) return; // İptal
-  updateMesaiCell(pid, y, m, d, newVal);
-  renderMesaiView();
+  const person = getPersonnelList().find(p => p.id === pid);
+  const personName = person ? person.name : 'Personel';
+  const monthName = monthNamesList[m - 1];
+  const dateLabel = `${d} ${monthName} ${y}`;
+
+  const modalHtml = `
+    <form id="form-mesai-cell-edit" style="padding: 0.5rem 0;">
+      <div style="display: flex; align-items: center; gap: 0.85rem; background: rgba(99, 102, 241, 0.1); padding: 0.85rem 1.1rem; border-radius: 12px; margin-bottom: 1.25rem; border: 1px solid rgba(99, 102, 241, 0.25);">
+        <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(99, 102, 241, 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+          <i class="fa-solid fa-user-clock" style="font-size: 1.3rem; color: var(--accent-primary);"></i>
+        </div>
+        <div>
+          <div style="font-weight: 800; font-size: 1rem; color: var(--text-main);">${personName}</div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 0.1rem;">📅 ${dateLabel}</div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 1.5rem;">
+        <label style="font-weight: 700; margin-bottom: 0.5rem; display: block; font-size: 0.9rem;">
+          Mesai Saati Giriniz (0 – 8 Saat veya 'X'):
+        </label>
+        <input type="text" id="mesai-cell-val-input" value="${currentVal === 'X' ? '' : currentVal}" placeholder="Örn: 4, 8 veya X (İzinli)" 
+          style="width: 100%; font-size: 1.25rem; font-weight: 800; text-align: center; color: var(--accent-primary); padding: 0.75rem; border-radius: 10px;" />
+        <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem; line-height: 1.5;">
+          💡 İzinli veya tatil durumları için <strong>X</strong> girin ya da boş bırakın.<br>Çalışılan mesai saati için sayı (0–8) girin.
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-cell-edit">İptal</button>
+        <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.5rem; font-weight: 700;">
+          <i class="fa-solid fa-check"></i> Güncelle ve Kaydet
+        </button>
+      </div>
+    </form>
+  `;
+
+  openModal('📝 MESAİ SAATİ DÜZENLE', modalHtml);
+
+  setTimeout(() => {
+    const input = document.getElementById('mesai-cell-val-input');
+    if (input) {
+      input.focus();
+      input.select();
+    }
+  }, 50);
+
+  document.getElementById('btn-cancel-cell-edit')?.addEventListener('click', closeModal);
+
+  document.getElementById('form-mesai-cell-edit')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const inputVal = document.getElementById('mesai-cell-val-input')?.value;
+    updateMesaiCell(pid, y, m, d, inputVal);
+    closeModal();
+    renderMesaiView();
+    showToast(`✅ ${personName} — ${dateLabel} mesai saati güncellendi.`, 'success');
+  });
 };
 
