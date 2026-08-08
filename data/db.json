@@ -488,9 +488,10 @@
       "ayrilisDate": "2026-07-27",
       "expectedReturnDate": "2026-07-31",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-08",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786147720491",
@@ -552,9 +553,9 @@
       "ayrilisDate": "2026-01-12",
       "expectedReturnDate": "2026-01-19",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-08"
     },
     {
       "id": "rec-1786142611530",
