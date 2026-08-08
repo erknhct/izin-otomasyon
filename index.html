@@ -679,16 +679,17 @@
         <!-- Mesai Özet Kartları -->
         <div class="stats-grid" id="mesai-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px,1fr));">
           <div class="stat-card">
-            <div class="stat-icon primary"><i class="fa-solid fa-clock"></i></div>
-            <div><div class="stat-value" id="mesai-stat-total">0</div><div class="stat-label">Bu Ay Toplam Mesai Saati</div></div>
-          </div>
-          <div class="stat-card">
             <div class="stat-icon success"><i class="fa-solid fa-users"></i></div>
             <div><div class="stat-value" id="mesai-stat-personnel">0</div><div class="stat-label">Mesaili Personel Sayısı</div></div>
           </div>
-          <div class="stat-card">
-            <div class="stat-icon warning"><i class="fa-solid fa-xmark"></i></div>
-            <div><div class="stat-value" id="mesai-stat-izin">0</div><div class="stat-label">İzinli Gün Sayısı (X)</div></div>
+          <div class="stat-card" style="display:flex; flex-direction:column; justify-content:center;">
+            <div style="display:flex; align-items:center; gap:1rem;">
+              <div class="stat-icon warning"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <div><div class="stat-value" id="mesai-stat-incomplete">0</div><div class="stat-label">Hedef Saati Tamamlanamayan Personel</div></div>
+            </div>
+            <div id="mesai-stat-incomplete-names" style="margin-top:0.5rem; font-size:0.75rem; color:var(--text-muted); line-height:1.4; max-height:60px; overflow-y:auto;">
+              <!-- Names will be injected here -->
+            </div>
           </div>
         </div>
 

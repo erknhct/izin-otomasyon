@@ -395,12 +395,17 @@ export function renderMesaiTable(y, m) {
   let grandTotal = 0;
   let mesailiSayisi = 0;
   let toplamXCount = 0;
+  let incompleteNames = [];
+  
+  const targetEl = document.getElementById('mesai-global-target');
+  const globalTarget = targetEl ? parseInt(targetEl.value, 10) : 50;
 
   personnel.forEach((p, idx) => {
     const monthTotal = getMonthMesaiHours(p.id, y, m);
     const remaining = getRemainingYearlyQuota(p.id, y, m);
     grandTotal += monthTotal;
     if (monthTotal > 0) mesailiSayisi++;
+    if (monthTotal < globalTarget) incompleteNames.push(p.name);
 
     const totalStyle = monthTotal > 50
       ? 'color:#ef4444; font-weight:800;'
@@ -446,9 +451,19 @@ export function renderMesaiTable(y, m) {
   const statTotal = document.getElementById('mesai-stat-total');
   const statPers = document.getElementById('mesai-stat-personnel');
   const statIzin = document.getElementById('mesai-stat-izin');
+  const statIncomplete = document.getElementById('mesai-stat-incomplete');
+  const statIncompleteNames = document.getElementById('mesai-stat-incomplete-names');
   if (statTotal) statTotal.textContent = grandTotal;
   if (statPers) statPers.textContent = mesailiSayisi;
   if (statIzin) statIzin.textContent = toplamXCount;
+  if (statIncomplete) statIncomplete.textContent = incompleteNames.length;
+  if (statIncompleteNames) {
+    if (incompleteNames.length > 0) {
+      statIncompleteNames.innerHTML = incompleteNames.map(n => `• ${escapeHtml(n)}`).join('<br>');
+    } else {
+      statIncompleteNames.innerHTML = '<span style="color:#10b981;">Herkes hedefe ulaştı! 🎉</span>';
+    }
+  }
 
   // Boş durum
   const hasAnyData = Object.keys(mesaiData.mesaiShifts).some(k => k.startsWith(dateToStr(y, m, 1).substring(0, 7)));
