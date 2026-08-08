@@ -244,27 +244,28 @@
                 <input type="text" id="wiz-ilgi-evrak" placeholder="Örn: 03.08.2026 tarihli yazımız." />
               </div>
 
-              <!-- Gönderilen Makam -->
-              <div class="form-group full-width">
-                <label for="wiz-alici-makam"><i class="fa-solid fa-building-columns"></i> Gönderilecek Makam</label>
-                <select id="wiz-alici-makam" required>
-                  <option value="komisyon">ANKARA ADLÎ YARGI İLK DERECE MAHKEMESİ ADALET KOMİSYONU BAŞKANLIĞI'NA</option>
-                  <option value="bakanlik">ANKARA CUMHURİYET BAŞSAVCILIĞI Bakanlık Muhabere Bürosu'na</option>
-                  <option value="ozel">Özel Makam Yaz (Manuel)</option>
-                </select>
+              <!-- Gönderilen Makam & İmzalayan Yetkili (Yan yana 2'li) -->
+              <div class="form-row-2col">
+                <div class="form-group">
+                  <label for="wiz-alici-makam"><i class="fa-solid fa-building-columns"></i> Gönderilecek Makam</label>
+                  <select id="wiz-alici-makam" required>
+                    <option value="komisyon">ANKARA ADLÎ YARGI İLK DERECE MAHKEMESİ ADALET KOMİSYONU BAŞKANLIĞI'NA</option>
+                    <option value="bakanlik">ANKARA CUMHURİYET BAŞSAVCILIĞI Bakanlık Muhabere Bürosu'na</option>
+                    <option value="ozel">Özel Makam Yaz (Manuel)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="wiz-imzalayan"><i class="fa-solid fa-pen-nib"></i> İmzalayacak Yetkili</label>
+                  <select id="wiz-imzalayan" required>
+                    <!-- Dynamically filled -->
+                  </select>
+                </div>
               </div>
 
               <div class="form-group full-width" id="group-alici-makam-ozel" style="display: none;">
                 <label for="wiz-alici-makam-ozel">Özel Alıcı Makam Metni</label>
                 <textarea id="wiz-alici-makam-ozel" rows="2"></textarea>
-              </div>
-
-              <!-- İmzalayan Yetkili -->
-              <div class="form-group full-width">
-                <label for="wiz-imzalayan"><i class="fa-solid fa-pen-nib"></i> İmzalayacak Yetkili</label>
-                <select id="wiz-imzalayan" required>
-                  <!-- Dynamically filled -->
-                </select>
               </div>
             </div>
 
