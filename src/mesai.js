@@ -577,9 +577,27 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
         cell.value = d <= dim ? d : '';
       }
 
-      // ── Mevcut Personel Verilerini Temizle (satır 8'den 57'ye kadar) ──
+      // ── Satır 8 ve sonrasındaki eski birleştirilmiş hücreleri (merge) unmerge yap ──
+      if (ws.model && ws.model.merges && Array.isArray(ws.model.merges)) {
+        const mergesToUnmerge = [...ws.model.merges];
+        mergesToUnmerge.forEach(rangeStr => {
+          try {
+            const match = rangeStr.match(/\d+/g);
+            if (match && match.length >= 1) {
+              const startRow = parseInt(match[0], 10);
+              if (startRow >= 8) {
+                ws.unmergeCells(rangeStr);
+              }
+            }
+          } catch (e) {
+            // sessizce geç
+          }
+        });
+      }
+
+      // ── Mevcut Personel Verilerini Temizle (satır 8'den 60'a kadar) ──
       // Sadece değerleri siliyoruz, stilleri bozmuyoruz.
-      for (let r = 8; r <= 57; r++) {
+      for (let r = 8; r <= 60; r++) {
         for (let c = 1; c <= 40; c++) {
           ws.getCell(r, c).value = null;
         }
@@ -597,9 +615,12 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
           }
         }
 
+        const sicilVal = p.sicil || p.sicilNo || '';
+        const parsedSicil = parseInt(sicilVal, 10);
+
         ws.getCell('A' + rowNum).value = idx + 1;
-        ws.getCell('C' + rowNum).value = p.sicilNo ? parseInt(p.sicilNo, 10) : '';
-        ws.getCell('D' + rowNum).value = p.tcNo ? parseInt(p.tcNo, 10) : '';
+        ws.getCell('C' + rowNum).value = !isNaN(parsedSicil) && parsedSicil > 0 ? parsedSicil : sicilVal;
+        ws.getCell('D' + rowNum).value = p.tcNo ? parseInt(p.tcNo, 10) : (p.tc || '');
         ws.getCell('E' + rowNum).value = (p.name || '').toUpperCase();
         ws.getCell('F' + rowNum).value = p.title || p.unvan || 'Zabıt Katibi';
 
