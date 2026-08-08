@@ -1124,11 +1124,15 @@ function renderPersonnelTable() {
     </tr>
   `).join('');
 
-  searchInput?.replaceWith(searchInput.cloneNode(true));
-  document.getElementById('search-personnel')?.addEventListener('input', renderPersonnelTable);
+  if (searchInput && !searchInput.dataset.hasListener) {
+    searchInput.dataset.hasListener = "true";
+    searchInput.addEventListener('input', renderPersonnelTable);
+  }
 
-  // Add Personnel Listener
-  document.getElementById('btn-add-personnel')?.addEventListener('click', () => {
+  const btnAdd = document.getElementById('btn-add-personnel');
+  if (btnAdd && !btnAdd.dataset.hasListener) {
+    btnAdd.dataset.hasListener = "true";
+    btnAdd.addEventListener('click', () => {
     openModal('Yeni Personel Ekle', `
       <form id="form-add-personnel" class="form-grid">
         <div class="form-group">
@@ -1171,6 +1175,7 @@ function renderPersonnelTable() {
       populateWizardOptions();
     });
   });
+  }
 
   // Edit Personnel Listener
   tbody.querySelectorAll('.btn-edit-personnel').forEach(btn => {
