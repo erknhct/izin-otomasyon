@@ -477,6 +477,22 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786198645259",
+      "personnelId": "1786144743643",
+      "personnelName": "Erkan HACAT",
+      "sicil": "155118",
+      "unvan": "Bilgi İşlem Müdürü",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 19,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-09-07",
+      "aliciMakam": "komisyon",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-09-07"
+    },
+    {
       "id": "rec-1786190440346",
       "personnelId": "11",
       "personnelName": "Zeynep ARSLAN",
