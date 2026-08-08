@@ -417,6 +417,23 @@
           </div>
         </div>
 
+        <!-- Global Date Filter -->
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; align-items: center; background: rgba(255,255,255,0.02); padding: 1rem 1.25rem; border-radius: var(--radius-lg); border: 1px solid var(--border-color); flex-wrap: wrap;">
+          <strong style="color: var(--text-main); font-size: 0.9rem;"><i class="fa-solid fa-calendar-days" style="color: var(--accent-primary);"></i> Dönem Filtresi:</strong>
+          
+          <div style="display: flex; gap: 0.4rem; border-right: 1px solid var(--border-color); padding-right: 1rem;">
+            <button class="btn btn-sm btn-secondary" id="btn-filter-this-month" style="font-size: 0.8rem;">Bu Ay</button>
+            <button class="btn btn-sm btn-secondary" id="btn-filter-this-year" style="font-size: 0.8rem;">Bu Yıl</button>
+            <button class="btn btn-sm btn-secondary" id="btn-report-clear-dates" style="font-size: 0.8rem;">Tüm Zamanlar</button>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <input type="date" id="report-global-start" class="form-control" style="width: auto; cursor: pointer;">
+            <span style="color: var(--text-muted); font-weight: 600;">-</span>
+            <input type="date" id="report-global-end" class="form-control" style="width: auto; cursor: pointer;">
+          </div>
+        </div>
+
         <!-- 1. KPI Cards -->
         <div class="stats-grid" id="reports-kpi-grid">
           <!-- Filled dynamically -->

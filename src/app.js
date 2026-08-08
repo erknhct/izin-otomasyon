@@ -190,6 +190,16 @@ async function initApp() {
   setupWizardForm();
   renderPersonnelTable();
   renderLeavesTable();
+
+  // Set default report filter to "Bu Yıl"
+  const rStart = document.getElementById('report-global-start');
+  const rEnd = document.getElementById('report-global-end');
+  if (rStart && rEnd) {
+    const y = new Date().getFullYear();
+    rStart.value = `${y}-01-01`;
+    rEnd.value = `${y}-12-31`;
+  }
+
   renderReports();
   renderSettings();
   initMesaiView();
@@ -1593,7 +1603,7 @@ function renderSettings() {
 // 6. REPORTS & ANALYTICS
 function renderReports() {
   const personnelList = getPersonnelList();
-  const allRecords = getLeaveRecords();
+  let allRecords = getLeaveRecords();
   const leaveTypes = getLeaveTypes();
 
   // Populate report type filter dropdown
@@ -1602,6 +1612,11 @@ function renderReports() {
     typeFilterSelect.innerHTML = `<option value="">Tüm İzin Türleri</option>` +
       leaveTypes.map(l => `<option value="${l.code}">${l.name}</option>`).join('');
   }
+
+  // Date Filter Inputs
+  const startDateInput = document.getElementById('report-global-start');
+  const endDateInput = document.getElementById('report-global-end');
+  const clearDatesBtn = document.getElementById('btn-report-clear-dates');
 
   // Attach search and filter event listeners
   const searchInput = document.getElementById('report-search-personnel');
@@ -1615,7 +1630,77 @@ function renderReports() {
     typeFilterSelect.addEventListener('change', renderReports);
   }
 
+  if (startDateInput && !startDateInput.dataset.hasListener) {
+    startDateInput.dataset.hasListener = "true";
+    startDateInput.addEventListener('change', renderReports);
+  }
+  if (endDateInput && !endDateInput.dataset.hasListener) {
+    endDateInput.dataset.hasListener = "true";
+    endDateInput.addEventListener('change', renderReports);
+  }
 
+  const btnThisMonth = document.getElementById('btn-filter-this-month');
+  const btnThisYear = document.getElementById('btn-filter-this-year');
+
+  if (btnThisMonth && !btnThisMonth.dataset.hasListener) {
+    btnThisMonth.dataset.hasListener = "true";
+    btnThisMonth.addEventListener('click', () => {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      // format YYYY-MM-DD keeping local timezone correctly
+      const fmt = (d) => { const pad = n => n<10?'0'+n:n; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+      
+      if (startDateInput) startDateInput.value = fmt(start);
+      if (endDateInput) endDateInput.value = fmt(end);
+      renderReports();
+    });
+  }
+
+  if (btnThisYear && !btnThisYear.dataset.hasListener) {
+    btnThisYear.dataset.hasListener = "true";
+    btnThisYear.addEventListener('click', () => {
+      const now = new Date();
+      if (startDateInput) startDateInput.value = `${now.getFullYear()}-01-01`;
+      if (endDateInput) endDateInput.value = `${now.getFullYear()}-12-31`;
+      renderReports();
+    });
+  }
+
+  if (clearDatesBtn && !clearDatesBtn.dataset.hasListener) {
+    clearDatesBtn.dataset.hasListener = "true";
+    clearDatesBtn.addEventListener('click', () => {
+      if (startDateInput) startDateInput.value = '';
+      if (endDateInput) endDateInput.value = '';
+      renderReports();
+    });
+  }
+
+  // Visual highlight logic for Quick Filter Buttons
+  if (startDateInput && endDateInput && btnThisMonth && btnThisYear && clearDatesBtn) {
+    const fmtStr = (d) => { const pad = n => n<10?'0'+n:n; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+    const currN = new Date();
+    const ms = fmtStr(new Date(currN.getFullYear(), currN.getMonth(), 1));
+    const me = fmtStr(new Date(currN.getFullYear(), currN.getMonth() + 1, 0));
+    const ys = `${currN.getFullYear()}-01-01`;
+    const ye = `${currN.getFullYear()}-12-31`;
+
+    const cs = startDateInput.value;
+    const ce = endDateInput.value;
+
+    btnThisMonth.className = (cs === ms && ce === me) ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+    btnThisYear.className = (cs === ys && ce === ye) ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+    clearDatesBtn.className = (!cs && !ce) ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+  }
+
+  // Apply Date Filters
+  if (startDateInput && startDateInput.value) {
+    allRecords = allRecords.filter(r => r.ayrilisDate >= startDateInput.value);
+  }
+  if (endDateInput && endDateInput.value) {
+    allRecords = allRecords.filter(r => r.ayrilisDate <= endDateInput.value);
+  }
 
   const searchQuery = (searchInput?.value || '').toLowerCase();
   const typeFilter = typeFilterSelect?.value || '';
@@ -1945,7 +2030,49 @@ function openPersonHistoryModal(personId) {
 
 function exportReportsPdf() {
   const personnelList = getPersonnelList();
-  const allRecords = getLeaveRecords();
+  let allRecords = getLeaveRecords();
+
+  const startDateInput = document.getElementById('report-global-start');
+  const endDateInput = document.getElementById('report-global-end');
+  const searchInput = document.getElementById('report-search-personnel');
+  const typeFilterSelect = document.getElementById('report-type-filter');
+
+  const searchQuery = (searchInput?.value || '').toLowerCase();
+  const typeFilter = typeFilterSelect?.value || '';
+
+  // Calculate PDF Filter Text
+  let filterText = 'Uygulanan Filtre: Tüm Zamanlar';
+  const filterParts = [];
+  if (startDateInput && startDateInput.value && endDateInput && endDateInput.value) {
+    filterParts.push(`Tarih: ${formatDateTR(startDateInput.value)} - ${formatDateTR(endDateInput.value)}`);
+  } else if (startDateInput && startDateInput.value) {
+    filterParts.push(`Tarih: ${formatDateTR(startDateInput.value)} Sonrası`);
+  } else if (endDateInput && endDateInput.value) {
+    filterParts.push(`Tarih: ${formatDateTR(endDateInput.value)} Öncesi`);
+  }
+  
+  if (typeFilter) {
+    const leaveTypes = getLeaveTypes();
+    const lObj = leaveTypes.find(l => l.code === typeFilter) || { name: 'Özel Tür' };
+    if (typeFilter === 'rapor') filterParts.push('İzin Türü: İstirahat (Sağlık) Raporu');
+    else if (typeFilter === 'yillik') filterParts.push('İzin Türü: Yıllık İzin');
+    else filterParts.push(`İzin Türü: ${lObj.name}`);
+  }
+  
+  if (searchQuery) {
+    filterParts.push(`Arama: "${searchQuery}"`);
+  }
+
+  if (filterParts.length > 0) {
+    filterText = 'Uygulanan Filtreler: ' + filterParts.join(' | ');
+  }
+
+  if (startDateInput && startDateInput.value) {
+    allRecords = allRecords.filter(r => r.ayrilisDate >= startDateInput.value);
+  }
+  if (endDateInput && endDateInput.value) {
+    allRecords = allRecords.filter(r => r.ayrilisDate <= endDateInput.value);
+  }
 
   let totalRaporDays = 0;
   let totalYillikDays = 0;
@@ -1998,7 +2125,19 @@ function exportReportsPdf() {
     };
   });
 
-  const rowsHtml = personStats.map((s, idx) => {
+  const filteredPersonStats = personStats.filter(s => {
+    const matchesSearch = !searchQuery || 
+      s.person.name.toLowerCase().includes(searchQuery) || 
+      s.person.sicil.includes(searchQuery);
+    
+    if (!matchesSearch) return false;
+    if (typeFilter === 'rapor') return s.raporCount > 0;
+    if (typeFilter === 'yillik') return s.yillikCount > 0;
+    if (typeFilter) return s.otherCount > 0;
+    return true;
+  });
+
+  const rowsHtml = filteredPersonStats.map((s, idx) => {
     const otherText = Object.keys(s.otherMap).length > 0
       ? Object.entries(s.otherMap).map(([tName, tData]) => `${tName} (${tData.count} Kez / ${tData.days} Gün)`).join(', ')
       : '-';
@@ -2061,7 +2200,7 @@ function exportReportsPdf() {
       <span><strong>${s.person.name}</strong> <small>(${s.person.sicil})</small></span>
       <span style="color: #d97706; font-weight: bold;">⚠️ ${s.yillikCount} Parça (${s.yillikDays} Gün)</span>
     </div>
-  `).join('') : '<div style="font-size: 8pt; color: #166534; font-weight: 600;">✅ Mevzuata aykırı bölme yok.</div>';
+  `).join('') : '<div style="font-size: 8pt; color: #166534; font-weight: 600;">✅ Yıllık iznini 2\'den fazla parçaya bölerek kullanan personel bulunmuyor.</div>';
 
   const pdfHtml = `
     <!DOCTYPE html>
@@ -2104,6 +2243,7 @@ function exportReportsPdf() {
             <h1 class="title-main">ANKARA ADLİYESİ BİLGİ İŞLEM MÜDÜRLÜĞÜ</h1>
             <h2 class="title-sub">PERSONEL İZİN & SAĞLIK RAPORU DETAYLI ANALİZ RAPORU</h2>
             <div class="title-date">Rapor Tarihi: ${todayStr} | Toplam Personel Sayısı: ${personnelList.length}</div>
+            <div class="title-date" style="color: #4f46e5; font-weight: 600; margin-top: 4px;">${filterText}</div>
           </td>
           <td width="100" style="text-align: right; font-size: 9pt; color: #64748b;">
             T.C.<br>ANKARA ADLİYESİ
