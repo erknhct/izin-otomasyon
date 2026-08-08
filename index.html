@@ -229,7 +229,7 @@
               <!-- 5. İzin Süresi (Gün Sayısı) -->
               <div class="form-group">
                 <label for="wiz-izin-suresi"><i class="fa-solid fa-stopwatch"></i> 5. İzin Süresi (Kaç Gün?)</label>
-                <input type="number" id="wiz-izin-suresi" value="4" min="1" max="90" required style="font-size: 1.1rem; font-weight: 700; color: var(--accent-primary);" />
+                <input type="number" id="wiz-izin-suresi" placeholder="Örn: 5" min="1" max="90" required style="font-size: 1.1rem; font-weight: 700; color: var(--accent-primary);" />
               </div>
 
               <!-- 6. Göreve Başlama Tarihi (Otomatik Hesaplanan) -->
@@ -249,9 +249,7 @@
                 <div class="form-group">
                   <label for="wiz-alici-makam"><i class="fa-solid fa-building-columns"></i> Gönderilecek Makam</label>
                   <select id="wiz-alici-makam" required>
-                    <option value="komisyon">ANKARA ADLÎ YARGI İLK DERECE MAHKEMESİ ADALET KOMİSYONU BAŞKANLIĞI'NA</option>
-                    <option value="bakanlik">ANKARA CUMHURİYET BAŞSAVCILIĞI Bakanlık Muhabere Bürosu'na</option>
-                    <option value="ozel">Özel Makam Yaz (Manuel)</option>
+                    <!-- Dynamically filled -->
                   </select>
                 </div>
 
@@ -549,6 +547,17 @@
               <button class="btn btn-sm btn-primary" id="btn-add-signer"><i class="fa-solid fa-plus"></i> Yetkili Ekle</button>
             </div>
             <div id="list-signers">
+              <!-- Dynamically filled -->
+            </div>
+          </div>
+
+          <!-- Alici Makamlar -->
+          <div class="glass-card">
+            <div class="card-title">
+              <span>Gönderilecek Makamlar</span>
+              <button class="btn btn-sm btn-primary" id="btn-add-makam"><i class="fa-solid fa-plus"></i> Makam Ekle</button>
+            </div>
+            <div id="list-makamlar">
               <!-- Dynamically filled -->
             </div>
           </div>

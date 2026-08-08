@@ -462,6 +462,22 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786222853087",
+      "personnelId": "1786144743643",
+      "personnelName": "Erkan HACAT",
+      "sicil": "155118",
+      "unvan": "Bilgi İşlem Müdürü",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 4,
+      "ayrilisDate": "2026-08-08",
+      "expectedReturnDate": "2026-08-12",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786204460093",
       "personnelId": "47",
       "personnelName": "Hande TAŞ",
@@ -764,5 +780,15 @@
       "ad": "Dr. Arif Naci SUCUOĞLU",
       "unvan": "Cumhuriyet Başsavcı Vekili"
     }
-  }
+  },
+  "aliciMakamlar": [
+    {
+      "id": "Komisyon ",
+      "name": "ANKARA ADLİ YARGI\nİLK DERECE MAHKEMESİ\nADALET KOMİSYONU BAŞKANLIĞI'NA"
+    },
+    {
+      "id": "Bakanlık Muhabere",
+      "name": "ANKARA CUMHURİYET BAŞSAVCILIĞI\nBakanlık Muhabere Bürosu'na"
+    }
+  ]
 }

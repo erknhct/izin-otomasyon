@@ -130,6 +130,7 @@ export function generateDocumentPreviewHtml(payload) {
     baslayisTarihi = tarih,
     ilgiEvrak = '',
     aliciMakam = 'komisyon',
+    aliciMakamText = '',
     aliciMakamOzel = '',
     imzalayanAd = 'Dr. Arif Naci SUCUOĞLU',
     imzalayanUnvan = 'Cumhuriyet Başsavcı Vekili',
@@ -139,24 +140,25 @@ export function generateDocumentPreviewHtml(payload) {
   let destTitleLines = [];
   let closingSentence = "Bilgilerinize arz olunur.";
 
-  if (aliciMakam === 'komisyon') {
-    destTitleLines = [
-      "ANKARA ADLÎ YARGI",
-      "İLK DERECE MAHKEMESİ",
-      "ADALET KOMİSYONU BAŞKANLIĞI'NA"
-    ];
-    closingSentence = "Bilgilerinize arz olunur.";
-  } else if (aliciMakam === 'bakanlik') {
-    destTitleLines = [
-      "ANKARA CUMHURİYET BAŞSAVCILIĞI",
-      "Bakanlık Muhabere Bürosu'na"
-    ];
+  if (aliciMakam === 'ozel') {
+    destTitleLines = aliciMakamOzel.split('\n').map(l => l.trim());
+    if (destTitleLines.length === 0 || destTitleLines.join('') === '') {
+      destTitleLines = ["ANKARA ADLÎ YARGI ", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
+    }
+  } else {
+    if (aliciMakamText) {
+      destTitleLines = aliciMakamText.split('\n').map(l => l.trim());
+    } else {
+      // Fallback just in case
+      destTitleLines = ["ANKARA ADLÎ YARGI ", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
+    }
+  }
+
+  // Preserve backwards compatibility for closing sentence if it's the default 'bakanlik'
+  if (aliciMakam === 'bakanlik' || (aliciMakamText && aliciMakamText.toLowerCase().includes('bakanlık'))) {
     closingSentence = "Gereğini arz ederim.";
   } else {
-    destTitleLines = (aliciMakamOzel || '').split('\n').filter(l => l.trim());
-    if (destTitleLines.length === 0) {
-      destTitleLines = ["ANKARA ADLÎ YARGI", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
-    }
+    closingSentence = "Bilgilerinize arz olunur.";
   }
 
   const { subjectStr, bodyParagraph } = getDocumentTextComponents(payload);
@@ -217,6 +219,7 @@ export function buildUdfXml(payload) {
     baslayisTarihi = tarih,
     ilgiEvrak = '',
     aliciMakam = 'komisyon',
+    aliciMakamText = '',
     aliciMakamOzel = '',
     imzalayanAd = 'Dr. Arif Naci SUCUOĞLU',
     imzalayanUnvan = 'Cumhuriyet Başsavcı Vekili',
@@ -227,24 +230,25 @@ export function buildUdfXml(payload) {
   let destTitleLines = [];
   let closingSentence = "Bilgilerinize arz olunur.";
 
-  if (aliciMakam === 'komisyon') {
-    destTitleLines = [
-      "ANKARA ADLÎ YARGI ",
-      "İLK DERECE MAHKEMESİ ",
-      "ADALET KOMİSYONU BAŞKANLIĞI'NA"
-    ];
-    closingSentence = "Bilgilerinize arz olunur.";
-  } else if (aliciMakam === 'bakanlik') {
-    destTitleLines = [
-      "ANKARA CUMHURİYET BAŞSAVCILIĞI",
-      "Bakanlık Muhabere Bürosu'na"
-    ];
-    closingSentence = "Gereğini arz ederim.";
-  } else {
-    destTitleLines = aliciMakamOzel.split('\n').filter(l => l.trim());
-    if (destTitleLines.length === 0) {
+  if (aliciMakam === 'ozel') {
+    destTitleLines = aliciMakamOzel.split('\n').map(l => l.trim());
+    if (destTitleLines.length === 0 || destTitleLines.join('') === '') {
       destTitleLines = ["ANKARA ADLÎ YARGI ", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
     }
+  } else {
+    if (aliciMakamText) {
+      destTitleLines = aliciMakamText.split('\n').map(l => l.trim());
+    } else {
+      // Fallback just in case
+      destTitleLines = ["ANKARA ADLÎ YARGI ", "ADALET KOMİSYONU BAŞKANLIĞI'NA"];
+    }
+  }
+
+  // Preserve backwards compatibility for closing sentence if it's the default 'bakanlik'
+  if (aliciMakam === 'bakanlik' || (aliciMakamText && aliciMakamText.toLowerCase().includes('bakanlık'))) {
+    closingSentence = "Gereğini arz ederim.";
+  } else {
+    closingSentence = "Bilgilerinize arz olunur.";
   }
 
   const { subjectStr, bodyParagraph } = getDocumentTextComponents(payload);

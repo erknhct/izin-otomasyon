@@ -7,7 +7,8 @@ import {
   getLeaveRecords, addLeaveRecord, updateLeaveRecord, deleteLeaveRecord,
   getAdminPasswordStored, setAdminPasswordStored,
   getStaffPasswordStored, setStaffPasswordStored,
-  getMesaiSettingsDB, saveMesaiSettingsDB
+  getMesaiSettingsDB, saveMesaiSettingsDB,
+  getAliciMakamlar, saveAliciMakamlar
 } from './storage.js';
 import { calculateExpectedReturn, calculateDaysFromReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
 import {
@@ -707,10 +708,24 @@ function populateWizardOptions() {
   const signerSelect = document.getElementById('wiz-imzalayan');
   signerSelect.innerHTML = signatories.map(s => `<option value="${s.id}" ${s.default ? 'selected' : ''}>${s.name} (${s.title})</option>`).join('');
 
+  // 4. Alici Makamlar
+  const makamlar = getAliciMakamlar();
+  const makamSelect = document.getElementById('wiz-alici-makam');
+  if (makamSelect) {
+    let optionsHtml = makamlar.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    optionsHtml += `<option value="ozel">Özel Makam Yaz (Manuel)</option>`;
+    makamSelect.innerHTML = optionsHtml;
+  }
+
   // Default dates
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('wiz-ayrilis-tarih').value = today;
-  document.getElementById('wiz-baslayis-tarih').value = calculateExpectedReturn(today, document.getElementById('wiz-izin-suresi').value);
+  
+  const izinSuresiInput = document.getElementById('wiz-izin-suresi');
+  if (izinSuresiInput) {
+    izinSuresiInput.value = ''; // Varsayılan olarak boş gelsin (Kullanıcı kendi yazsın)
+    document.getElementById('wiz-baslayis-tarih').value = '';
+  }
 }
 
 function setupWizardForm() {
@@ -873,6 +888,11 @@ function getWizardPayload() {
   const ayrilisTarihi = document.getElementById('wiz-ayrilis-tarih')?.value || new Date().toISOString().split('T')[0];
   const baslayisTarihi = document.getElementById('wiz-baslayis-tarih')?.value || ayrilisTarihi;
 
+  const aliciMakamId = document.getElementById('wiz-alici-makam')?.value || 'komisyon';
+  const makamList = getAliciMakamlar();
+  const foundMakam = makamList.find(m => m.id === aliciMakamId);
+  const aliciMakamText = foundMakam ? foundMakam.name : '';
+
   let docType = `${leaveCode}_${actionType}`;
   const todayStr = new Date().toISOString().split('T')[0];
   const donusNotu = getReturnReasonNotu(ayrilisTarihi, izinSuresi);
@@ -897,7 +917,8 @@ function getWizardPayload() {
     ayrilisTarihi: ayrilisTarihi,
     baslayisTarihi: baslayisTarihi,
     ilgiEvrak: document.getElementById('wiz-ilgi-evrak')?.value || '',
-    aliciMakam: document.getElementById('wiz-alici-makam')?.value || 'komisyon',
+    aliciMakam: aliciMakamId,
+    aliciMakamText: aliciMakamText,
     aliciMakamOzel: document.getElementById('wiz-alici-makam-ozel')?.value || '',
     imzalayanAd: signer.name,
     imzalayanUnvan: signer.title,
@@ -1401,6 +1422,72 @@ function renderPersonnelTable() {
 
 // 5. SETTINGS
 function renderSettings() {
+  // Alici Makamlar
+  const makamlar = getAliciMakamlar();
+  document.getElementById('list-makamlar').innerHTML = makamlar.map(m => `
+    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0; border-bottom: var(--border-color) 1px solid;">
+      <div>
+        <strong>${m.id}</strong><br><small style="color: var(--text-muted);">${m.name}</small>
+      </div>
+      ${isAdmin() ? `<button class="btn btn-sm btn-danger btn-del-makam" data-id="${m.id}"><i class="fa-solid fa-trash"></i> Sil</button>` : ''}
+    </div>
+  `).join('');
+
+  document.querySelectorAll('.btn-del-makam').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-id');
+      showConfirmModal({
+        title: 'Makamı Sil',
+        message: `Bu gönderilecek makamı silmek istediğinize emin misiniz?`,
+        confirmText: 'Evet, Sil',
+        onConfirm: () => {
+          let current = getAliciMakamlar();
+          current = current.filter(m => m.id !== id);
+          saveAliciMakamlar(current);
+          renderSettings();
+          populateWizardOptions();
+          showToast('Makam silindi.', 'warning');
+        }
+      });
+    });
+  });
+
+  document.getElementById('btn-add-makam')?.addEventListener('click', () => {
+    openModal('Yeni Gönderilecek Makam Ekle', `
+      <form id="form-add-makam" class="form-grid">
+        <div class="form-group">
+          <label>Makam Kısa Adı (ID)</label>
+          <input type="text" id="makam-id" required placeholder="Örn: komisyon" />
+        </div>
+        <div class="form-group">
+          <label>Makam Uzun Adı (Alt satıra geçmek için Enter'a basın)</label>
+          <textarea id="makam-name" required placeholder="Örn: ANKARA CUMHURİYET BAŞSAVCILIĞI&#10;Bakanlık Muhabere Bürosu'na" rows="3"></textarea>
+        </div>
+        <div class="form-group full-width" style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+          <button type="submit" class="btn btn-success"><i class="fa-solid fa-save"></i> Kaydet</button>
+        </div>
+      </form>
+    `);
+    document.getElementById('form-add-makam')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const current = getAliciMakamlar();
+      const newId = document.getElementById('makam-id').value;
+      if (current.find(m => m.id === newId)) {
+        showToast('Bu ID zaten mevcut!', 'danger');
+        return;
+      }
+      current.push({
+        id: newId,
+        name: document.getElementById('makam-name').value
+      });
+      saveAliciMakamlar(current);
+      closeModal();
+      renderSettings();
+      populateWizardOptions();
+      showToast('Makam eklendi.', 'success');
+    });
+  });
+
   // Signers
   const signers = getSignatories();
   document.getElementById('list-signers').innerHTML = signers.map(s => `

@@ -12,6 +12,10 @@ const STORAGE_KEYS = {
 // In-Memory Database Cache
 let dbCache = {
   personnel: [],
+  aliciMakamlar: [
+    { id: 'komisyon', name: "ANKARA ADLÎ YARGI\nİLK DERECE MAHKEMESİ\nADALET KOMİSYONU BAŞKANLIĞI'NA" },
+    { id: 'bakanlik', name: "ANKARA CUMHURİYET BAŞSAVCILIĞI\nBakanlık Muhabere Bürosu'na" }
+  ],
   leaveTypes: [],
   signatories: [],
   leaveRecords: [],
@@ -45,6 +49,7 @@ export async function initStorage() {
         }
         // Sync to localStorage
         localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
+        localStorage.setItem('udf_alici_makamlar_v1', JSON.stringify(dbCache.aliciMakamlar));
         localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
         localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(dbCache.signatories));
         localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(dbCache.leaveRecords));
@@ -59,6 +64,17 @@ export async function initStorage() {
 
   // Fallback to localStorage
   dbCache.personnel = JSON.parse(localStorage.getItem(STORAGE_KEYS.PERSONNEL) || '[]');
+  
+  const savedMakamlar = localStorage.getItem('udf_alici_makamlar_v1');
+  if (savedMakamlar) {
+    dbCache.aliciMakamlar = JSON.parse(savedMakamlar);
+  } else {
+    dbCache.aliciMakamlar = [
+      { id: 'komisyon', name: "ANKARA ADLÎ YARGI\nİLK DERECE MAHKEMESİ\nADALET KOMİSYONU BAŞKANLIĞI'NA" },
+      { id: 'bakanlik', name: "ANKARA CUMHURİYET BAŞSAVCILIĞI\nBakanlık Muhabere Bürosu'na" }
+    ];
+  }
+
   dbCache.leaveTypes = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_TYPES) || '[]');
   dbCache.signatories = JSON.parse(localStorage.getItem(STORAGE_KEYS.SIGNATORIES) || '[]');
   dbCache.leaveRecords = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_RECORDS) || '[]');
@@ -81,6 +97,7 @@ export async function syncToDiskFile() {
   delete dbCache.appPassword;
   // Always update localStorage
   localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
+  localStorage.setItem('udf_alici_makamlar_v1', JSON.stringify(dbCache.aliciMakamlar));
   localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
   localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(dbCache.signatories));
   localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(dbCache.leaveRecords));
@@ -214,6 +231,15 @@ export function getAppPasswordStored() {
 
 export function setAppPasswordStored(newPassword) {
   setAdminPasswordStored(newPassword);
+}
+
+export function getAliciMakamlar() {
+  return dbCache.aliciMakamlar || [];
+}
+
+export function saveAliciMakamlar(list) {
+  dbCache.aliciMakamlar = list;
+  syncToDiskFile();
 }
 
 export function getMesaiSettingsDB() {
