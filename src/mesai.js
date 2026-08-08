@@ -93,22 +93,44 @@ function isPersonOnLeave(pid, dateStr) {
 
   return records.some(r => {
     if (r.personnelId !== pid) return false;
-    // Aktif izinde veya geçmiş izin kaydı (başlayış tarihi geçmişte bile olsa tarih aralığında kalıyor)
-    if (r.status === 'başladı') return false; // Göreve başlamış, sayılmaz
+    if (!r.ayrilisDate) return false;
 
     const start = new Date(r.ayrilisDate);
     start.setHours(0, 0, 0, 0);
 
-    // Bitiş tarihi: baslayisDate varsa bir gün önce, yoksa expectedReturnDate bir gün önce
+    // İzin bitiş tarihi hesabı (izinli olunan son gün):
+    // 1. expectedReturnDate (göreve başlama tarihi) varsa, bir gün öncesi iznin son günüdür.
+    // 2. expectedReturnDate yoksa ayrılış tarihi + gün sayısı - 1.
+    // 3. Hiçbiri yoksa baslayisDate - 1.
     let endDate;
-    if (r.baslayisDate) {
+    if (r.expectedReturnDate) {
+      endDate = new Date(r.expectedReturnDate);
+      endDate.setDate(endDate.getDate() - 1);
+    } else if (r.days) {
+      endDate = new Date(r.ayrilisDate);
+      endDate.setDate(endDate.getDate() + parseInt(r.days, 10) - 1);
+    } else if (r.baslayisDate) {
       endDate = new Date(r.baslayisDate);
       endDate.setDate(endDate.getDate() - 1);
     } else {
-      endDate = new Date(r.expectedReturnDate);
-      endDate.setDate(endDate.getDate() - 1);
+      return false;
     }
     endDate.setHours(0, 0, 0, 0);
+
+    // Eğer baslayisDate girilmişse ve expectedReturnDate ile yakın tarihlerde ise (en fazla 7 gün fark)
+    // gerçek dönüş tarihini yansıtması için baslayisDate esas alınabilir.
+    // Ancak baslayisDate evrak sonradan basıldığı için aylar sonraya aitse (örn: Ocak ayı iznine Ağustos'ta göreve başlayış yazılması),
+    // kişinin izni aylarca uzatılmayıp planlanan expectedReturnDate esas alınır.
+    if (r.baslayisDate && r.expectedReturnDate) {
+      const bDate = new Date(r.baslayisDate);
+      const expDate = new Date(r.expectedReturnDate);
+      const diffDays = Math.abs((bDate - expDate) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 7) {
+        endDate = new Date(r.baslayisDate);
+        endDate.setDate(endDate.getDate() - 1);
+        endDate.setHours(0, 0, 0, 0);
+      }
+    }
 
     return target >= start && target <= endDate;
   });
@@ -513,47 +535,48 @@ th { background:#f2f2f2; font-weight:bold; }
 }
 
 // ─────────────────────────────────────────────────────────
-// EXCEL EXPORT — Mevcut Şablon Dosyasını Kullanarak
+// EXCEL EXPORT — Mevcut Şablon Dosyasını Kullanarak (ExcelJS ile)
 // ─────────────────────────────────────────────────────────
 export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan, tasdikAd, tasdikUnvan) {
-  if (typeof XLSX === 'undefined') { alert('Excel kütüphanesi yüklenemedi.'); return; }
+  if (typeof ExcelJS === 'undefined') { alert('Excel kütüphanesi yüklenemedi. Lütfen sayfayı yenileyin.'); return; }
 
   const personnel = getPersonnelList();
   const dim = getDaysInMonth(y, m);
   const titleMonth = monthNames[m - 1].toUpperCase();
 
-  // Önce şablon dosyasını fetch et
-  try {
-    const res = await fetch('/public/mesai_sablon.xlsx');
-    if (res.ok) {
-      const buf = await res.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array', cellStyles: true });
+  // Şablon dosyasını fetch et (Vite public klasöründeki dosyalar root'tan sunulur)
+  let res = await fetch('/mesai_sablon.xlsx');
+  if (!res.ok) {
+    res = await fetch('/public/mesai_sablon.xlsx'); // Fallback
+  }
 
-      // İlk sayfayı al (şablon)
-      const sheetName = wb.SheetNames[0];
-      const ws = wb.Sheets[sheetName];
+  if (res.ok) {
+    try {
+      const buf = await res.arrayBuffer();
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(buf);
+
+      // İlk sayfayı al
+      const ws = workbook.worksheets[0];
 
       // ── Başlık Alanlarını Güncelle ──
-      // Birim satırı (E4 benzeri): BİRİMİ alanı zaten şablonda var, sadece ay/yıl güncelle
-      // E6 = AY, F6 = YIL  (şablona göre ayarlıyoruz)
-      const ayHucre = findCell(ws, titleMonth, y);
-      if (ws['E6']) ws['E6'].v = titleMonth;
-      if (ws['F6']) ws['F6'].v = y;
+      // E6 = AY, F6 = YIL
+      ws.getCell('E6').value = titleMonth;
+      ws.getCell('F6').value = y;
 
       // ── Gün Başlıkları (G7 → AK7) ──
+      // ExcelJS'de sütunlar 1-indekslidir. G sütunu = 7.
       for (let d = 1; d <= 31; d++) {
-        const colName = XLSX.utils.encode_col(5 + d); // G=6, H=7...
-        const cellAddr = colName + '7';
-        if (ws[cellAddr]) {
-          ws[cellAddr].v = d <= dim ? d : '';
-        }
+        const colIdx = 6 + d; // G=7, H=8 vb.
+        const cell = ws.getCell(7, colIdx);
+        cell.value = d <= dim ? d : '';
       }
 
-      // ── Mevcut Personel Verilerini Temizle (satır 8'den 50'ye kadar) ──
-      for (let r = 8; r <= 50; r++) {
-        for (let c = 0; c <= 39; c++) {
-          const addr = XLSX.utils.encode_col(c) + r;
-          if (ws[addr]) ws[addr].v = '';
+      // ── Mevcut Personel Verilerini Temizle (satır 8'den 57'ye kadar) ──
+      // Sadece değerleri siliyoruz, stilleri bozmuyoruz.
+      for (let r = 8; r <= 57; r++) {
+        for (let c = 1; c <= 40; c++) {
+          ws.getCell(r, c).value = null;
         }
       }
 
@@ -561,43 +584,40 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
       personnel.forEach((p, idx) => {
         const rowNum = 8 + idx;
 
-        if (ws['A' + rowNum]) ws['A' + rowNum].v = idx + 1;
-        else ws['A' + rowNum] = { t: 'n', v: idx + 1 };
+        // Otomatik Stil Çoğaltma: Sadece 8. satırı (ilk personel satırını) tasarlamanız yeterli.
+        // Sonraki tüm personeller için (9, 10, 11...) 8. satırın tasarımını, kenarlıklarını ve yazı tiplerini otomatik kopyalıyoruz.
+        if (rowNum > 8) {
+          for (let c = 1; c <= 38; c++) { // A'dan AL'ye (1-38)
+            ws.getCell(rowNum, c).style = ws.getCell(8, c).style;
+          }
+        }
 
-        if (ws['C' + rowNum]) ws['C' + rowNum].v = p.sicilNo ? parseInt(p.sicilNo, 10) : '';
-        else ws['C' + rowNum] = { t: p.sicilNo ? 'n' : 's', v: p.sicilNo ? parseInt(p.sicilNo, 10) : '' };
-
-        if (ws['D' + rowNum]) ws['D' + rowNum].v = p.tcNo ? parseInt(p.tcNo, 10) : '';
-        else ws['D' + rowNum] = { t: p.tcNo ? 'n' : 's', v: p.tcNo ? parseInt(p.tcNo, 10) : '' };
-
-        if (ws['E' + rowNum]) ws['E' + rowNum].v = (p.name || '').toUpperCase();
-        else ws['E' + rowNum] = { t: 's', v: (p.name || '').toUpperCase() };
-
-        if (ws['F' + rowNum]) ws['F' + rowNum].v = p.title || p.unvan || 'Zabıt Katibi';
-        else ws['F' + rowNum] = { t: 's', v: p.title || p.unvan || 'Zabıt Katibi' };
+        ws.getCell('A' + rowNum).value = idx + 1;
+        ws.getCell('C' + rowNum).value = p.sicilNo ? parseInt(p.sicilNo, 10) : '';
+        ws.getCell('D' + rowNum).value = p.tcNo ? parseInt(p.tcNo, 10) : '';
+        ws.getCell('E' + rowNum).value = (p.name || '').toUpperCase();
+        ws.getCell('F' + rowNum).value = p.title || p.unvan || 'Zabıt Katibi';
 
         for (let d = 1; d <= 31; d++) {
-          const colLtr = XLSX.utils.encode_col(5 + d);
-          const addr = colLtr + rowNum;
+          const colIdx = 6 + d; 
+          const cell = ws.getCell(rowNum, colIdx);
+          
           if (d <= dim) {
             const val = getMesaiCellValue(p.id, y, m, d);
             const isX = (val === 'X' || val === undefined || val === null || val === '');
             if (isX) {
-              if (ws[addr]) ws[addr].v = 'X'; else ws[addr] = { t: 's', v: 'X' };
+              cell.value = 'X';
             } else {
               const nv = parseInt(val, 10);
-              if (ws[addr]) { ws[addr].v = isNaN(nv) ? val : nv; ws[addr].t = isNaN(nv) ? 's' : 'n'; }
-              else ws[addr] = { t: isNaN(nv) ? 's' : 'n', v: isNaN(nv) ? val : nv };
+              cell.value = isNaN(nv) ? val : nv;
             }
           } else {
-            if (ws[addr]) ws[addr].v = '';
-            else ws[addr] = { t: 's', v: '' };
+            cell.value = '';
           }
         }
 
-        // Toplam saat formülü (AL sütunu)
-        const totalCol = 'AL' + rowNum;
-        ws[totalCol] = { f: `SUM(G${rowNum}:AK${rowNum})`, t: 'n' };
+        // Toplam saat formülü (AL sütunu = 38. sütun)
+        ws.getCell('AL' + rowNum).value = { formula: `SUM(G${rowNum}:AK${rowNum})` };
       });
 
       // ── İmza Alanlarını Dinamik Yaz ──
@@ -606,132 +626,34 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
       const signRow2 = lastRow + 4;
       const signRow3 = lastRow + 5;
 
-      setCell(ws, 'T' + signRow1, 'DÜZENLEYEN');
-      setCell(ws, 'AD' + signRow1, 'TASDİK EDEN');
-      setCell(ws, 'T' + signRow2, duzenleyenAd || '');
-      setCell(ws, 'AD' + signRow2, tasdikAd || '');
-      setCell(ws, 'T' + signRow3, duzenleyenUnvan || '');
-      setCell(ws, 'AD' + signRow3, tasdikUnvan || '');
+      ws.getCell('T' + signRow1).value = 'DÜZENLEYEN';
+      ws.getCell('AD' + signRow1).value = 'TASDİK EDEN';
+      ws.getCell('T' + signRow2).value = duzenleyenAd || '';
+      ws.getCell('AD' + signRow2).value = tasdikAd || '';
+      ws.getCell('T' + signRow3).value = duzenleyenUnvan || '';
+      ws.getCell('AD' + signRow3).value = tasdikUnvan || '';
 
       // Sayfa adını güncelle
-      const newSheetName = titleMonth + '-' + y;
-      wb.SheetNames = [newSheetName];
-      wb.Sheets[newSheetName] = ws;
-      delete wb.Sheets[sheetName];
+      ws.name = `${titleMonth}-${y}`;
 
-      XLSX.writeFile(wb, `${y} YILI MESAİ CETVELİ (${titleMonth}).xlsx`);
+      // ── Dosyayı İndir ──
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${y} YILI MESAİ CETVELİ (${titleMonth}).xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
       return;
+    } catch (err) {
+      console.error('Şablon dosyası işlenirken hata oluştu:', err);
+      alert('Şablon dosyası işlenirken hata oluştu. Lütfen şablonun geçerli bir Excel (.xlsx) dosyası olduğundan emin olun.');
     }
-  } catch (err) {
-    console.warn('Şablon dosyası yüklenemedi, sıfırdan oluşturuluyor:', err);
+  } else {
+    alert('Şablon dosyası bulunamadı! Lütfen public klasöründe boş bir "mesai_sablon.xlsx" dosyası olduğundan emin olun.');
   }
-
-  // Şablon yoksa sıfırdan üret (fallback)
-  exportMesaiFallback(y, m, dim, titleMonth, personnel, duzenleyenAd, duzenleyenUnvan, tasdikAd, tasdikUnvan);
-}
-
-function setCell(ws, addr, val) {
-  const t = typeof val === 'number' ? 'n' : 's';
-  if (ws[addr]) ws[addr].v = val; else ws[addr] = { t, v: val };
-}
-
-function findCell(ws, month, year) { return null; } // placeholder
-
-// Fallback: Şablon olmadan yeni Excel üret
-function exportMesaiFallback(y, m, dim, titleMonth, personnel, duzAd, duzUnvan, tasAd, tasUnvan) {
-  const thin = { top:{style:'thin'},bottom:{style:'thin'},left:{style:'thin'},right:{style:'thin'} };
-  const thick = { top:{style:'medium'},bottom:{style:'medium'},left:{style:'medium'},right:{style:'medium'} };
-  const yellowFill = { fgColor:{rgb:'FFF2CC'}, patternType:'solid' };
-  const whiteFill  = { fgColor:{rgb:'FFFFFF'}, patternType:'solid' };
-
-  function c(val, bold, hAlign, sz, border, fill) {
-    return { v: val ?? '', t: typeof val === 'number' ? 'n' : 's',
-      s: { font:{name:'Calibri',sz:sz||9,bold:!!bold},
-           alignment:{horizontal:hAlign||'center',vertical:'center',wrapText:true},
-           border: border||thin, fill: fill||whiteFill } };
-  }
-
-  const totalCols = 40;
-  const rows = [];
-  // 3 boş satır
-  for (let r = 0; r < 3; r++) rows.push(Array(totalCols).fill({v:'',t:'s'}));
-
-  const r4 = Array(totalCols).fill(null).map(() => c(''));
-  r4[0] = c('BİRİMİ:', true, 'left', 10, thick);
-  r4[2] = c('Ankara Cumhuriyet Başsavcılığı', true, 'left', 10);
-  r4[6] = c('AYLIK FAZLA ÇALIŞMA CETVELİ', true, 'center', 14, thick);
-  rows.push(r4);
-
-  const r5 = Array(totalCols).fill(null).map(() => c(''));
-  r5[2] = c('İnfaz Bürosu', true, 'left', 10);
-  rows.push(r5);
-
-  const r6 = Array(totalCols).fill(null).map(() => c(''));
-  r6[0] = c('AİT OLDUĞU AY:', true, 'left', 10, thick);
-  r6[4] = c(titleMonth, true, 'center', 10);
-  r6[5] = c(y, true, 'center', 10);
-  rows.push(r6);
-
-  const r7 = Array(totalCols).fill(null).map(() => c(''));
-  r7[0] = c('S.N.', true, 'center', 8, thick);
-  r7[2] = c('SİCİL NO', true, 'center', 8, thick);
-  r7[3] = c('T.C. NO', true, 'center', 8, thick);
-  r7[4] = c('AD SOYAD', true, 'center', 8, thick);
-  r7[5] = c('UNVAN', true, 'center', 8, thick);
-  for (let d = 1; d <= 31; d++) {
-    const wknd = d <= dim && isWeekend(y, m, d);
-    r7[5+d] = c(d <= dim ? d : '', true, 'center', 8, thick, wknd ? yellowFill : whiteFill);
-  }
-  r7[37] = c('TOPLAM\nSAAT', true, 'center', 8, thick);
-  rows.push(r7);
-
-  personnel.forEach((p, idx) => {
-    const row = Array(totalCols).fill(null).map(() => c(''));
-    row[0] = c(idx+1, true, 'center', 9, thin);
-    row[2] = c(p.sicilNo ? parseInt(p.sicilNo,10) : '', false, 'center', 9, thin);
-    row[3] = c(p.tcNo ? parseInt(p.tcNo,10) : '', false, 'center', 9, thin);
-    row[4] = c((p.name||'').toUpperCase(), true, 'left', 9);
-    row[5] = c(p.title||p.unvan||'Zabıt Katibi', false, 'center', 9);
-    for (let d = 1; d <= 31; d++) {
-      const wknd = d <= dim && isWeekend(y, m, d);
-      if (d <= dim) {
-        const val = getMesaiCellValue(p.id, y, m, d);
-        const isX = (val === 'X' || val === undefined || val === null || val === '');
-        row[5+d] = isX
-          ? c('X', false, 'center', 9, thin, wknd ? yellowFill : whiteFill)
-          : c(parseInt(val,10)||val, !isNaN(parseInt(val,10)), 'center', 9, thin, wknd ? yellowFill : whiteFill);
-      } else {
-        row[5+d] = c('', false, 'center', 9, thin, whiteFill);
-      }
-    }
-    const curRowIdx = 8 + idx;
-    row[37] = { f:`SUM(G${curRowIdx}:AK${curRowIdx})`, t:'n',
-      s:{font:{name:'Calibri',sz:10,bold:true},alignment:{horizontal:'center',vertical:'center'},border:thin,fill:whiteFill} };
-    rows.push(row);
-  });
-
-  // İmza
-  rows.push(Array(totalCols).fill(null).map(() => c('')));
-  const sRow1 = Array(totalCols).fill(null).map(() => c(''));
-  sRow1[20] = c('DÜZENLEYEN', true, 'center', 10, thick, yellowFill);
-  sRow1[30] = c('TASDİK EDEN', true, 'center', 10, thick, yellowFill);
-  rows.push(sRow1);
-  const sRow2 = Array(totalCols).fill(null).map(() => c(''));
-  sRow2[20] = c(duzAd||'', true, 'center', 10, thin, yellowFill);
-  sRow2[30] = c(tasAd||'', true, 'center', 10, thin, yellowFill);
-  rows.push(sRow2);
-  const sRow3 = Array(totalCols).fill(null).map(() => c(''));
-  sRow3[20] = c(duzUnvan||'', false, 'center', 10, thin, yellowFill);
-  sRow3[30] = c(tasUnvan||'', false, 'center', 10, thin, yellowFill);
-  rows.push(sRow3);
-
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wscols = [{wch:7},{wch:3},{wch:10},{wch:14},{wch:25},{wch:18}];
-  for (let w = 0; w < 31; w++) wscols.push({wch:3.4});
-  wscols.push({wch:9});
-  ws['!cols'] = wscols;
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, titleMonth+'-'+y);
-  XLSX.writeFile(wb, `${y} YILI MESAİ CETVELİ (${titleMonth}).xlsx`);
 }

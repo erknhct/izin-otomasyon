@@ -94,6 +94,29 @@ export function calculateExpectedReturn(startDateStr, days) {
 }
 
 /**
+ * Calculates number of leave days in reverse based on start date and chosen return date.
+ */
+export function calculateDaysFromReturn(startDateStr, returnDateStr) {
+  if (!startDateStr || !returnDateStr) return 1;
+  const start = new Date(startDateStr);
+  const ret = new Date(returnDateStr);
+  if (isNaN(start.getTime()) || isNaN(ret.getTime())) return 1;
+  if (ret <= start) return 1;
+
+  const rawDiff = Math.round((ret - start) / (1000 * 60 * 60 * 24));
+  if (rawDiff <= 0) return 1;
+
+  // Find smallest d where calculateExpectedReturn matches returnDateStr
+  for (let d = 1; d <= rawDiff; d++) {
+    if (calculateExpectedReturn(startDateStr, d) === returnDateStr) {
+      return d;
+    }
+  }
+
+  return rawDiff;
+}
+
+/**
  * Checks if a personnel already has an active or overlapping leave record in the same date range
  */
 export function checkLeaveConflict(personnelId, ayrilisDate, expectedReturnDate, excludeRecordId = null) {

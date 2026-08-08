@@ -8,7 +8,7 @@ import {
   getAdminPasswordStored, setAdminPasswordStored,
   getStaffPasswordStored, setStaffPasswordStored
 } from './storage.js';
-import { calculateExpectedReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
+import { calculateExpectedReturn, calculateDaysFromReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
 import {
   generateMesaiForMonth, renderMesaiTable, clearMesaiForMonth,
   getMesaiSignatories, saveMesaiSignatories,
@@ -706,17 +706,30 @@ function setupWizardForm() {
   const groupAliciOzel = document.getElementById('group-alici-makam-ozel');
   const izinSuresiInput = document.getElementById('wiz-izin-suresi');
   const ayrilisTarihiInput = document.getElementById('wiz-ayrilis-tarih');
+  const baslayisTarihiInput = document.getElementById('wiz-baslayis-tarih');
 
-  // Auto calculate expected return date
+  // Auto calculate expected return date (Süre -> Başlayış)
   function updateReturnDateCalc() {
     const sDate = ayrilisTarihiInput.value;
     const days = izinSuresiInput.value;
     const calcReturn = calculateExpectedReturn(sDate, days);
-    document.getElementById('wiz-baslayis-tarih').value = calcReturn;
+    if (baslayisTarihiInput) baslayisTarihiInput.value = calcReturn;
+  }
+
+  // Auto calculate leave duration in days (Başlayış -> Süre)
+  function updateDurationCalc() {
+    const sDate = ayrilisTarihiInput.value;
+    const rDate = baslayisTarihiInput.value;
+    const calcDays = calculateDaysFromReturn(sDate, rDate);
+    if (izinSuresiInput) izinSuresiInput.value = calcDays;
   }
 
   izinSuresiInput.addEventListener('input', updateReturnDateCalc);
   ayrilisTarihiInput.addEventListener('change', updateReturnDateCalc);
+  if (baslayisTarihiInput) {
+    baslayisTarihiInput.addEventListener('change', updateDurationCalc);
+    baslayisTarihiInput.addEventListener('input', updateDurationCalc);
+  }
 
   function handleFormVisibility() {
     const action = actionTypeSelect.value;
@@ -2193,6 +2206,8 @@ function initMesaiView() {
     mesaiCurrentYear = parseInt(ySel.value, 10);
     renderMesaiView();
   });
+  const targetEl = document.getElementById('mesai-global-target');
+  if (targetEl) targetEl.addEventListener('change', renderMesaiView);
 
   // İmza alanı değerleri localStorage'dan yükle
   const sigs = getMesaiSignatories();
@@ -2221,6 +2236,9 @@ function syncMesaiSelects() {
 }
 
 function renderMesaiView() {
+  const targetEl = document.getElementById('mesai-global-target');
+  const globalTarget = targetEl ? parseInt(targetEl.value, 10) : 45;
+  generateMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth, globalTarget);
   renderMesaiTable(mesaiCurrentYear, mesaiCurrentMonth);
 }
 
