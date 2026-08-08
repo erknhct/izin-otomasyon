@@ -31,6 +31,7 @@ export async function initStorage() {
         dbCache = data;
         if (!dbCache.adminPassword) dbCache.adminPassword = dbCache.appPassword || 'ankara2025';
         if (!dbCache.staffPassword) dbCache.staffPassword = 'yazi2025';
+        delete dbCache.appPassword;
         if (dbCache.leaveRecords && Array.isArray(dbCache.leaveRecords)) {
           dbCache.leaveRecords.forEach(r => delete r.raporKurum);
         }
@@ -58,6 +59,7 @@ export async function initStorage() {
   }
   dbCache.adminPassword = localStorage.getItem('udf_admin_password') || localStorage.getItem('udf_app_password') || 'ankara2025';
   dbCache.staffPassword = localStorage.getItem('udf_staff_password') || 'yazi2025';
+  delete dbCache.appPassword;
   return false;
 }
 
@@ -65,6 +67,7 @@ export async function initStorage() {
  * Saves current in-memory dbCache to data/db.json on disk via POST /api/db
  */
 export async function syncToDiskFile() {
+  delete dbCache.appPassword;
   // Always update localStorage
   localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
   localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
