@@ -55,41 +55,35 @@ function isAdmin() {
 }
 
 function updateUserRoleUI() {
-  const avatarEl = document.getElementById('sidebar-user-avatar');
-  const roleEl   = document.getElementById('sidebar-user-role');
-  const badgeEl  = document.getElementById('user-role-badge');
+  const pillEl   = document.getElementById('top-user-pill');
+  const avatarEl = document.getElementById('top-user-avatar');
+  const textEl   = document.getElementById('top-user-role-text');
 
   if (isAdmin()) {
     if (avatarEl) {
       avatarEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #f59e0b;"></i>';
-      avatarEl.style.background = 'rgba(245, 158, 11, 0.2)';
-      avatarEl.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+      avatarEl.style.background = 'rgba(245, 158, 11, 0.25)';
     }
-    if (roleEl) {
-      roleEl.textContent = 'Sistem Yöneticisi';
-      roleEl.style.color = '#f59e0b';
+    if (textEl) {
+      textEl.textContent = 'Sistem Yöneticisi';
     }
-    if (badgeEl) {
-      badgeEl.innerHTML = '<i class="fa-solid fa-crown" style="color: #f59e0b;"></i> Sistem Yöneticisi';
-      badgeEl.style.background = 'rgba(245, 158, 11, 0.15)';
-      badgeEl.style.border = '1px solid rgba(245, 158, 11, 0.3)';
-      badgeEl.style.color = '#f59e0b';
+    if (pillEl) {
+      pillEl.style.background = 'rgba(245, 158, 11, 0.12)';
+      pillEl.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+      pillEl.style.color = '#f59e0b';
     }
   } else {
     if (avatarEl) {
       avatarEl.innerHTML = '<i class="fa-solid fa-user-gear" style="color: #3b82f6;"></i>';
-      avatarEl.style.background = 'rgba(59, 130, 246, 0.2)';
-      avatarEl.style.border = '1px solid rgba(59, 130, 246, 0.4)';
+      avatarEl.style.background = 'rgba(59, 130, 246, 0.25)';
     }
-    if (roleEl) {
-      roleEl.textContent = 'Yönetici';
-      roleEl.style.color = '#3b82f6';
+    if (textEl) {
+      textEl.textContent = 'Yönetici';
     }
-    if (badgeEl) {
-      badgeEl.innerHTML = '<i class="fa-solid fa-user-gear" style="color: #3b82f6;"></i> Yönetici';
-      badgeEl.style.background = 'rgba(59, 130, 246, 0.15)';
-      badgeEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
-      badgeEl.style.color = '#3b82f6';
+    if (pillEl) {
+      pillEl.style.background = 'rgba(59, 130, 246, 0.12)';
+      pillEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
+      pillEl.style.color = '#3b82f6';
     }
   }
 }
@@ -130,8 +124,16 @@ window.handleLogin = function() {
 };
 
 window.logoutApp = function() {
-  destroySession();
-  location.reload();
+  showConfirmModal({
+    title: '🔒 Oturumu Kapat',
+    message: 'Sistemden çıkış yapmak üzeresiniz. Devam etmek istediğinizden emin misiniz?',
+    confirmText: 'Evet, Oturumu Kapat',
+    cancelText: 'Vazgeç',
+    onConfirm: () => {
+      destroySession();
+      location.reload();
+    }
+  });
 };
 
 window.changeAppPassword = function() {
@@ -326,7 +328,7 @@ function closeModal() {
   modalOverlay.classList.remove('active');
 }
 
-function showConfirmModal({ title, message, confirmText = 'Evet, Sil', cancelText = 'Vazgeç', onConfirm }) {
+function showConfirmModal({ title, message, confirmText = 'Evet, Onayla', cancelText = 'Vazgeç', onConfirm }) {
   const html = `
     <div style="text-align: center; padding: 1rem 0.5rem;">
       <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); border: 2px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto; box-shadow: 0 0 25px rgba(239, 68, 68, 0.3);">
@@ -337,13 +339,13 @@ function showConfirmModal({ title, message, confirmText = 'Evet, Sil', cancelTex
       <div style="display: flex; gap: 0.75rem; justify-content: center;">
         <button class="btn btn-secondary" id="confirm-modal-cancel" style="min-width: 110px; font-weight: 600;">${cancelText}</button>
         <button class="btn btn-danger" id="confirm-modal-ok" style="min-width: 125px; font-weight: 800; color: #ffffff !important; background: linear-gradient(135deg, #ef4444, #dc2626); border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
-          <i class="fa-solid fa-trash"></i> ${confirmText}
+          ${confirmText}
         </button>
       </div>
     </div>
   `;
 
-  openModal('⚠️ Silme Onayı', html);
+  openModal(title || 'İşlem Onayı', html);
 
   document.getElementById('confirm-modal-cancel')?.addEventListener('click', closeModal);
   document.getElementById('confirm-modal-ok')?.addEventListener('click', () => {

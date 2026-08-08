@@ -49,22 +49,6 @@
         </div>
       </div>
 
-      <!-- Active User Profile Card in Sidebar -->
-      <div class="sidebar-user-card" id="sidebar-user-card" style="margin: 0.75rem 1rem 0.5rem 1rem; padding: 0.65rem 0.85rem; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: var(--border-color) 1px solid; display: flex; align-items: center; justify-content: space-between;">
-        <div style="display: flex; align-items: center; gap: 0.65rem;">
-          <div id="sidebar-user-avatar" style="width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;">
-            <!-- Dynamic Icon -->
-          </div>
-          <div>
-            <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Aktif Oturum</div>
-            <div id="sidebar-user-role" style="font-size: 0.85rem; font-weight: 700; color: var(--text-main);"></div>
-          </div>
-        </div>
-        <button onclick="logoutApp()" title="Oturumu Kapat" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); color: var(--accent-danger); border-radius: 8px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.25)'" onmouseout="this.style.background='rgba(239,68,68,0.12)'">
-          <i class="fa-solid fa-right-from-bracket"></i>
-        </button>
-      </div>
-
       <nav class="nav-menu">
         <a class="nav-item active" data-view="dashboard">
           <div class="nav-icon"><i class="fa-solid fa-chart-line"></i></div>
@@ -93,7 +77,17 @@
         <div class="top-bar-left">
           <span class="active-view-indicator" id="top-view-title"><i class="fa-solid fa-house" style="color: var(--accent-primary);"></i> Ana Sayfa</span>
         </div>
-        <div class="top-bar-right" style="display: flex; align-items: center; gap: 0.75rem;">
+
+        <div class="top-bar-right">
+          <!-- Active User Role Pill -->
+          <div class="top-user-pill" id="top-user-pill" title="Aktif Kullanıcı Rolü">
+            <div id="top-user-avatar" class="top-user-pill-avatar"></div>
+            <span id="top-user-role-text"></span>
+          </div>
+
+          <div class="top-bar-divider"></div>
+
+          <!-- Urgent Notifications Bell -->
           <div class="notif-wrapper">
             <button class="notif-bell-btn" id="notif-bell-btn" title="Günü Gelen / Tarihi Geçen Başlayış Bildirimleri">
               <i class="fa-solid fa-bell"></i>
@@ -114,14 +108,22 @@
             </div>
           </div>
 
+          <!-- Theme Toggle Button -->
           <button class="theme-toggle-btn" id="theme-toggle-btn" title="Aydınlık / Karanlık Mod Değiştir">
             <i class="fa-solid fa-moon"></i>
             <span>Karanlık Mod</span>
           </button>
 
+          <!-- Settings Button -->
           <button class="top-settings-btn" id="top-settings-btn" title="Şablon & İzin Türü Ayarları">
             <i class="fa-solid fa-sliders"></i>
-            <span>Ayarlar & Şablonlar</span>
+            <span>Ayarlar</span>
+          </button>
+
+          <!-- Logout Button -->
+          <button class="top-logout-btn" onclick="logoutApp()" title="Oturumu Kapat">
+            <i class="fa-solid fa-right-from-bracket"></i>
+            <span>Çıkış Yap</span>
           </button>
         </div>
       </header>
