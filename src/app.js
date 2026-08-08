@@ -9,6 +9,11 @@ import {
   getStaffPasswordStored, setStaffPasswordStored
 } from './storage.js';
 import { calculateExpectedReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
+import {
+  generateMesaiForMonth, renderMesaiTable, clearMesaiForMonth,
+  getMesaiSignatories, saveMesaiSignatories,
+  updateMesaiCell, exportMesaiToExcelFile, printMesaiView
+} from './mesai.js';
 
 // DOM Elements
 const navItems = document.querySelectorAll('.nav-item');
@@ -187,6 +192,7 @@ async function initApp() {
   renderLeavesTable();
   renderReports();
   renderSettings();
+  initMesaiView();
 
   // Global delegation for PDF report button
   document.addEventListener('click', (e) => {
@@ -276,9 +282,10 @@ function switchView(viewName) {
   const viewTitles = {
     dashboard: '<i class="fa-solid fa-house" style="color: var(--accent-primary);"></i> Ana Sayfa',
     leaves: '<i class="fa-solid fa-calendar-check" style="color: var(--accent-primary);"></i> İzin Kayıtları Geçmişi',
-    personnel: '<i class="fa-solid fa-users" style="color: var(--accent-primary);"></i> Personel Listesi (50)',
+    personnel: '<i class="fa-solid fa-users" style="color: var(--accent-primary);"></i> Personel Listesi',
     reports: '<i class="fa-solid fa-chart-pie" style="color: var(--accent-primary);"></i> Raporlar & Analizler',
-    settings: '<i class="fa-solid fa-sliders" style="color: var(--accent-primary);"></i> Şablon & İzin Türü Ayarları'
+    settings: '<i class="fa-solid fa-sliders" style="color: var(--accent-primary);"></i> Şablon & İzin Türü Ayarları',
+    mesai: '<i class="fa-solid fa-business-time" style="color: var(--accent-primary);"></i> Aylık Mesai Cetveli'
   };
   const topTitle = document.getElementById('top-view-title');
   if (topTitle && viewTitles[viewName]) {
@@ -290,6 +297,7 @@ function switchView(viewName) {
   if (viewName === 'personnel') renderPersonnelTable();
   if (viewName === 'reports') renderReports();
   if (viewName === 'settings') renderSettings();
+  if (viewName === 'mesai') renderMesaiView();
 }
 
 // Theme Toggle
@@ -2146,3 +2154,141 @@ function exportReportsPdf() {
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+
+// =============================================
+// MESAİ CETVELİ MODÜLÜ CONTROLLER
+// =============================================
+
+let mesaiCurrentYear  = new Date().getFullYear();
+let mesaiCurrentMonth = new Date().getMonth() + 1;
+
+function initMesaiView() {
+  // Ay / Yıl selectler
+  const mSel = document.getElementById('mesai-month-select');
+  const ySel = document.getElementById('mesai-year-select');
+  if (mSel) mSel.value = String(mesaiCurrentMonth);
+  if (ySel) ySel.value = String(mesaiCurrentYear);
+
+  // Navigasyon butonları
+  const prevBtn = document.getElementById('mesai-prev-month-btn');
+  const nextBtn = document.getElementById('mesai-next-month-btn');
+  if (prevBtn) prevBtn.addEventListener('click', () => {
+    if (mesaiCurrentMonth === 1) { mesaiCurrentMonth = 12; mesaiCurrentYear--; }
+    else mesaiCurrentMonth--;
+    syncMesaiSelects();
+    renderMesaiView();
+  });
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    if (mesaiCurrentMonth === 12) { mesaiCurrentMonth = 1; mesaiCurrentYear++; }
+    else mesaiCurrentMonth++;
+    syncMesaiSelects();
+    renderMesaiView();
+  });
+
+  if (mSel) mSel.addEventListener('change', () => {
+    mesaiCurrentMonth = parseInt(mSel.value, 10);
+    renderMesaiView();
+  });
+  if (ySel) ySel.addEventListener('change', () => {
+    mesaiCurrentYear = parseInt(ySel.value, 10);
+    renderMesaiView();
+  });
+
+  // İmza alanı değerleri localStorage'dan yükle
+  const sigs = getMesaiSignatories();
+  const duzAdiEl   = document.getElementById('mesai-duzenleyen-adi');
+  const duzUnvEl   = document.getElementById('mesai-duzenleyen-unvan');
+  const tasAdiEl   = document.getElementById('mesai-tasdik-adi');
+  const tasUnvEl   = document.getElementById('mesai-tasdik-unvan');
+  if (duzAdiEl) duzAdiEl.value   = sigs.duzenleyen?.ad    || '';
+  if (duzUnvEl) duzUnvEl.value   = sigs.duzenleyen?.unvan || '';
+  if (tasAdiEl) tasAdiEl.value   = sigs.tasdik?.ad        || '';
+  if (tasUnvEl) tasUnvEl.value   = sigs.tasdik?.unvan     || '';
+
+  // İmza alanı değişince otomatik kaydet
+  [duzAdiEl, duzUnvEl, tasAdiEl, tasUnvEl].forEach(el => {
+    if (el) el.addEventListener('change', saveMesaiSigs);
+  });
+
+  renderMesaiView();
+}
+
+function syncMesaiSelects() {
+  const mSel = document.getElementById('mesai-month-select');
+  const ySel = document.getElementById('mesai-year-select');
+  if (mSel) mSel.value = String(mesaiCurrentMonth);
+  if (ySel) ySel.value = String(mesaiCurrentYear);
+}
+
+function renderMesaiView() {
+  renderMesaiTable(mesaiCurrentYear, mesaiCurrentMonth);
+}
+
+function saveMesaiSigs() {
+  saveMesaiSignatories({
+    duzenleyen: {
+      ad:    document.getElementById('mesai-duzenleyen-adi')?.value  || '',
+      unvan: document.getElementById('mesai-duzenleyen-unvan')?.value || ''
+    },
+    tasdik: {
+      ad:    document.getElementById('mesai-tasdik-adi')?.value   || '',
+      unvan: document.getElementById('mesai-tasdik-unvan')?.value  || ''
+    }
+  });
+}
+
+function getMesaiSigs() {
+  return {
+    duzAd:    document.getElementById('mesai-duzenleyen-adi')?.value    || '',
+    duzUnvan: document.getElementById('mesai-duzenleyen-unvan')?.value   || '',
+    tasAd:    document.getElementById('mesai-tasdik-adi')?.value        || '',
+    tasUnvan: document.getElementById('mesai-tasdik-unvan')?.value       || ''
+  };
+}
+
+// Global mesai action functions (called from inline onclick in index.html)
+window.generateMesaiCetveli = function() {
+  const targetEl = document.getElementById('mesai-global-target');
+  const globalTarget = targetEl ? parseInt(targetEl.value, 10) : 45;
+  if (!confirm(`${['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][mesaiCurrentMonth-1]} ${mesaiCurrentYear} aylık fazla çalışma cetveli otomatik oluşturulsun mu?\n\n• İzin takip sistemindeki tüm izinler otomatik X olarak işlenir\n• Resmi tatil ve bayramlara X işlenir\n• Hafta içi günlük max 4 saat, hafta sonu max 8 saat\n• Aylık max ${Math.min(50, globalTarget)} saat, yıllık max 300 saat\n\n⚠️ Mevcut cetvel üzerine yazılacaktır.`)) return;
+
+  generateMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth, globalTarget);
+  renderMesaiView();
+  showToast(`⚡ ${['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][mesaiCurrentMonth-1]} ${mesaiCurrentYear} mesai cetveli başarıyla oluşturuldu!`, 'success');
+};
+
+window.clearMesaiMonth = function() {
+  if (!confirm(`${['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][mesaiCurrentMonth-1]} ${mesaiCurrentYear} ayına ait tüm mesai saatleri silinsin mi?`)) return;
+  clearMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth);
+  renderMesaiView();
+  showToast('🗑️ Aylık mesai verileri temizlendi.', 'info');
+};
+
+window.exportMesaiExcel = async function() {
+  const sigs = getMesaiSigs();
+  saveMesaiSigs();
+  try {
+    await exportMesaiToExcelFile(mesaiCurrentYear, mesaiCurrentMonth, sigs.duzAd, sigs.duzUnvan, sigs.tasAd, sigs.tasUnvan);
+    showToast('📊 Mesai cetveli Excel olarak indirildi!', 'success');
+  } catch (err) {
+    showToast('Excel oluşturulamadı: ' + err.message, 'danger');
+  }
+};
+
+window.printMesaiCetveli = function() {
+  const sigs = getMesaiSigs();
+  saveMesaiSigs();
+  printMesaiView(mesaiCurrentYear, mesaiCurrentMonth, sigs.duzAd, sigs.duzUnvan, sigs.tasAd, sigs.tasUnvan);
+};
+
+window.mesaiCellEdit = function(pid, y, m, d, tdEl) {
+  const currentVal = tdEl.querySelector('span')?.textContent?.trim() || 'X';
+  const newVal = prompt(
+    `📝 ${tdEl.title || ''}\n\nMesai saatini girin (0–8 saat) ya da boş bırakırsanız X işlenir:`,
+    currentVal === 'X' ? '' : currentVal
+  );
+  if (newVal === null) return; // İptal
+  updateMesaiCell(pid, y, m, d, newVal);
+  renderMesaiView();
+};
+

@@ -9,6 +9,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/src/style.css" />
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <!-- LOGIN SCREEN -->
@@ -68,6 +70,10 @@
         <a class="nav-item" data-view="reports">
           <div class="nav-icon"><i class="fa-solid fa-chart-pie"></i></div>
           <span>Raporlar & Analizler</span>
+        </a>
+        <a class="nav-item" data-view="mesai">
+          <div class="nav-icon"><i class="fa-solid fa-business-time"></i></div>
+          <span>Mesai Cetveli</span>
         </a>
       </nav>
     </aside>
@@ -559,6 +565,121 @@
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MESAI CETVELİ VIEW -->
+      <section id="view-mesai" class="view-section">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title"><i class="fa-solid fa-business-time" style="color: var(--accent-primary); margin-right: 0.5rem;"></i>Aylık Fazla Çalışma (Mesai) Cetveli</h1>
+            <p class="page-description">İzin kayıtlarınızdaki ayrılış ve başlayış tarihleri otomatik olarak mesai cetveliyle senkronize edilir. İzinli günlere otomatik X işlenir.</p>
+          </div>
+        </div>
+
+        <!-- Controls Row -->
+        <div class="glass-card" style="padding: 1rem 1.25rem;">
+          <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <!-- Ay / Yıl Seçici -->
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <button id="mesai-prev-month-btn" class="btn btn-secondary btn-sm" title="Önceki Ay"><i class="fa-solid fa-chevron-left"></i></button>
+              <select id="mesai-month-select" class="form-control" style="width: 120px; font-weight: 700;">
+                <option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option>
+                <option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option>
+                <option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option>
+                <option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option>
+              </select>
+              <select id="mesai-year-select" class="form-control" style="width: 90px; font-weight: 700;">
+                <option value="2024">2024</option><option value="2025">2025</option>
+                <option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option>
+              </select>
+              <button id="mesai-next-month-btn" class="btn btn-secondary btn-sm" title="Sonraki Ay"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+
+            <!-- Aylık Hedef Saat -->
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Aylık Hedef (Saat):</label>
+              <input type="number" id="mesai-global-target" class="form-control" value="45" min="1" max="50" style="width: 70px; font-weight: 700; text-align: center;">
+            </div>
+
+            <!-- Aksiyon Butonları -->
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-left: auto;">
+              <button class="btn btn-primary btn-sm" onclick="generateMesaiCetveli()" title="İzin verilerini okuyarak tüm cetveli otomatik oluştur">
+                <i class="fa-solid fa-magic"></i> Otomatik Oluştur
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="clearMesaiMonth()" title="Bu ayın tüm mesai verilerini temizle">
+                <i class="fa-solid fa-trash"></i> Ayı Temizle
+              </button>
+              <button class="btn btn-success btn-sm" onclick="exportMesaiExcel()" title="Excel olarak indir">
+                <i class="fa-solid fa-file-excel"></i> Excel İndir
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="printMesaiCetveli()" title="Yazdır">
+                <i class="fa-solid fa-print"></i> Yazdır
+              </button>
+            </div>
+          </div>
+
+          <!-- İmza Alanı Ayarları -->
+          <div style="display: flex; gap: 1rem; margin-top: 0.75rem; flex-wrap: wrap; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Düzenleyen Ad Soyad:</label>
+              <input type="text" id="mesai-duzenleyen-adi" class="form-control" placeholder="Ad Soyad" style="width: 180px; font-size: 0.82rem;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Unvan:</label>
+              <input type="text" id="mesai-duzenleyen-unvan" class="form-control" placeholder="Unvan" style="width: 160px; font-size: 0.82rem;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Tasdik Eden Ad Soyad:</label>
+              <input type="text" id="mesai-tasdik-adi" class="form-control" placeholder="Ad Soyad" style="width: 180px; font-size: 0.82rem;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.4rem;">
+              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Unvan:</label>
+              <input type="text" id="mesai-tasdik-unvan" class="form-control" placeholder="Unvan" style="width: 160px; font-size: 0.82rem;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Mesai Özet Kartları -->
+        <div class="stats-grid" id="mesai-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px,1fr));">
+          <div class="stat-card">
+            <div class="stat-icon primary"><i class="fa-solid fa-clock"></i></div>
+            <div><div class="stat-value" id="mesai-stat-total">0</div><div class="stat-label">Bu Ay Toplam Mesai Saati</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon success"><i class="fa-solid fa-users"></i></div>
+            <div><div class="stat-value" id="mesai-stat-personnel">0</div><div class="stat-label">Mesaili Personel Sayısı</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon warning"><i class="fa-solid fa-xmark"></i></div>
+            <div><div class="stat-value" id="mesai-stat-izin">0</div><div class="stat-label">İzinli Gün Sayısı (X)</div></div>
+          </div>
+        </div>
+
+        <!-- Mesai Cetveli Tablosu -->
+        <div class="glass-card" style="padding: 0; overflow: hidden;">
+          <div style="overflow-x: auto;">
+            <table id="mesai-table" style="width: 100%; border-collapse: collapse; min-width: 1200px; font-size: 0.78rem;">
+              <thead>
+                <tr id="mesai-table-header" style="background: var(--bg-sidebar); position: sticky; top: 0; z-index: 10;"></tr>
+              </thead>
+              <tbody id="mesai-table-body"></tbody>
+            </table>
+          </div>
+          <div id="mesai-table-empty" style="text-align: center; padding: 3rem 2rem; color: var(--text-muted); display: none;">
+            <i class="fa-solid fa-calendar-xmark" style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.4;"></i>
+            <p>Henüz mesai verisi oluşturulmamış. "Otomatik Oluştur" butonuna tıklayarak başlayın.</p>
+          </div>
+        </div>
+
+        <!-- Açıklama -->
+        <div class="glass-card" style="padding: 0.85rem 1.25rem;">
+          <div style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.6;">
+            <strong style="color: var(--text-main);">📌 Kurallar:</strong>
+            Hafta içi günlük max 4 saat · Hafta sonu günlük max 8 saat · Aylık max 50 saat · Yıllık max 300 saat ·
+            <span style="color: #ef4444; font-weight: 700;">X</span> = İzinli / Tatil (mesai yazılmaz) ·
+            Hücreye tıklayarak saat değerini veya X'i manuel düzenleyebilirsiniz.
           </div>
         </div>
       </section>
