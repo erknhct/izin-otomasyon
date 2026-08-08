@@ -15,6 +15,11 @@ let dbCache = {
   leaveTypes: [],
   signatories: [],
   leaveRecords: [],
+  mesaiSettings: {
+    targetHours: 50,
+    duzenleyen: { ad: '', unvan: '' },
+    tasdik: { ad: '', unvan: '' }
+  },
   adminPassword: 'ankara2025',
   staffPassword: 'yazi2025'
 };
@@ -34,6 +39,9 @@ export async function initStorage() {
         delete dbCache.appPassword;
         if (dbCache.leaveRecords && Array.isArray(dbCache.leaveRecords)) {
           dbCache.leaveRecords.forEach(r => delete r.raporKurum);
+        }
+        if (!dbCache.mesaiSettings) {
+          dbCache.mesaiSettings = { targetHours: 50, duzenleyen: { ad: '', unvan: '' }, tasdik: { ad: '', unvan: '' } };
         }
         // Sync to localStorage
         localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
@@ -56,6 +64,9 @@ export async function initStorage() {
   dbCache.leaveRecords = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_RECORDS) || '[]');
   if (dbCache.leaveRecords && Array.isArray(dbCache.leaveRecords)) {
     dbCache.leaveRecords.forEach(r => delete r.raporKurum);
+  }
+  if (!dbCache.mesaiSettings) {
+    dbCache.mesaiSettings = { targetHours: 50, duzenleyen: { ad: '', unvan: '' }, tasdik: { ad: '', unvan: '' } };
   }
   dbCache.adminPassword = localStorage.getItem('udf_admin_password') || localStorage.getItem('udf_app_password') || 'ankara2025';
   dbCache.staffPassword = localStorage.getItem('udf_staff_password') || 'yazi2025';
@@ -203,5 +214,14 @@ export function getAppPasswordStored() {
 
 export function setAppPasswordStored(newPassword) {
   setAdminPasswordStored(newPassword);
+}
+
+export function getMesaiSettingsDB() {
+  return dbCache.mesaiSettings;
+}
+
+export function saveMesaiSettingsDB(settings) {
+  dbCache.mesaiSettings = settings;
+  syncToDiskFile();
 }
 

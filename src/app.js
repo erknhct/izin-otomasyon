@@ -6,7 +6,8 @@ import {
   getSignatories, saveSignatories,
   getLeaveRecords, addLeaveRecord, updateLeaveRecord, deleteLeaveRecord,
   getAdminPasswordStored, setAdminPasswordStored,
-  getStaffPasswordStored, setStaffPasswordStored
+  getStaffPasswordStored, setStaffPasswordStored,
+  getMesaiSettingsDB, saveMesaiSettingsDB
 } from './storage.js';
 import { calculateExpectedReturn, calculateDaysFromReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
 import {
@@ -2484,12 +2485,14 @@ function initMesaiView() {
   });
   const targetEl = document.getElementById('mesai-global-target');
   if (targetEl) {
-    const savedTarget = localStorage.getItem('mesai_target_hours');
-    if (savedTarget) {
-      targetEl.value = savedTarget;
+    const settings = getMesaiSettingsDB();
+    if (settings && settings.targetHours) {
+      targetEl.value = settings.targetHours;
     }
     targetEl.addEventListener('change', () => {
-      localStorage.setItem('mesai_target_hours', targetEl.value);
+      const s = getMesaiSettingsDB() || { targetHours: 50 };
+      s.targetHours = targetEl.value;
+      saveMesaiSettingsDB(s);
       renderMesaiView(true);
     });
   }

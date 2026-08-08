@@ -11,7 +11,7 @@
  *  - İzin kenarlı hafta sonlarına X işlenir
  */
 
-import { getPersonnelList, getLeaveRecords } from './storage.js';
+import { getPersonnelList, getLeaveRecords, getMesaiSettingsDB, saveMesaiSettingsDB } from './storage.js';
 
 // ─────────────────────────────────────────────────────────
 // STORAGE (localStorage tabanlı, hafif)
@@ -72,7 +72,7 @@ function isOfficialHoliday(y, m, d) {
   };
   if (fixed[md]) return true;
 
-  // Dini Bayramlar (2024–2028 yeterli; genişletilebilir)
+  // Dini Bayramlar (2024–2035 yeterli; genişletilebilir)
   const dini = [
     '2024-04-10','2024-04-11','2024-04-12','2024-06-16','2024-06-17','2024-06-18','2024-06-19',
     '2025-03-30','2025-03-31','2025-04-01','2025-06-06','2025-06-07','2025-06-08','2025-06-09',
@@ -346,11 +346,17 @@ export function getMesaiCellValue(pid, y, m, d) {
 // İMZA ALANI KAYDET / OKU
 // ─────────────────────────────────────────────────────────
 export function getMesaiSignatories() {
-  return mesaiData.signatories || { duzenleyen: { ad: '', unvan: '' }, tasdik: { ad: '', unvan: '' } };
+  const settings = getMesaiSettingsDB();
+  return {
+    duzenleyen: settings?.duzenleyen || { ad: '', unvan: '' },
+    tasdik: settings?.tasdik || { ad: '', unvan: '' }
+  };
 }
 export function saveMesaiSignatories(s) {
-  mesaiData.signatories = s;
-  saveMesaiData(mesaiData);
+  const settings = getMesaiSettingsDB() || { targetHours: 50 };
+  settings.duzenleyen = s.duzenleyen;
+  settings.tasdik = s.tasdik;
+  saveMesaiSettingsDB(settings);
 }
 
 // ─────────────────────────────────────────────────────────

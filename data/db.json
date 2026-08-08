@@ -748,9 +748,21 @@
       "aliciMakam": "komisyon",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-08-10"
+      "baslayisDate": "2026-08-10",
+      "hiddenFromDashboard": true
     }
   ],
   "adminPassword": "Tuna3342",
-  "staffPassword": "Ankara2026"
+  "staffPassword": "Ankara2026",
+  "mesaiSettings": {
+    "targetHours": 50,
+    "duzenleyen": {
+      "ad": "Emine SÖKMEN",
+      "unvan": "Bilgisayar İşletmeni"
+    },
+    "tasdik": {
+      "ad": "Dr. Arif Naci SUCUOĞLU",
+      "unvan": "Cumhuriyet Başsavcı Vekili"
+    }
+  }
 }
