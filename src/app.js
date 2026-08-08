@@ -1742,7 +1742,7 @@ function renderReports() {
     if (typeFilter === 'yillik') return s.yillikCount > 0;
     if (typeFilter) return s.otherCount > 0;
     return true;
-  }).sort((a,b) => b.totalDays - a.totalDays);
+  });
 
   const tbody = document.querySelector('#table-reports tbody');
   if (tbody) {
