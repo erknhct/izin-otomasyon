@@ -29,6 +29,9 @@ export async function initStorage() {
       if (data.personnel && Array.isArray(data.personnel)) {
         dbCache = data;
         if (!dbCache.appPassword) dbCache.appPassword = 'ankara2025';
+        if (dbCache.leaveRecords && Array.isArray(dbCache.leaveRecords)) {
+          dbCache.leaveRecords.forEach(r => delete r.raporKurum);
+        }
         // Sync to localStorage
         localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
         localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
@@ -46,6 +49,9 @@ export async function initStorage() {
   dbCache.leaveTypes = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_TYPES) || '[]');
   dbCache.signatories = JSON.parse(localStorage.getItem(STORAGE_KEYS.SIGNATORIES) || '[]');
   dbCache.leaveRecords = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_RECORDS) || '[]');
+  if (dbCache.leaveRecords && Array.isArray(dbCache.leaveRecords)) {
+    dbCache.leaveRecords.forEach(r => delete r.raporKurum);
+  }
   dbCache.appPassword = localStorage.getItem('udf_app_password') || 'ankara2025';
   return false;
 }
