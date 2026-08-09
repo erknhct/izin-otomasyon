@@ -802,6 +802,9 @@ function populateWizardOptions() {
   const personnelList = getPersonnelList();
   const personSelect = document.getElementById('wiz-personnel-select');
   personSelect.innerHTML = personnelList.map(p => `<option value="${p.id}">${p.name} (${p.sicil}) - ${p.title}</option>`).join('');
+  
+  const wizCount = document.getElementById('wiz-personnel-count');
+  if (wizCount) wizCount.textContent = `(${personnelList.length} Personel)`;
 
   // 2. Leave Types
   const leaveTypes = getLeaveTypes();
@@ -1357,6 +1360,10 @@ function renderLeavesTable() {
 // 4. PERSONNEL MANAGEMENT
 function renderPersonnelTable() {
   const list = getPersonnelList();
+  
+  const sidebarCount = document.getElementById('sidebar-personnel-count');
+  if (sidebarCount) sidebarCount.textContent = `(${list.length})`;
+
   const tbody = document.querySelector('#table-personnel tbody');
   const searchInput = document.getElementById('search-personnel');
   const query = normalizeSearch(searchInput?.value || '');
@@ -1366,6 +1373,7 @@ function renderPersonnelTable() {
   const isFiltering = query !== '';
   tbody.innerHTML = filtered.map((p, index) => `
     <tr ${!isFiltering ? 'draggable="true"' : ''} data-index="${index}" class="personnel-row">
+      <td style="text-align: center; color: var(--text-muted); font-weight: 500;">${index + 1}</td>
       <td><code>${p.sicil}</code></td>
       <td><strong>${p.name}</strong></td>
       <td>${p.title}</td>

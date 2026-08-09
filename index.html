@@ -65,7 +65,7 @@
         </a>
         <a class="nav-item" data-view="personnel">
           <div class="nav-icon"><i class="fa-solid fa-users"></i></div>
-          <span>Personel Listesi (50)</span>
+          <span>Personel Listesi <span id="sidebar-personnel-count"></span></span>
         </a>
         <a class="nav-item" data-view="reports">
           <div class="nav-icon"><i class="fa-solid fa-chart-pie"></i></div>
@@ -197,7 +197,7 @@
             <div class="form-grid">
               <!-- 1. Personel Seçimi -->
               <div class="form-group">
-                <label for="wiz-personnel-select"><i class="fa-solid fa-user"></i> 1. Personel Seçiniz (50 Personel)</label>
+                <label for="wiz-personnel-select"><i class="fa-solid fa-user"></i> 1. Personel Seçiniz <span id="wiz-personnel-count"></span></label>
                 <select id="wiz-personnel-select" required style="font-weight: 600;">
                   <!-- Dynamically filled -->
                 </select>
@@ -383,7 +383,7 @@
         <div class="page-header">
           <div>
             <h1 class="page-title">Personel Yönetimi</h1>
-            <p class="page-description">Birimde çalışan 50+ personel listesi, ekleme ve düzenleme</p>
+            <p class="page-description">Birimde çalışan tüm personelin listesi, ekleme ve düzenleme</p>
           </div>
           <div style="display: flex; gap: 0.75rem;">
             <input type="text" id="search-personnel" placeholder="Personel Ara (Ad, Sicil)..." style="width: 250px;" />
@@ -398,6 +398,7 @@
             <table class="data-table" id="table-personnel">
               <thead>
                 <tr>
+                  <th style="width: 50px; text-align: center;">#</th>
                   <th>Sicil No</th>
                   <th>Adı Soyadı</th>
                   <th>Unvanı</th>

@@ -6,10 +6,10 @@ import JSZip from 'jszip';
 export function numberToTurkishText(num) {
   const n = parseInt(num, 10);
   if (isNaN(n)) return num.toString();
-  
+
   const units = ['', 'Bir', 'İki', 'Üç', 'Dört', 'Beş', 'Altı', 'Yedi', 'Sekiz', 'Dokuz'];
   const tens = ['', 'On', 'Yirmi', 'Otuz', 'Kırk', 'Elli', 'Altmış', 'Yetmiş', 'Seksen', 'Doksan'];
-  
+
   if (n === 0) return 'Sıfır';
   if (n < 10) return units[n];
   if (n < 100) {
@@ -300,7 +300,7 @@ export function buildUdfXml(payload) {
 
   // Construct CDATA and Elements XML
   const cdataText = lines.map(l => l[0]).join('\n') + '\n';
-  
+
   let elementsXml = '';
   let currentOffset = 0;
 
@@ -316,7 +316,7 @@ export function buildUdfXml(payload) {
     const boldStr = bold ? 'true' : 'false';
 
     elementsXml += `<paragraph resolver="hvl-default" Alignment="${align}" FirstLineIndent="${indent}" SpaceBelow="1.0" LineSpacing="0.0" RightIndent="0.0" LeftIndent="0.0" SpaceAbove="0.0"><content resolver="hvl-default" family="Times New Roman" size="${size}" bold="${boldStr}" startOffset="${currentOffset}" length="${lineLen}" /></paragraph>\n`;
-    
+
     currentOffset += lineLen;
   });
 
@@ -338,15 +338,15 @@ ${elementsXml}</elements>
  */
 export async function downloadUdfFile(payload, filename = 'evrak.udf') {
   const xmlContent = buildUdfXml(payload);
-  
+
   const zip = new JSZip();
   zip.file('content.xml', xmlContent);
-  
+
   const blob = await zip.generateAsync({
     type: 'blob',
     mimeType: 'application/x-zip-compressed'
   });
-  
+
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
