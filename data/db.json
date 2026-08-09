@@ -462,6 +462,22 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786305739878",
+      "personnelId": "31",
+      "personnelName": "Tuğçe ŞEN",
+      "sicil": "351330",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 6,
+      "ayrilisDate": "2026-08-09",
+      "expectedReturnDate": "2026-08-17",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786303781264",
       "personnelId": "4",
       "personnelName": "Hasan KARAKOÇLAR",
