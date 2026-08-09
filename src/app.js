@@ -494,9 +494,6 @@ function renderDashboard() {
   const upcomingList = pendingList.filter(r => !r.isDue);
   const completedList = allRecords.filter(r => r.status === 'baslayis_yapildi' && !r.hiddenFromDashboard);
 
-  document.getElementById('pending-count-badge').textContent = dueList.length > 0 
-    ? `${pendingList.length} Bekleyen (${dueList.length} ACİL)` 
-    : `${pendingList.length} Bekleyen`;
 
   if (pendingList.length === 0 && completedList.length === 0) {
     pendingContainer.innerHTML = `
@@ -508,17 +505,56 @@ function renderDashboard() {
     return;
   }
 
-  let html = '';
+  let currentActiveTab = null;
+  const existingActiveBtn = pendingContainer.querySelector('.dashboard-tabs .tab-btn.active');
+  if (existingActiveBtn) {
+    const targetId = existingActiveBtn.getAttribute('data-target');
+    if (targetId === 'tab-due') currentActiveTab = 'due';
+    else if (targetId === 'tab-upcoming') currentActiveTab = 'upcoming';
+    else if (targetId === 'tab-completed') currentActiveTab = 'completed';
+  }
 
+  // Fallbacks in case the list for the currently active tab becomes empty
+  if (currentActiveTab === 'due' && dueList.length === 0) currentActiveTab = null;
+  if (currentActiveTab === 'upcoming' && upcomingList.length === 0) currentActiveTab = null;
+  if (currentActiveTab === 'completed' && completedList.length === 0) currentActiveTab = null;
+
+  const activeTab = currentActiveTab || (dueList.length > 0 ? 'due' : (upcomingList.length > 0 ? 'upcoming' : 'completed'));
+
+  const titles = {
+    'due': '<span><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-danger); margin-right: 8px;"></i> GÜNÜ GELEN / TARİHİ GEÇENLER (ACİL BAŞLAYIŞ YAZISI GEREKLİ)</span>',
+    'upcoming': '<span><i class="fa-solid fa-calendar-days" style="color: var(--accent-primary); margin-right: 8px;"></i> DEVAM EDEN İZİNLER (Gelecek Başlayışlar)</span>',
+    'completed': '<span><i class="fa-solid fa-circle-check" style="color: var(--accent-success); margin-right: 8px;"></i> BAŞLAYIŞI YAPILAN VE TAMAMLANAN İZİNLER</span>'
+  };
+
+  const activeTitleHtml = titles[activeTab] || titles['due'];
+
+  let html = `
+    <div class="dashboard-tabs-container">
+      <div class="dashboard-tabs" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; overflow-x: auto;">
+        <button class="btn ${activeTab === 'due' ? 'btn-danger' : 'btn-secondary'} tab-btn" data-target="tab-due" data-type="danger" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 1rem; font-weight: 600;">
+          🚨 Günü Gelenler <span class="badge ${activeTab === 'due' ? 'badge-light' : 'badge-danger'}">${dueList.length}</span>
+        </button>
+        <button class="btn ${activeTab === 'upcoming' ? 'btn-primary' : 'btn-secondary'} tab-btn" data-target="tab-upcoming" data-type="primary" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 1rem; font-weight: 600;">
+          ⏳ Devam Edenler <span class="badge ${activeTab === 'upcoming' ? 'badge-light' : 'badge-info'}">${upcomingList.length}</span>
+        </button>
+        <button class="btn ${activeTab === 'completed' ? 'btn-success' : 'btn-secondary'} tab-btn" data-target="tab-completed" data-type="success" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 1rem; font-weight: 600;">
+          ✅ Tamamlananlar <span class="badge ${activeTab === 'completed' ? 'badge-light' : 'badge-success'}">${completedList.length}</span>
+        </button>
+      </div>
+      
+      <div class="card-title" id="dynamic-tab-title" style="margin-bottom: 1.25rem; font-size: 1.1rem; padding-left: 0.25rem;">
+        ${activeTitleHtml}
+      </div>
+
+      <div class="tab-content">
+  `;
+
+  // DUE LIST TAB
+  html += `<div id="tab-due" class="tab-pane" style="display: ${activeTab === 'due' ? 'block' : 'none'};">`;
   if (dueList.length > 0) {
     html += `
-      <div style="margin-bottom: 1.5rem; border: 2px solid var(--accent-danger); background: rgba(239, 68, 68, 0.08); padding: 1.25rem; border-radius: var(--radius-md);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h3 style="color: var(--accent-danger); font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
-            <i class="fa-solid fa-triangle-exclamation"></i> 🚨 GÜNÜ GELEN / TARİHİ GEÇENLER (ACİL BAŞLAYIŞ YAZISI GEREKLİ)
-          </h3>
-          <span class="badge badge-danger">${dueList.length} Acil Personel</span>
-        </div>
+      <div style="border: 2px solid var(--accent-danger); background: rgba(239, 68, 68, 0.08); padding: 1.25rem; border-radius: var(--radius-md);">
         <div class="table-container">
           <table class="data-table">
             <thead>
@@ -545,9 +581,6 @@ function renderDashboard() {
                     <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}" style="font-weight: 700;">
                       <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
                     </button>
-                    <button class="btn btn-sm btn-secondary btn-delete-leave-record" data-record-id="${item.id}" title="Ana Sayfa Panosundan Kaldır">
-                      <i class="fa-solid fa-eye-slash"></i> Panodan Kaldır
-                    </button>
                   </td>
                 </tr>
               `).join('')}
@@ -556,14 +589,21 @@ function renderDashboard() {
         </div>
       </div>
     `;
+  } else {
+    html += `
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted); background: rgba(255,255,255,0.02); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <i class="fa-solid fa-face-smile" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
+        <p>Harika! Günü geçen izin kaydı bulunmuyor.</p>
+      </div>
+    `;
   }
+  html += `</div>`;
 
+  // UPCOMING TAB
+  html += `<div id="tab-upcoming" class="tab-pane" style="display: ${activeTab === 'upcoming' ? 'block' : 'none'};">`;
   if (upcomingList.length > 0) {
     html += `
-      <div style="margin-top: 1rem;">
-        <h4 style="color: var(--text-main); font-size: 0.95rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-          <i class="fa-solid fa-calendar-days" style="color: var(--accent-primary);"></i> ⏳ DEVAM EDEN İZİNLER (Gelecek Başlayışlar)
-        </h4>
+      <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
         <div class="table-container">
           <table class="data-table">
             <thead>
@@ -590,9 +630,6 @@ function renderDashboard() {
                     <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}">
                       <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
                     </button>
-                    <button class="btn btn-sm btn-secondary btn-delete-leave-record" data-record-id="${item.id}" title="Ana Sayfa Panosundan Kaldır">
-                      <i class="fa-solid fa-eye-slash"></i> Panodan Kaldır
-                    </button>
                   </td>
                 </tr>
               `).join('')}
@@ -601,17 +638,21 @@ function renderDashboard() {
         </div>
       </div>
     `;
+  } else {
+    html += `
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted); background: rgba(255,255,255,0.02); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <i class="fa-solid fa-calendar-check" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
+        <p>Devam eden izin kaydı bulunmuyor.</p>
+      </div>
+    `;
   }
+  html += `</div>`;
 
+  // COMPLETED TAB
+  html += `<div id="tab-completed" class="tab-pane" style="display: ${activeTab === 'completed' ? 'block' : 'none'};">`;
   if (completedList.length > 0) {
     html += `
-      <div style="margin-top: 1.5rem; border: 1px solid var(--accent-success); background: rgba(16, 185, 129, 0.05); padding: 1.25rem; border-radius: var(--radius-md);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-          <h4 style="color: var(--accent-success); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
-            <i class="fa-solid fa-circle-check"></i> ✅ BAŞLAYIŞI YAPILAN VE TAMAMLANAN İZİNLER
-          </h4>
-          <span class="badge badge-success">${completedList.length} Kayıt</span>
-        </div>
+      <div style="border: 1px solid var(--accent-success); background: rgba(16, 185, 129, 0.05); padding: 1.25rem; border-radius: var(--radius-md);">
         <div class="table-container">
           <table class="data-table">
             <thead>
@@ -649,9 +690,72 @@ function renderDashboard() {
         </div>
       </div>
     `;
+  } else {
+    html += `
+      <div style="text-align: center; padding: 2rem; color: var(--text-muted); background: rgba(255,255,255,0.02); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <i class="fa-solid fa-folder-open" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem;"></i>
+        <p>Panoda tamamlanmış izin kaydı bulunmuyor.</p>
+      </div>
+    `;
   }
+  html += `</div>`;
+
+  html += `
+      </div>
+    </div>
+  `;
 
   pendingContainer.innerHTML = html;
+
+  // Add click listeners for tabs
+  pendingContainer.querySelectorAll('.dashboard-tabs .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      // Reset all tabs
+      pendingContainer.querySelectorAll('.dashboard-tabs .tab-btn').forEach(b => {
+        b.className = 'btn btn-secondary tab-btn';
+        b.style.flexShrink = '0';
+        b.style.display = 'flex';
+        b.style.alignItems = 'center';
+        b.style.gap = '0.5rem';
+        b.style.padding = '0.6rem 1.25rem';
+        b.style.fontSize = '1rem';
+        b.style.fontWeight = '600';
+        
+        const badge = b.querySelector('.badge');
+        if (b.getAttribute('data-type') === 'danger') badge.className = 'badge badge-danger';
+        if (b.getAttribute('data-type') === 'primary') badge.className = 'badge badge-info';
+        if (b.getAttribute('data-type') === 'success') badge.className = 'badge badge-success';
+      });
+      // Hide all panes
+      pendingContainer.querySelectorAll('.tab-content .tab-pane').forEach(p => p.style.display = 'none');
+      
+      // Set active tab
+      const targetId = btn.getAttribute('data-target');
+      const type = btn.getAttribute('data-type');
+      btn.className = `btn btn-${type} tab-btn active`;
+      btn.style.flexShrink = '0';
+      btn.style.display = 'flex';
+      btn.style.alignItems = 'center';
+      btn.style.gap = '0.5rem';
+      btn.style.padding = '0.6rem 1.25rem';
+      btn.style.fontSize = '1rem';
+      btn.style.fontWeight = '600';
+      
+      const badge = btn.querySelector('.badge');
+      badge.className = 'badge badge-light';
+
+      // Update Dynamic Title
+      const tabTitles = {
+        'tab-due': '<span><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-danger); margin-right: 8px;"></i> GÜNÜ GELEN / TARİHİ GEÇENLER (ACİL BAŞLAYIŞ YAZISI GEREKLİ)</span>',
+        'tab-upcoming': '<span><i class="fa-solid fa-calendar-days" style="color: var(--accent-primary); margin-right: 8px;"></i> DEVAM EDEN İZİNLER (Gelecek Başlayışlar)</span>',
+        'tab-completed': '<span><i class="fa-solid fa-circle-check" style="color: var(--accent-success); margin-right: 8px;"></i> BAŞLAYIŞI YAPILAN VE TAMAMLANAN İZİNLER</span>'
+      };
+      pendingContainer.querySelector('#dynamic-tab-title').innerHTML = tabTitles[targetId];
+
+      // Show active pane
+      pendingContainer.querySelector('#' + targetId).style.display = 'block';
+    });
+  });
 
   // Add click listeners
   pendingContainer.querySelectorAll('.btn-create-baslayis').forEach(btn => {
@@ -777,8 +881,10 @@ function setupWizardForm() {
 
     if (isRapor) {
       aliciMakamSelect.value = 'bakanlik';
+      if (!aliciMakamSelect.value && aliciMakamSelect.options.length > 0) aliciMakamSelect.selectedIndex = 0;
     } else {
       aliciMakamSelect.value = 'komisyon';
+      if (!aliciMakamSelect.value && aliciMakamSelect.options.length > 0) aliciMakamSelect.selectedIndex = 0;
     }
   }
 
@@ -793,14 +899,44 @@ function setupWizardForm() {
   document.getElementById('btn-preview-xml')?.addEventListener('click', () => {
     try {
       const payload = getWizardPayload();
-      const previewHtml = generateDocumentPreviewHtml(payload);
-      openModal('📄 ÖNİZLEME', previewHtml);
+      
+      const payloadAyrilis = { ...payload, actionType: 'ayrilis', docType: payload.leaveType + '_ayrilis' };
+      const payloadBaslayis = { ...payload, actionType: 'baslayis', docType: payload.leaveType + '_baslayis' };
+      
+      const htmlAyrilis = generateDocumentPreviewHtml(payloadAyrilis, 'btn-modal-dl-ayrilis');
+      const htmlBaslayis = generateDocumentPreviewHtml(payloadBaslayis, 'btn-modal-dl-baslayis');
 
-      document.getElementById('btn-modal-download-udf')?.addEventListener('click', async () => {
-        const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
-        await downloadUdfFile(payload, filename);
+      const previewHtml = `
+        <div style="display: flex; gap: 1.5rem; width: 100%; overflow-x: auto; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 450px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
+            <h4 style="text-align: center; color: var(--accent-primary); margin-bottom: 1rem; font-size: 1.1rem;"><i class="fa-solid fa-plane-departure"></i> İZNE AYRILIŞ YAZISI</h4>
+            <div style="zoom: 0.85; transform-origin: top left;">${htmlAyrilis}</div>
+          </div>
+          <div style="flex: 1; min-width: 450px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
+            <h4 style="text-align: center; color: var(--accent-success); margin-bottom: 1rem; font-size: 1.1rem;"><i class="fa-solid fa-plane-arrival"></i> GÖREVE BAŞLAYIŞ YAZISI</h4>
+            <div style="zoom: 0.85; transform-origin: top left;">${htmlBaslayis}</div>
+          </div>
+        </div>
+        <style>
+           .modal-container { max-width: 95vw !important; width: 1400px !important; }
+           .udf-preview-content-box { min-height: 850px; }
+        </style>
+      `;
+
+      openModal('📄 AYRILIŞ VE BAŞLAYIŞ BELGELERİ ÖNİZLEMESİ', previewHtml);
+
+      document.getElementById('btn-modal-dl-ayrilis')?.addEventListener('click', async () => {
+        const filename = `${payload.personnelName}_${payload.leaveType}_ayrilis.udf`;
+        await downloadUdfFile(payloadAyrilis, filename);
         showToast(`${filename} UDF olarak indirildi!`, 'success');
       });
+
+      document.getElementById('btn-modal-dl-baslayis')?.addEventListener('click', async () => {
+        const filename = `${payload.personnelName}_${payload.leaveType}_baslayis.udf`;
+        await downloadUdfFile(payloadBaslayis, filename);
+        showToast(`${filename} UDF olarak indirildi!`, 'success');
+      });
+
     } catch (err) {
       console.error('Önizleme hatası:', err);
       showToast('Önizleme oluşturulurken hata: ' + err.message, 'danger');
@@ -960,7 +1096,8 @@ async function startBaslayisWizardForRecord(recId) {
     });
 
     delete document.getElementById('form-udf-wizard').dataset.linkedRecordId;
-    actionTypeSelect.value = 'ayrilis';
+    document.getElementById('form-udf-wizard').reset();
+    populateWizardOptions();
     actionTypeSelect.dispatchEvent(new Event('change'));
     
     showToast(`✅ ${rec.personnelName} için Göreve Başlayış UDF belgesi indirildi ve işlem tamamlandı!`, 'success');

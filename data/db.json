@@ -462,6 +462,54 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786301077086",
+      "personnelId": "25",
+      "personnelName": "Esra AKSOY",
+      "sicil": "291332",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 11,
+      "ayrilisDate": "2026-08-09",
+      "expectedReturnDate": "2026-08-20",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-20"
+    },
+    {
+      "id": "rec-1786300695510",
+      "personnelId": "16",
+      "personnelName": "İbrahim ŞAHİN",
+      "sicil": "201345",
+      "unvan": "Bilgisayar İşletmeni",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 12,
+      "ayrilisDate": "2026-08-09",
+      "expectedReturnDate": "2026-08-21",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-21"
+    },
+    {
+      "id": "rec-1786300422895",
+      "personnelId": "35",
+      "personnelName": "Gamze KORKMAZ",
+      "sicil": "394662",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "ayrilisDate": "2026-08-09",
+      "expectedReturnDate": "2026-08-14",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-14"
+    },
+    {
       "id": "rec-1786222853087",
       "personnelId": "1786144743643",
       "personnelName": "Erkan HACAT",
@@ -473,9 +521,10 @@
       "ayrilisDate": "2026-08-08",
       "expectedReturnDate": "2026-08-12",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-12",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786204460093",
@@ -489,9 +538,10 @@
       "ayrilisDate": "2026-08-17",
       "expectedReturnDate": "2026-09-07",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-09-07",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786198645259",
@@ -507,7 +557,8 @@
       "aliciMakam": "komisyon",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-09-07"
+      "baslayisDate": "2026-09-07",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786190440346",
@@ -521,9 +572,9 @@
       "ayrilisDate": "2026-08-04",
       "expectedReturnDate": "2026-08-07",
       "aliciMakam": "komisyon",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-09"
     },
     {
       "id": "rec-1786148340330",
@@ -554,9 +605,10 @@
       "ayrilisDate": "2026-08-08",
       "expectedReturnDate": "2026-10-02",
       "aliciMakam": "bakanlik",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-10-02",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786147105736",
@@ -570,9 +622,9 @@
       "ayrilisDate": "2026-08-07",
       "expectedReturnDate": "2026-08-11",
       "aliciMakam": "bakanlik",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786143389611",
@@ -588,7 +640,8 @@
       "aliciMakam": "bakanlik",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-08-07"
+      "baslayisDate": "2026-08-07",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786142854771",
@@ -668,7 +721,8 @@
       "aliciMakam": "komisyon",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-08-08"
+      "baslayisDate": "2026-08-08",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786141476463",
@@ -700,7 +754,8 @@
       "aliciMakam": "komisyon",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-08-07"
+      "baslayisDate": "2026-08-07",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786138720798",
@@ -732,7 +787,8 @@
       "aliciMakam": "bakanlik",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-08-24"
+      "baslayisDate": "2026-08-24",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786134596080",
@@ -748,7 +804,8 @@
       "aliciMakam": "komisyon",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-08-06"
+      "baslayisDate": "2026-08-06",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786134461527",

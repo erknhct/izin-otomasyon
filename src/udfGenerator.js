@@ -117,7 +117,7 @@ export function getDocumentTextComponents(payload) {
 /**
  * Generates clean HTML document preview for modal view
  */
-export function generateDocumentPreviewHtml(payload) {
+export function generateDocumentPreviewHtml(payload, downloadBtnId = 'btn-modal-download-udf') {
   const {
     docType,
     personnelName,
@@ -172,11 +172,11 @@ export function generateDocumentPreviewHtml(payload) {
 
   return `
     <div style="margin-bottom: 1.25rem; display: flex; justify-content: flex-end;">
-      <button class="btn btn-primary" id="btn-modal-download-udf" style="font-weight: 600;">
+      <button class="btn btn-primary" id="${downloadBtnId}" style="font-weight: 600;">
         <i class="fa-solid fa-download"></i> UDF İNDİR
       </button>
     </div>
-    <div id="udf-preview-content" style="background: #ffffff; color: #1e293b; padding: 2.5rem; border-radius: 12px; font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.6; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid #cbd5e1; user-select: text;">
+    <div class="udf-preview-content-box" style="background: #ffffff; color: #1e293b; padding: 2.5rem; border-radius: 12px; font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.6; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid #cbd5e1; user-select: text;">
       <div style="margin-bottom: 2rem;"><strong>Konu :</strong> ${subjectStr}</div>
       
       <div style="text-align: center; font-weight: normal; margin: 2.5rem 0 2rem 0; font-size: 13pt; line-height: 1.4;">
