@@ -279,7 +279,7 @@ export function buildUdfXml(payload) {
   lines.push(["", 0, false, 12, "0.0"]);
 
   if (isBaslayis && cleanIlgi) {
-    lines.push([`İlgi     : ${cleanIlgi}`, 0, false, 12, "0.0"]);
+    lines.push([`İlgi    : ${cleanIlgi}`, 0, false, 12, "0.0"]);
     lines.push(["", 0, false, 12, "0.0"]);
   }
 
