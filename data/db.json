@@ -957,7 +957,7 @@
   "adminPassword": "Tuna3342",
   "staffPassword": "Ankara2026",
   "mesaiSettings": {
-    "targetHours": 50,
+    "targetHours": "30",
     "duzenleyen": {
       "ad": "Emine SÖKMEN",
       "unvan": "Bilgisayar İşletmeni"

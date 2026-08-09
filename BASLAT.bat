@@ -18,9 +18,7 @@ for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr "IPv4"') do (
 :found
 set IP=%IP: =%
 
-:: Tarayiciyi 3 saniye sonra ac
-timeout /t 3 /nobreak >nul
-start "" "http://localhost:5173"
+
 
 :: Sunucuyu arka planda baslat - bu pencere kucuk kalsin
 npm run start
