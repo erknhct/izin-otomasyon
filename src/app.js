@@ -565,7 +565,7 @@ function renderDashboard(forceResetTab = false) {
                 <th>İzin Türü</th>
                 <th>Ayrılış Tarihi</th>
                 <th>Süre</th>
-                <th>Beklenen Başlayış</th>
+                <th>Başlayış Tarihi</th>
                 <th>İşlem</th>
               </tr>
             </thead>
@@ -614,7 +614,7 @@ function renderDashboard(forceResetTab = false) {
                 <th>İzin Türü</th>
                 <th>Ayrılış Tarihi</th>
                 <th>Süre</th>
-                <th>Tahmini Başlayış</th>
+                <th>Başlayış Tarihi</th>
                 <th>İşlem</th>
               </tr>
             </thead>
@@ -2329,7 +2329,7 @@ function openPersonHistoryModal(personId) {
               <th>İzin Türü</th>
               <th>Süre</th>
               <th>Ayrılış Tarihi</th>
-              <th>Tahmini Başlayış</th>
+              <th>Başlayış Tarihi</th>
               <th>Fiili Başlayış</th>
               <th>Durum</th>
             </tr>
