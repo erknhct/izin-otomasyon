@@ -462,6 +462,38 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786303622176",
+      "personnelId": "15",
+      "personnelName": "Merve KARA",
+      "sicil": "199012",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 13,
+      "ayrilisDate": "2026-08-09",
+      "expectedReturnDate": "2026-08-24",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-24"
+    },
+    {
+      "id": "rec-1786303476917",
+      "personnelId": "6",
+      "personnelName": "Ahmet YILMAZ",
+      "sicil": "102345",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "ayrilisDate": "2026-08-09",
+      "expectedReturnDate": "2026-08-14",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786302239495",
       "personnelId": "48",
       "personnelName": "Eren YILDIRIM",
