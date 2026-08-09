@@ -904,6 +904,10 @@ function setupWizardForm() {
       const payloadAyrilis = { ...payload, actionType: 'ayrilis', docType: payload.leaveType + '_ayrilis' };
       const payloadBaslayis = { ...payload, actionType: 'baslayis', docType: payload.leaveType + '_baslayis' };
       
+      if (!payloadBaslayis.ilgiEvrak) {
+        payloadBaslayis.ilgiEvrak = `${formatDateTR(payload.ayrilisTarihi)} tarihli yazımız.`;
+      }
+
       const htmlAyrilis = generateDocumentPreviewHtml(payloadAyrilis, 'btn-modal-dl-ayrilis');
       const htmlBaslayis = generateDocumentPreviewHtml(payloadBaslayis, 'btn-modal-dl-baslayis');
 

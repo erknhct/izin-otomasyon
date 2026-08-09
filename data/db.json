@@ -505,9 +505,9 @@
       "ayrilisDate": "2026-08-09",
       "expectedReturnDate": "2026-08-25",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-25"
     },
     {
       "id": "rec-1786301911916",

@@ -177,13 +177,13 @@ export function generateDocumentPreviewHtml(payload, downloadBtnId = 'btn-modal-
       </button>
     </div>
     <div class="udf-preview-content-box" style="background: #ffffff; color: #1e293b; padding: 2.5rem; border-radius: 12px; font-family: 'Times New Roman', Times, serif; font-size: 13pt; line-height: 1.6; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid #cbd5e1; user-select: text;">
-      <div style="margin-bottom: 2rem;"><strong>Konu :</strong> ${subjectStr}</div>
+      <div style="margin-bottom: 2rem;"><span style="display:inline-block; width: 45px;"><strong>Konu</strong></span><strong>:</strong> ${subjectStr}</div>
       
       <div style="text-align: center; font-weight: normal; margin: 2.5rem 0 2rem 0; font-size: 13pt; line-height: 1.4;">
         ${destTitleLines.join('<br>')}
       </div>
 
-      ${isBaslayis && cleanIlgi ? `<div style="margin-bottom: 1.5rem;"><strong>İlgi     :</strong> ${cleanIlgi}</div>` : ''}
+      ${isBaslayis && cleanIlgi ? `<div style="margin-bottom: 1.5rem;"><span style="display:inline-block; width: 45px;"><strong>İlgi</strong></span><strong>:</strong> ${cleanIlgi}</div>` : ''}
 
       <div style="text-indent: 1.25cm; text-align: justify; margin-bottom: 1rem;">
         ${bodyParagraph}
@@ -279,7 +279,7 @@ export function buildUdfXml(payload) {
   lines.push(["", 0, false, 12, "0.0"]);
 
   if (isBaslayis && cleanIlgi) {
-    lines.push([`İlgi     : ${cleanIlgi}`, 0, false, 12, "0.0"]);
+    lines.push([`İlgi : ${cleanIlgi}`, 0, false, 12, "0.0"]);
     lines.push(["", 0, false, 12, "0.0"]);
   }
 
