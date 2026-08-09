@@ -312,7 +312,7 @@ function switchView(viewName) {
     topTitle.innerHTML = viewTitles[viewName];
   }
 
-  if (viewName === 'dashboard') renderDashboard();
+  if (viewName === 'dashboard') renderDashboard(true);
   if (viewName === 'leaves') renderLeavesTable();
   if (viewName === 'personnel') renderPersonnelTable();
   if (viewName === 'reports') renderReports();
@@ -467,7 +467,7 @@ function setupNotificationBell() {
 }
 
 // 1. DASHBOARD
-function renderDashboard() {
+function renderDashboard(forceResetTab = false) {
   renderNotificationBell();
   const stats = getDashboardStats();
   document.getElementById('stat-active-leaves').textContent = stats.totalActiveLeaves;
@@ -506,20 +506,21 @@ function renderDashboard() {
   }
 
   let currentActiveTab = null;
-  const existingActiveBtn = pendingContainer.querySelector('.dashboard-tabs .tab-btn.active');
-  if (existingActiveBtn) {
-    const targetId = existingActiveBtn.getAttribute('data-target');
-    if (targetId === 'tab-due') currentActiveTab = 'due';
-    else if (targetId === 'tab-upcoming') currentActiveTab = 'upcoming';
-    else if (targetId === 'tab-completed') currentActiveTab = 'completed';
+  if (!forceResetTab) {
+    const existingActiveBtn = pendingContainer.querySelector('.dashboard-tabs .tab-btn.active');
+    if (existingActiveBtn) {
+      const targetId = existingActiveBtn.getAttribute('data-target');
+      if (targetId === 'tab-due') currentActiveTab = 'due';
+      else if (targetId === 'tab-upcoming') currentActiveTab = 'upcoming';
+      else if (targetId === 'tab-completed') currentActiveTab = 'completed';
+    }
   }
-
   // Fallbacks in case the list for the currently active tab becomes empty
   if (currentActiveTab === 'due' && dueList.length === 0) currentActiveTab = null;
   if (currentActiveTab === 'upcoming' && upcomingList.length === 0) currentActiveTab = null;
   if (currentActiveTab === 'completed' && completedList.length === 0) currentActiveTab = null;
 
-  const activeTab = currentActiveTab || (dueList.length > 0 ? 'due' : (upcomingList.length > 0 ? 'upcoming' : 'completed'));
+  const activeTab = currentActiveTab || 'due';
 
   const titles = {
     'due': '<span><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-danger); margin-right: 8px;"></i> GÜNÜ GELEN / TARİHİ GEÇENLER (ACİL BAŞLAYIŞ YAZISI GEREKLİ)</span>',
