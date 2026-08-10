@@ -546,28 +546,24 @@ export function printMesaiView(y, m, duzenleyenAd, duzenleyenUnvan, tasvipAd, ta
     rows += `<tr>${cells}</tr>`;
   });
 
-  // SAYFA TOPLAMI & GENEL TOPLAM satırları
-  let totalDayCells = '';
+  // SAYFA TOPLAMI & GENEL TOPLAM satırları (Excel çıktısıyla birebir aynı şekilde boş)
+  let emptyDayCells = '';
   for (let d = 1; d <= 31; d++) {
-    if (d <= dim) {
-      totalDayCells += `<td style="text-align:center; font-weight:bold;">${dayTotals[d] > 0 ? dayTotals[d] : ''}</td>`;
-    } else {
-      totalDayCells += `<td></td>`;
-    }
+    emptyDayCells += `<td></td>`;
   }
 
   const sayfaToplamRow = `<tr style="font-weight:bold; background:#f9f9f9;">
     <td colspan="5" style="text-align:right; padding-right:8px;">SAYFA TOPLAMI</td>
-    ${totalDayCells}
-    <td style="text-align:center;">${grandTotal > 0 ? grandTotal : 0}</td>
+    ${emptyDayCells}
+    <td></td>
     <td></td>
     <td></td>
   </tr>`;
 
   const genelToplamRow = `<tr style="font-weight:bold; background:#f2f2f2;">
     <td colspan="5" style="text-align:right; padding-right:8px;">GENEL TOPLAM</td>
-    ${totalDayCells}
-    <td style="text-align:center;">${grandTotal > 0 ? grandTotal : 0}</td>
+    ${emptyDayCells}
+    <td></td>
     <td></td>
     <td></td>
   </tr>`;
