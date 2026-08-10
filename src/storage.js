@@ -21,8 +21,9 @@ let dbCache = {
   leaveRecords: [],
   mesaiSettings: {
     targetHours: 50,
-    duzenleyen: { ad: '', unvan: '' },
-    tasdik: { ad: '', unvan: '' }
+    duzenleyen: { ad: 'Emine SÖKMEN', unvan: 'Bilgisayar İşletmeni' },
+    tasvip: { ad: 'Ad Soyad', unvan: 'Unvan' },
+    tasdik: { ad: 'Dr. Arif Naci SUCUOĞLU', unvan: 'Cumhuriyet Başsavcı Vekili' }
   },
   adminPassword: 'ankara2025',
   staffPassword: 'yazi2025'
@@ -45,7 +46,7 @@ export async function initStorage() {
           dbCache.leaveRecords.forEach(r => delete r.raporKurum);
         }
         if (!dbCache.mesaiSettings) {
-          dbCache.mesaiSettings = { targetHours: 50, duzenleyen: { ad: '', unvan: '' }, tasdik: { ad: '', unvan: '' } };
+          dbCache.mesaiSettings = { targetHours: 50, duzenleyen: { ad: 'Emine SÖKMEN', unvan: 'Bilgisayar İşletmeni' }, tasvip: { ad: 'Ad Soyad', unvan: 'Unvan' }, tasdik: { ad: 'Dr. Arif Naci SUCUOĞLU', unvan: 'Cumhuriyet Başsavcı Vekili' } };
         }
         // Sync to localStorage
         localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
@@ -82,7 +83,7 @@ export async function initStorage() {
     dbCache.leaveRecords.forEach(r => delete r.raporKurum);
   }
   if (!dbCache.mesaiSettings) {
-    dbCache.mesaiSettings = { targetHours: 50, duzenleyen: { ad: '', unvan: '' }, tasdik: { ad: '', unvan: '' } };
+    dbCache.mesaiSettings = { targetHours: 50, duzenleyen: { ad: 'Emine SÖKMEN', unvan: 'Bilgisayar İşletmeni' }, tasvip: { ad: 'Ad Soyad', unvan: 'Unvan' }, tasdik: { ad: 'Dr. Arif Naci SUCUOĞLU', unvan: 'Cumhuriyet Başsavcı Vekili' } };
   }
   dbCache.adminPassword = localStorage.getItem('udf_admin_password') || localStorage.getItem('udf_app_password') || 'ankara2025';
   dbCache.staffPassword = localStorage.getItem('udf_staff_password') || 'yazi2025';

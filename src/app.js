@@ -2741,15 +2741,20 @@ function initMesaiView() {
   const sigs = getMesaiSignatories();
   const duzAdiEl   = document.getElementById('mesai-duzenleyen-adi');
   const duzUnvEl   = document.getElementById('mesai-duzenleyen-unvan');
+  const tasvipAdiEl = document.getElementById('mesai-tasvip-adi');
+  const tasvipUnvEl = document.getElementById('mesai-tasvip-unvan');
   const tasAdiEl   = document.getElementById('mesai-tasdik-adi');
   const tasUnvEl   = document.getElementById('mesai-tasdik-unvan');
-  if (duzAdiEl) duzAdiEl.value   = sigs.duzenleyen?.ad    || '';
-  if (duzUnvEl) duzUnvEl.value   = sigs.duzenleyen?.unvan || '';
-  if (tasAdiEl) tasAdiEl.value   = sigs.tasdik?.ad        || '';
-  if (tasUnvEl) tasUnvEl.value   = sigs.tasdik?.unvan     || '';
+
+  if (duzAdiEl) duzAdiEl.value     = sigs.duzenleyen?.ad    || '';
+  if (duzUnvEl) duzUnvEl.value     = sigs.duzenleyen?.unvan || '';
+  if (tasvipAdiEl) tasvipAdiEl.value = sigs.tasvip?.ad       || '';
+  if (tasvipUnvEl) tasvipUnvEl.value = sigs.tasvip?.unvan    || '';
+  if (tasAdiEl) tasAdiEl.value     = sigs.tasdik?.ad        || '';
+  if (tasUnvEl) tasUnvEl.value     = sigs.tasdik?.unvan     || '';
 
   // İmza alanı değişince otomatik kaydet
-  [duzAdiEl, duzUnvEl, tasAdiEl, tasUnvEl].forEach(el => {
+  [duzAdiEl, duzUnvEl, tasvipAdiEl, tasvipUnvEl, tasAdiEl, tasUnvEl].forEach(el => {
     if (el) el.addEventListener('change', saveMesaiSigs);
   });
 
@@ -2780,6 +2785,10 @@ function saveMesaiSigs() {
       ad:    document.getElementById('mesai-duzenleyen-adi')?.value  || '',
       unvan: document.getElementById('mesai-duzenleyen-unvan')?.value || ''
     },
+    tasvip: {
+      ad:    document.getElementById('mesai-tasvip-adi')?.value   || '',
+      unvan: document.getElementById('mesai-tasvip-unvan')?.value  || ''
+    },
     tasdik: {
       ad:    document.getElementById('mesai-tasdik-adi')?.value   || '',
       unvan: document.getElementById('mesai-tasdik-unvan')?.value  || ''
@@ -2789,10 +2798,12 @@ function saveMesaiSigs() {
 
 function getMesaiSigs() {
   return {
-    duzAd:    document.getElementById('mesai-duzenleyen-adi')?.value    || '',
-    duzUnvan: document.getElementById('mesai-duzenleyen-unvan')?.value   || '',
-    tasAd:    document.getElementById('mesai-tasdik-adi')?.value        || '',
-    tasUnvan: document.getElementById('mesai-tasdik-unvan')?.value       || ''
+    duzAd:       document.getElementById('mesai-duzenleyen-adi')?.value    || '',
+    duzUnvan:    document.getElementById('mesai-duzenleyen-unvan')?.value   || '',
+    tasvipAd:    document.getElementById('mesai-tasvip-adi')?.value        || '',
+    tasvipUnvan: document.getElementById('mesai-tasvip-unvan')?.value     || '',
+    tasAd:       document.getElementById('mesai-tasdik-adi')?.value        || '',
+    tasUnvan:    document.getElementById('mesai-tasdik-unvan')?.value       || ''
   };
 }
 
@@ -2845,7 +2856,7 @@ window.exportMesaiExcel = async function() {
   const sigs = getMesaiSigs();
   saveMesaiSigs();
   try {
-    await exportMesaiToExcelFile(mesaiCurrentYear, mesaiCurrentMonth, sigs.duzAd, sigs.duzUnvan, sigs.tasAd, sigs.tasUnvan);
+    await exportMesaiToExcelFile(mesaiCurrentYear, mesaiCurrentMonth, sigs.duzAd, sigs.duzUnvan, sigs.tasvipAd, sigs.tasvipUnvan, sigs.tasAd, sigs.tasUnvan);
     showToast('📊 Mesai cetveli Excel olarak indirildi!', 'success');
   } catch (err) {
     showToast('Excel oluşturulamadı: ' + err.message, 'danger');
@@ -2855,7 +2866,7 @@ window.exportMesaiExcel = async function() {
 window.printMesaiCetveli = function() {
   const sigs = getMesaiSigs();
   saveMesaiSigs();
-  printMesaiView(mesaiCurrentYear, mesaiCurrentMonth, sigs.duzAd, sigs.duzUnvan, sigs.tasAd, sigs.tasUnvan);
+  printMesaiView(mesaiCurrentYear, mesaiCurrentMonth, sigs.duzAd, sigs.duzUnvan, sigs.tasvipAd, sigs.tasvipUnvan, sigs.tasAd, sigs.tasUnvan);
 };
 
 window.mesaiCellEdit = function(pid, y, m, d, tdEl) {

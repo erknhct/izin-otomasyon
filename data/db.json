@@ -462,6 +462,86 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786360626910",
+      "personnelId": "40",
+      "personnelName": "Sinan ŞAHİN",
+      "sicil": "441327",
+      "unvan": "Teknisyen",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "ayrilisDate": "2026-08-03",
+      "expectedReturnDate": "2026-08-10",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-10"
+    },
+    {
+      "id": "rec-1786358834000",
+      "personnelId": "3",
+      "personnelName": "Öznur YILDIRIM",
+      "sicil": "125768",
+      "unvan": "Teknisyen",
+      "leaveType": "rapor",
+      "leaveTypeName": "İstirahat Raporu / Sağlık İzni",
+      "days": 5,
+      "ayrilisDate": "2026-08-03",
+      "expectedReturnDate": "2026-08-10",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-10"
+    },
+    {
+      "id": "rec-1786354512558",
+      "personnelId": "2",
+      "personnelName": "Erdal ŞİMŞEK",
+      "sicil": "96214",
+      "unvan": "Bilgisayar İşletmeni",
+      "leaveType": "dogum",
+      "leaveTypeName": "Doğum İzni",
+      "days": 25,
+      "ayrilisDate": "2026-06-10",
+      "expectedReturnDate": "2026-07-06",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-10"
+    },
+    {
+      "id": "rec-1786353965615",
+      "personnelId": "43",
+      "personnelName": "Berna COŞKUN",
+      "sicil": "471326",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "ayrilisDate": "2026-08-03",
+      "expectedReturnDate": "2026-08-10",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-10"
+    },
+    {
+      "id": "rec-1786351214053",
+      "personnelId": "38",
+      "personnelName": "Volkan KAHRAMAN",
+      "sicil": "424661",
+      "unvan": "Mühendis",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "ayrilisDate": "2026-08-10",
+      "expectedReturnDate": "2026-08-17",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786305739878",
       "personnelId": "31",
       "personnelName": "Tuğçe ŞEN",
@@ -491,7 +571,8 @@
       "aliciMakam": "Komisyon ",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-08-14"
+      "baslayisDate": "2026-08-14",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786303622176",
@@ -553,9 +634,9 @@
       "ayrilisDate": "2026-08-03",
       "expectedReturnDate": "2026-08-07",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-10"
     },
     {
       "id": "rec-1786302149401",
@@ -965,6 +1046,10 @@
     "tasdik": {
       "ad": "Dr. Arif Naci SUCUOĞLU",
       "unvan": "Cumhuriyet Başsavcı Vekili"
+    },
+    "tasvip": {
+      "ad": "Ad Soyad",
+      "unvan": "Unvan"
     }
   },
   "aliciMakamlar": [

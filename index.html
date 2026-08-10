@@ -661,23 +661,42 @@
             </div>
           </div>
 
-          <!-- İmza Alanı Ayarları -->
-          <div style="display: flex; gap: 1rem; margin-top: 0.75rem; flex-wrap: wrap; border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Düzenleyen Ad Soyad:</label>
-              <input type="text" id="mesai-duzenleyen-adi" class="form-control" placeholder="Ad Soyad" style="width: 180px; font-size: 0.82rem;">
+          <!-- İmza Alanı Ayarları (Alt alta 2'li yapı) -->
+          <div style="display: flex; gap: 0.75rem 1rem; margin-top: 0.75rem; flex-wrap: wrap; border-top: 1px solid var(--border-color); padding-top: 0.75rem; align-items: stretch;">
+            <!-- Düzenleyen -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem; background: var(--bg-surface-2, rgba(255,255,255,0.03)); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.6rem 0.85rem; flex: 1; min-width: 270px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; width: 145px; min-width: 145px;">Düzenleyen Ad Soyad:</label>
+                <input type="text" id="mesai-duzenleyen-adi" class="form-control" placeholder="Emine SÖKMEN" style="font-size: 0.82rem; flex: 1;">
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; width: 145px; min-width: 145px;">Unvan:</label>
+                <input type="text" id="mesai-duzenleyen-unvan" class="form-control" placeholder="Bilgisayar İşletmeni" style="font-size: 0.82rem; flex: 1;">
+              </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Unvan:</label>
-              <input type="text" id="mesai-duzenleyen-unvan" class="form-control" placeholder="Unvan" style="width: 160px; font-size: 0.82rem;">
+
+            <!-- Tasvip Eden -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem; background: var(--bg-surface-2, rgba(255,255,255,0.03)); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.6rem 0.85rem; flex: 1; min-width: 270px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: var(--accent-primary, #6366f1); white-space: nowrap; width: 145px; min-width: 145px;">Tasvip Eden Ad Soyad:</label>
+                <input type="text" id="mesai-tasvip-adi" class="form-control" placeholder="Ad Soyad" style="font-size: 0.82rem; flex: 1;">
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; width: 145px; min-width: 145px;">Unvan:</label>
+                <input type="text" id="mesai-tasvip-unvan" class="form-control" placeholder="Unvan" style="font-size: 0.82rem; flex: 1;">
+              </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Tasdik Eden Ad Soyad:</label>
-              <input type="text" id="mesai-tasdik-adi" class="form-control" placeholder="Ad Soyad" style="width: 180px; font-size: 0.82rem;">
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.4rem;">
-              <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Unvan:</label>
-              <input type="text" id="mesai-tasdik-unvan" class="form-control" placeholder="Unvan" style="width: 160px; font-size: 0.82rem;">
+
+            <!-- Tasdik Eden -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem; background: var(--bg-surface-2, rgba(255,255,255,0.03)); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.6rem 0.85rem; flex: 1; min-width: 270px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; width: 145px; min-width: 145px;">Tasdik Eden Ad Soyad:</label>
+                <input type="text" id="mesai-tasdik-adi" class="form-control" placeholder="Dr. Arif Naci SUCUOĞLU" style="font-size: 0.82rem; flex: 1;">
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); white-space: nowrap; width: 145px; min-width: 145px;">Unvan:</label>
+                <input type="text" id="mesai-tasdik-unvan" class="form-control" placeholder="Cumhuriyet Başsavcı Vekili" style="font-size: 0.82rem; flex: 1;">
+              </div>
             </div>
           </div>
         </div>

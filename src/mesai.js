@@ -37,6 +37,7 @@ if (!mesaiData.mesaiShifts) mesaiData.mesaiShifts = {};
 if (!mesaiData.pastMesaiHours) mesaiData.pastMesaiHours = {};
 if (!mesaiData.signatories) mesaiData.signatories = {
   duzenleyen: { ad: '', unvan: '' },
+  tasvip: { ad: '', unvan: '' },
   tasdik: { ad: '', unvan: '' }
 };
 
@@ -349,12 +350,14 @@ export function getMesaiSignatories() {
   const settings = getMesaiSettingsDB();
   return {
     duzenleyen: settings?.duzenleyen || { ad: '', unvan: '' },
+    tasvip: settings?.tasvip || { ad: '', unvan: '' },
     tasdik: settings?.tasdik || { ad: '', unvan: '' }
   };
 }
 export function saveMesaiSignatories(s) {
   const settings = getMesaiSettingsDB() || { targetHours: 50 };
   settings.duzenleyen = s.duzenleyen;
+  settings.tasvip = s.tasvip;
   settings.tasdik = s.tasdik;
   saveMesaiSettingsDB(settings);
 }
@@ -484,79 +487,172 @@ function escapeHtml(str) {
 // ─────────────────────────────────────────────────────────
 // YAZDIRMA
 // ─────────────────────────────────────────────────────────
-export function printMesaiView(y, m, duzenleyenAd, duzenleyenUnvan, tasdikAd, tasdikUnvan) {
+export function printMesaiView(y, m, duzenleyenAd, duzenleyenUnvan, tasvipAd, tasvipUnvan, tasdikAd, tasdikUnvan) {
   const personnel = getPersonnelList();
   const dim = getDaysInMonth(y, m);
-  const titleText = `${monthNames[m-1].toUpperCase()} ${y} AYLIK FAZLA ÇALIŞMA CETVELİ`;
+  const titleMonth = monthNames[m - 1].toUpperCase();
+  const titleText = `${titleMonth} ${y} AYLIK FAZLA ÇALIŞMA CETVELİ`;
 
   // Header row
-  let headCols = `<th>S.N.</th><th>SİCİL NO</th><th style="text-align:left;">AD SOYAD</th><th>UNVAN</th>`;
-  for (let d = 1; d <= dim; d++) {
-    const wknd = isWeekend(y, m, d);
-    const dow = getDayOfWeek(y, m, d);
-    const abbr = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'][dow];
-    headCols += `<th style="${wknd ? 'background:#fff2cc;' : ''}">${d}<br><small>${abbr}</small></th>`;
-  }
-  headCols += `<th>TOPLAM</th>`;
+  let headCols = `<th style="width:24px;">S.N.</th>
+    <th style="width:55px;">SİCİL NO</th>
+    <th style="width:80px;">T.C.NO.</th>
+    <th style="text-align:left; min-width:110px;">AD SOYAD</th>
+    <th style="min-width:80px;">UNVAN</th>`;
 
-  let rows = '';
-  personnel.forEach((p, idx) => {
-    let cells = `<td style="text-align:center;">${idx+1}</td>
-      <td style="text-align:center;">${p.sicilNo || '---'}</td>
-      <td style="text-align:left; font-weight:bold;">${escapeHtml(p.name || '')}</td>
-      <td>${escapeHtml(p.title || p.unvan || 'Zabıt Katibi')}</td>`;
-    let total = 0;
-    for (let d = 1; d <= dim; d++) {
-      const val = getMesaiCellValue(p.id, y, m, d);
+  for (let d = 1; d <= 31; d++) {
+    if (d <= dim) {
       const wknd = isWeekend(y, m, d);
-      const isX = (val === 'X' || val === undefined || val === null || val === '');
-      const h = isX ? 0 : (parseInt(val, 10) || 0);
-      total += h;
-      cells += `<td style="text-align:center; ${wknd ? 'background:#fff2cc;' : ''} ${isX ? 'color:#ccc;' : 'font-weight:bold;'}">${isX ? 'X' : val}</td>`;
+      const dow = getDayOfWeek(y, m, d);
+      const abbr = ['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'][dow];
+      headCols += `<th style="width:20px; ${wknd ? 'background:#fff2cc;' : ''}">${d}<br><span style="font-size:5.5pt; font-weight:normal;">${abbr}</span></th>`;
+    } else {
+      headCols += `<th style="width:20px;">${d}</th>`;
     }
-    cells += `<td style="text-align:center; font-weight:bold;">${total > 0 ? total : ''}</td>`;
+  }
+  headCols += `<th style="width:38px;">Toplam Saat</th><th style="width:34px;">Saat Ücreti</th><th style="width:42px;">Ödenecek Ücret</th>`;
+
+  const dayTotals = new Array(32).fill(0);
+  let grandTotal = 0;
+  let rows = '';
+
+  personnel.forEach((p, idx) => {
+    const sicilVal = p.sicilNo || p.sicil || '---';
+    const tcVal = p.tcNo || p.tc || '---';
+    let cells = `<td style="text-align:center;">${idx + 1}</td>
+      <td style="text-align:center;">${escapeHtml(sicilVal)}</td>
+      <td style="text-align:center;">${escapeHtml(tcVal)}</td>
+      <td style="text-align:left; font-weight:bold; text-transform:uppercase;">${escapeHtml(p.name || '')}</td>
+      <td style="text-align:center;">${escapeHtml(p.title || p.unvan || 'Zabıt Katibi')}</td>`;
+    
+    let total = 0;
+    for (let d = 1; d <= 31; d++) {
+      if (d <= dim) {
+        const val = getMesaiCellValue(p.id, y, m, d);
+        const wknd = isWeekend(y, m, d);
+        const isX = (val === 'X' || val === undefined || val === null || val === '');
+        const h = isX ? 0 : (parseInt(val, 10) || 0);
+        total += h;
+        dayTotals[d] += h;
+        cells += `<td style="text-align:center; ${wknd ? 'background:#fff2cc;' : ''} ${isX ? 'color:#888;' : 'font-weight:bold;'}">${isX ? 'X' : val}</td>`;
+      } else {
+        cells += `<td style="text-align:center;"></td>`;
+      }
+    }
+    grandTotal += total;
+    cells += `<td style="text-align:center; font-weight:bold;">${total > 0 ? total : 0}</td>
+      <td></td>
+      <td></td>`;
     rows += `<tr>${cells}</tr>`;
   });
+
+  // SAYFA TOPLAMI & GENEL TOPLAM satırları
+  let totalDayCells = '';
+  for (let d = 1; d <= 31; d++) {
+    if (d <= dim) {
+      totalDayCells += `<td style="text-align:center; font-weight:bold;">${dayTotals[d] > 0 ? dayTotals[d] : ''}</td>`;
+    } else {
+      totalDayCells += `<td></td>`;
+    }
+  }
+
+  const sayfaToplamRow = `<tr style="font-weight:bold; background:#f9f9f9;">
+    <td colspan="5" style="text-align:right; padding-right:8px;">SAYFA TOPLAMI</td>
+    ${totalDayCells}
+    <td style="text-align:center;">${grandTotal > 0 ? grandTotal : 0}</td>
+    <td></td>
+    <td></td>
+  </tr>`;
+
+  const genelToplamRow = `<tr style="font-weight:bold; background:#f2f2f2;">
+    <td colspan="5" style="text-align:right; padding-right:8px;">GENEL TOPLAM</td>
+    ${totalDayCells}
+    <td style="text-align:center;">${grandTotal > 0 ? grandTotal : 0}</td>
+    <td></td>
+    <td></td>
+  </tr>`;
+
+  // DÜZENLEYEN, TASVİP EDEN VE TASDİK EDEN İMZA BLOKLARI (Excel Tablo Yapısıyla Birebir Hizalı)
+  const signatureRows = `
+    <tr style="height:12px;"><td colspan="39" style="border:none;"></td></tr>
+    <tr>
+      <td colspan="5" style="border:none;"></td>
+      <td colspan="4" style="border:none;"></td>
+      <td colspan="8" style="text-align:center; font-weight:bold; font-size:7.5pt; border:1px solid #000; background:#f2f2f2; padding:3px;">DÜZENLEYEN</td>
+      <td colspan="2" style="border:none;"></td>
+      <td colspan="8" style="text-align:center; font-weight:bold; font-size:7.5pt; border:1px solid #000; background:#f2f2f2; padding:3px;">TASVİP EDEN</td>
+      <td colspan="2" style="border:none;"></td>
+      <td colspan="10" style="text-align:center; font-weight:bold; font-size:7.5pt; border:1px solid #000; background:#f2f2f2; padding:3px;">TASDİK EDEN</td>
+    </tr>
+    <tr>
+      <td colspan="5" style="border:none;"></td>
+      <td colspan="4" style="text-align:left; font-weight:bold; font-size:7pt; border:1px solid #000; background:#f9f9f9; padding:3px 4px;">ADI-SOYADI</td>
+      <td colspan="8" style="text-align:center; font-weight:bold; font-size:7.5pt; border:1px solid #000; padding:3px;">${escapeHtml(duzenleyenAd || '')}</td>
+      <td colspan="2" style="border:none;"></td>
+      <td colspan="8" style="text-align:center; font-weight:bold; font-size:7.5pt; border:1px solid #000; padding:3px;">${escapeHtml(tasvipAd || '')}</td>
+      <td colspan="2" style="border:none;"></td>
+      <td colspan="10" style="text-align:center; font-weight:bold; font-size:7.5pt; border:1px solid #000; padding:3px;">${escapeHtml(tasdikAd || '')}</td>
+    </tr>
+    <tr>
+      <td colspan="5" style="border:none;"></td>
+      <td colspan="4" style="text-align:left; font-weight:bold; font-size:7pt; border:1px solid #000; background:#f9f9f9; padding:3px 4px;">UNVANI</td>
+      <td colspan="8" style="text-align:center; font-size:7pt; border:1px solid #000; padding:3px;">${escapeHtml(duzenleyenUnvan || '')}</td>
+      <td colspan="2" style="border:none;"></td>
+      <td colspan="8" style="text-align:center; font-size:7pt; border:1px solid #000; padding:3px;">${escapeHtml(tasvipUnvan || '')}</td>
+      <td colspan="2" style="border:none;"></td>
+      <td colspan="10" style="text-align:center; font-size:7pt; border:1px solid #000; padding:3px;">${escapeHtml(tasdikUnvan || '')}</td>
+    </tr>
+    <tr style="height:36px;">
+      <td colspan="5" style="border:none;"></td>
+      <td colspan="4" style="text-align:left; font-weight:bold; font-size:7pt; border:1px solid #000; background:#f9f9f9; padding:3px 4px; vertical-align:middle;">İMZA</td>
+      <td colspan="8" style="border:1px solid #000;"></td>
+      <td colspan="2" style="border:none;"></td>
+      <td colspan="8" style="border:1px solid #000;"></td>
+      <td colspan="2" style="border:none;"></td>
+      <td colspan="10" style="border:1px solid #000;"></td>
+    </tr>`;
 
   const html = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>${titleText}</title>
 <style>
 * { box-sizing:border-box; }
-body { font-family:'Calibri',Arial,sans-serif; padding:12px 18px; color:#000; background:#fff; margin:0; font-size:8pt; }
-.hdr { text-align:center; margin-bottom:10px; border-bottom:2px solid #000; padding-bottom:6px; }
-.hdr h2 { margin:0; font-size:13pt; font-weight:bold; }
-.hdr h3 { margin:2px 0; font-size:10.5pt; }
-.hdr h4 { margin:2px 0; font-size:9.5pt; }
-table { width:100%; border-collapse:collapse; font-size:7.5pt; }
-th,td { border:1px solid #000; padding:2px 3px; text-align:center; }
-th { background:#f2f2f2; font-weight:bold; }
-.sign-area { margin-top:30px; display:flex; justify-content:space-around; }
-.sign-box { text-align:center; min-width:200px; border:1px solid #000; padding:8px 16px; }
-.sign-name { font-weight:bold; font-size:10pt; }
-.sign-title { font-size:9pt; }
-@media print { @page { size:A4 landscape; margin:8mm 10mm; } body { padding:0; } }
+body { font-family:'Calibri',Arial,sans-serif; padding:10px 14px; color:#000; background:#fff; margin:0; font-size:7pt; line-height:1.2; }
+.hdr-container { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px; border-bottom:2px solid #000; padding-bottom:4px; }
+.hdr-left { font-size:8.5pt; line-height:1.25; }
+.hdr-center { text-align:center; }
+.hdr-center h2 { margin:0; font-size:12pt; font-weight:bold; letter-spacing:0.5px; }
+.hdr-right { font-size:8.5pt; font-weight:bold; text-align:right; }
+table { width:100%; border-collapse:collapse; font-size:6.5pt; table-layout:auto; }
+th,td { border:1px solid #000; padding:2px 1px; text-align:center; vertical-align:middle; }
+th { background:#f2f2f2; font-weight:bold; font-size:6.5pt; }
+tr.sign-tr { page-break-inside:avoid; }
+@media print {
+  @page { size:A4 landscape; margin:6mm 8mm; }
+  body { padding:0; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
 </style></head>
 <body onload="window.print()">
-<div class="hdr">
-  <h2>T.C. ANKARA ADLİYESİ</h2>
-  <h3>AYLIK FAZLA ÇALIŞMA (MESAİ) CETVELİ</h3>
-  <h4>${titleText}</h4>
+<div class="hdr-container">
+  <div class="hdr-left">
+    <div><strong>T.C.</strong></div>
+    <div><strong>ANKARA CUMHURİYET BAŞSAVCILIĞI</strong></div>
+    <div><strong>Bilgi İşlem Müdürlüğü</strong></div>
+  </div>
+  <div class="hdr-center">
+    <h2>AYLIK FAZLA ÇALIŞMA CETVELİ</h2>
+  </div>
+  <div class="hdr-right">
+    <div>AİT OLDUĞU AY : <strong>${titleMonth} ${y}</strong></div>
+  </div>
 </div>
 <table>
   <thead><tr>${headCols}</tr></thead>
-  <tbody>${rows}</tbody>
+  <tbody>
+    ${rows}
+    ${sayfaToplamRow}
+    ${genelToplamRow}
+    ${signatureRows}
+  </tbody>
 </table>
-<div class="sign-area">
-  <div class="sign-box">
-    <div style="font-size:8pt; color:#555; margin-bottom:4px;">DÜZENLEYEN</div>
-    <div class="sign-name">${escapeHtml(duzenleyenAd || '___________________')}</div>
-    <div class="sign-title">${escapeHtml(duzenleyenUnvan || '')}</div>
-  </div>
-  <div class="sign-box">
-    <div style="font-size:8pt; color:#555; margin-bottom:4px;">TASDİK EDEN</div>
-    <div class="sign-name">${escapeHtml(tasdikAd || '___________________')}</div>
-    <div class="sign-title">${escapeHtml(tasdikUnvan || '')}</div>
-  </div>
-</div>
 </body></html>`;
 
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
@@ -568,7 +664,7 @@ th { background:#f2f2f2; font-weight:bold; }
 // ─────────────────────────────────────────────────────────
 // EXCEL EXPORT — Mevcut Şablon Dosyasını Kullanarak (ExcelJS ile)
 // ─────────────────────────────────────────────────────────
-export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan, tasdikAd, tasdikUnvan) {
+export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan, tasvipAd, tasvipUnvan, tasdikAd, tasdikUnvan) {
   if (typeof ExcelJS === 'undefined') { alert('Excel kütüphanesi yüklenemedi. Lütfen sayfayı yenileyin.'); return; }
 
   const personnel = getPersonnelList();
@@ -692,12 +788,19 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
       });
 
       // ── İmza Alanlarını Dinamik Yaz (Şablondaki Kendi Konumlarına) ──
+      const signHeaderRow = 11 + shiftCount;
       const signNameRow = 12 + shiftCount;
       const signTitleRow = 13 + shiftCount;
 
+      ws.getCell('K' + signHeaderRow).value = 'DÜZENLEYEN';
       ws.getCell('K' + signNameRow).value = duzenleyenAd || '';
       ws.getCell('K' + signTitleRow).value = duzenleyenUnvan || '';
+
+      ws.getCell('U' + signHeaderRow).value = 'TASVİP EDEN';
+      ws.getCell('U' + signNameRow).value = tasvipAd || '';
+      ws.getCell('U' + signTitleRow).value = tasvipUnvan || '';
       
+      ws.getCell('AE' + signHeaderRow).value = 'TASDİK EDEN';
       ws.getCell('AE' + signNameRow).value = tasdikAd || '';
       ws.getCell('AE' + signTitleRow).value = tasdikUnvan || '';
 
