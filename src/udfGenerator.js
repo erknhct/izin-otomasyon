@@ -63,11 +63,13 @@ export function getDocumentTextComponents(payload) {
     ayrilisPhrase = '',
     baslayisPhrase = '',
     ayrilisTemplate = '',
-    baslayisTemplate = ''
+    baslayisTemplate = '',
+    isYolIzniDahil = false
   } = payload;
 
   const gunMetni = `${izinSuresi} (${numberToTurkishText(izinSuresi)})`;
   const notuPart = donusNotu && donusNotu.trim() ? `${donusNotu.trim()} ` : '';
+  const yolIzniPart = isYolIzniDahil ? 'yol izni dahil ' : '';
   const isBaslayis = docType.includes('baslayis');
   const isRapor = docType.includes('rapor');
 
@@ -80,7 +82,8 @@ export function getDocumentTextComponents(payload) {
     ayrilisTarihi: formatDateTR(ayrilisTarihi),
     baslayisTarihi: formatDateTR(baslayisTarihi),
     donusNotu: notuPart,
-    ilgiEvrak: ilgiEvrak ? ilgiEvrak.trim() : ''
+    ilgiEvrak: ilgiEvrak ? ilgiEvrak.trim() : '',
+    yolIzni: yolIzniPart
   };
 
   let rawSubject = "";
@@ -99,13 +102,17 @@ export function getDocumentTextComponents(payload) {
     }
   } else {
     rawSubject = subjectText || (isRapor ? "{personel} - Rapor İşlemi" : leaveTypeName);
-    if (ayrilisTemplate && ayrilisTemplate.trim()) {
-      bodyParagraph = interpolateTemplate(ayrilisTemplate, variables);
+    let tpl = ayrilisTemplate;
+    if (tpl && tpl.trim()) {
+      if (isYolIzniDahil && !tpl.includes('{yolIzni}')) {
+        tpl = tpl.replace('{gun}', '{yolIzni}{gun}');
+      }
+      bodyParagraph = interpolateTemplate(tpl, variables);
     } else if (isRapor) {
       bodyParagraph = `${birim}müzde ${unvan} olarak görev yapan ${personnelName} (${sicilNo}) ekte gönderilen ${gunMetni} günlük istirahat raporuyla ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
     } else {
       const lowerName = leaveTypeName.toLowerCase();
-      bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${lowerName}nden ${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
+      bodyParagraph = `${birim}müzde görevli ${unvan} ${personnelName} (${sicilNo}) ${lowerName}nden ${yolIzniPart}${gunMetni} gününü kullanmak üzere ${formatDateTR(ayrilisTarihi)} tarihinde görevinden ayrılmıştır.`;
     }
   }
 

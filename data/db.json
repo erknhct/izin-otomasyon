@@ -400,7 +400,7 @@
       "name": "Yıllık İzin",
       "code": "yillik",
       "subjectText": "{personel} - Yıllık İzin",
-      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) yıllık izninden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) yıllık izninden {yolIzni}{gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
       "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük yıllık iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     },
     {
@@ -461,6 +461,40 @@
     }
   ],
   "leaveRecords": [
+    {
+      "id": "rec-1786370878593",
+      "personnelId": "36",
+      "personnelName": "Burak ASLAN",
+      "sicil": "407995",
+      "unvan": "Bilgisayar İşletmeni",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": true,
+      "ayrilisDate": "2026-08-10",
+      "expectedReturnDate": "2026-08-17",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1786370700483",
+      "personnelId": "41",
+      "personnelName": "Gözde SOYLU",
+      "sicil": "454660",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": true,
+      "ayrilisDate": "2026-08-10",
+      "expectedReturnDate": "2026-08-17",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
     {
       "id": "rec-1786360626910",
       "personnelId": "40",

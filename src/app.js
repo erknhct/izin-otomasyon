@@ -879,9 +879,12 @@ function setupWizardForm() {
     const isBaslayis = action === 'baslayis';
     const isRapor = lType === 'rapor';
 
+    const groupYolIzni = document.getElementById('group-yol-izni');
+
     groupAyrilis.style.display = isBaslayis ? 'none' : 'flex';
     groupBaslayis.style.display = 'flex';
     groupIlgi.style.display = isBaslayis ? 'flex' : 'none';
+    if (groupYolIzni) groupYolIzni.style.display = (isBaslayis || isRapor) ? 'none' : 'flex';
 
     if (isRapor) {
       aliciMakamSelect.value = 'bakanlik';
@@ -988,6 +991,7 @@ function setupWizardForm() {
           leaveType: payload.leaveType,
           leaveTypeName: ltObj.name,
           days: payload.izinSuresi,
+          isYolIzniDahil: payload.isYolIzniDahil,
           ayrilisDate: payload.ayrilisTarihi,
           expectedReturnDate: expReturn,
           aliciMakam: payload.aliciMakam,
@@ -1058,6 +1062,7 @@ function getWizardPayload() {
     birim: person.birim || 'Bilgi İşlem Müdürlüğü',
     tarih: formatDateTR(todayStr),
     izinSuresi: izinSuresi,
+    isYolIzniDahil: document.getElementById('wiz-yol-izni')?.checked || false,
     ayrilisTarihi: ayrilisTarihi,
     baslayisTarihi: baslayisTarihi,
     ilgiEvrak: document.getElementById('wiz-ilgi-evrak')?.value || '',
