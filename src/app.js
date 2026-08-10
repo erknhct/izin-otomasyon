@@ -884,7 +884,16 @@ function setupWizardForm() {
     groupAyrilis.style.display = isBaslayis ? 'none' : 'flex';
     groupBaslayis.style.display = 'flex';
     groupIlgi.style.display = isBaslayis ? 'flex' : 'none';
-    if (groupYolIzni) groupYolIzni.style.display = (isBaslayis || isRapor) ? 'none' : 'flex';
+
+    // Yol izni kutucuğu SADECE Yıllık İzin Ayrılış seçiliğinde görünmeli
+    const isYillikAyrilis = (!isBaslayis && lType === 'yillik');
+    if (groupYolIzni) {
+      groupYolIzni.style.display = isYillikAyrilis ? 'flex' : 'none';
+      if (!isYillikAyrilis) {
+        const yolChk = document.getElementById('wiz-yol-izni');
+        if (yolChk) yolChk.checked = false;
+      }
+    }
 
     if (isRapor) {
       aliciMakamSelect.value = 'bakanlik';
@@ -896,7 +905,18 @@ function setupWizardForm() {
   }
 
   actionTypeSelect.addEventListener('change', handleFormVisibility);
-  leaveTypeSelect.addEventListener('change', handleFormVisibility);
+  leaveTypeSelect.addEventListener('change', () => {
+    const lType = leaveTypeSelect.value;
+    if (lType === 'babalik') {
+      izinSuresiInput.value = 10;
+    } else if (lType === 'evlilik' || lType === 'vefat') {
+      izinSuresiInput.value = 7;
+    }
+    updateReturnDateCalc();
+    handleFormVisibility();
+  });
+
+  handleFormVisibility();
 
   aliciMakamSelect.addEventListener('change', () => {
     groupAliciOzel.style.display = aliciMakamSelect.value === 'ozel' ? 'flex' : 'none';
