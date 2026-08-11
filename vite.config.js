@@ -101,7 +101,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',   // Tüm ağ arayüzlerinde dinle (LAN erişimi)
     port: 5173,
-    strictPort: true
+    strictPort: true,
+    allowedHosts: true // Bilgisayar adı (ab00600-2260 vb.) ile LAN erişimine izin ver
   }
 });
 
