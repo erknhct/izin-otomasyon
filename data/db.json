@@ -558,9 +558,9 @@
       "ayrilisDate": "2026-06-30",
       "expectedReturnDate": "2026-07-06",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456633158",
@@ -575,9 +575,9 @@
       "ayrilisDate": "2026-07-02",
       "expectedReturnDate": "2026-07-06",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456551580",
@@ -592,9 +592,9 @@
       "ayrilisDate": "2026-07-05",
       "expectedReturnDate": "2026-07-13",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456455932",
@@ -609,9 +609,9 @@
       "ayrilisDate": "2026-06-29",
       "expectedReturnDate": "2026-07-06",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456423866",
@@ -626,9 +626,9 @@
       "ayrilisDate": "2026-06-29",
       "expectedReturnDate": "2026-07-06",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456375006",
@@ -643,9 +643,9 @@
       "ayrilisDate": "2026-06-22",
       "expectedReturnDate": "2026-07-06",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456330162",
@@ -660,9 +660,9 @@
       "ayrilisDate": "2026-06-25",
       "expectedReturnDate": "2026-06-29",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456259697",
@@ -677,9 +677,9 @@
       "ayrilisDate": "2026-06-22",
       "expectedReturnDate": "2026-06-29",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456210959",
@@ -694,9 +694,9 @@
       "ayrilisDate": "2026-06-15",
       "expectedReturnDate": "2026-06-25",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456171356",
@@ -711,9 +711,9 @@
       "ayrilisDate": "2026-06-15",
       "expectedReturnDate": "2026-06-26",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786456108480",
@@ -728,9 +728,9 @@
       "ayrilisDate": "2026-06-15",
       "expectedReturnDate": "2026-06-16",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-11"
     },
     {
       "id": "rec-1786455971547",
@@ -744,23 +744,6 @@
       "isYolIzniDahil": false,
       "ayrilisDate": "2026-06-08",
       "expectedReturnDate": "2026-06-15",
-      "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
-      "baslayisEvrakNo": null,
-      "baslayisDate": null
-    },
-    {
-      "id": "rec-1786455806419",
-      "personnelId": "1786451046538",
-      "personnelName": "Oğuzhan ARDIÇ",
-      "sicil": "250990",
-      "unvan": "Teknisyen",
-      "leaveType": "yillik",
-      "leaveTypeName": "Yıllık İzin",
-      "days": 5,
-      "isYolIzniDahil": false,
-      "ayrilisDate": "2026-08-06",
-      "expectedReturnDate": "2026-08-11",
       "aliciMakam": "Komisyon ",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,

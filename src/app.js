@@ -724,7 +724,7 @@ function renderDashboard(forceResetTab = false) {
                   <td>${item.sicil}</td>
                   <td><span class="badge badge-info">${item.leaveTypeName}</span></td>
                   <td>${formatDateTR(item.ayrilisDate)}</td>
-                  <td>${formatDateTR(item.baslayisDate || item.expectedReturnDate)}</td>
+                  <td>${formatDateTR(item.expectedReturnDate)}</td>
                   <td><span class="badge badge-success"><i class="fa-solid fa-check"></i> BAŞLAYIŞ YAPILDI</span></td>
                   <td style="display: flex; gap: 0.4rem; align-items: center;">
                     <button class="btn btn-sm btn-primary btn-re-download-baslayis" data-record-id="${item.id}">
@@ -2447,7 +2447,6 @@ function openPersonHistoryModal(personId) {
       <td><strong>${r.days} Gün</strong></td>
       <td>${formatDateTR(r.ayrilisDate)}</td>
       <td>${formatDateTR(r.expectedReturnDate)}</td>
-      <td>${r.baslayisDate ? formatDateTR(r.baslayisDate) : '-'}</td>
       <td>
         ${r.status === 'baslayis_yapildi' 
           ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>' 
@@ -2477,12 +2476,11 @@ function openPersonHistoryModal(personId) {
               <th>Süre</th>
               <th>Ayrılış Tarihi</th>
               <th>Başlayış Tarihi</th>
-              <th>Fiili Başlayış</th>
               <th>Durum</th>
             </tr>
           </thead>
           <tbody>
-            ${records.length > 0 ? rows : '<tr><td colspan="6" style="text-align:center; padding:1rem; color:var(--text-muted);">Bu personele ait geçmiş izin kaydı bulunmamaktadır.</td></tr>'}
+            ${records.length > 0 ? rows : '<tr><td colspan="5" style="text-align:center; padding:1rem; color:var(--text-muted);">Bu personele ait geçmiş izin kaydı bulunmamaktadır.</td></tr>'}
           </tbody>
         </table>
       </div>
