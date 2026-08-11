@@ -40,6 +40,52 @@ function getDbHash(obj) {
   }
 }
 
+function sanitizeDbData(cache) {
+  if (!cache) return;
+  const pMap = {};
+  if (Array.isArray(cache.personnel)) {
+    cache.personnel.forEach(p => {
+      if (p.id) pMap[p.id] = p;
+      if (p.name) pMap[p.name] = p;
+    });
+  }
+
+  if (Array.isArray(cache.leaveRecords)) {
+    cache.leaveRecords.forEach(r => {
+      delete r.raporKurum;
+      const p = pMap[r.personnelId] || pMap[r.personnelName];
+      if (p) {
+        if (p.title && (!r.unvan || r.unvan.includes('\uFFFD') || r.unvan === 'ef')) {
+          r.unvan = p.title;
+        }
+        if (p.name && (!r.personnelName || r.personnelName.includes('\uFFFD'))) {
+          r.personnelName = p.name;
+        }
+      }
+    });
+  }
+
+  if (Array.isArray(cache.leaveTypes)) {
+    const replacements = [
+      ['ayrılı\uFFFD\uFFFDını', 'ayrılışını'],
+      ['g\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFD\uFFFDnünü', 'gününü'],
+      ['ayr\uFFFD\uFFFDlmıştır', 'ayrılmıştır'],
+      ['g\uFFFD\uFFFD\uFFFD\uFFFDrevine', 'görevine'],
+      ['gün\uFFFD\uFFFDnü', 'gününü'],
+      ['günün\uFFFD\uFFFD\uFFFD\uFFFD', 'gününü']
+    ];
+    cache.leaveTypes.forEach(lt => {
+      ['ayrilisTemplate', 'baslayisTemplate', 'name', 'subjectText'].forEach(key => {
+        if (typeof lt[key] === 'string' && lt[key].includes('\uFFFD')) {
+          replacements.forEach(([from, to]) => {
+            lt[key] = lt[key].replaceAll(from, to);
+          });
+        }
+      });
+    });
+  }
+}
+
 /**
  * Initializes database by reading data/db.json from backend API
  */
@@ -53,12 +99,11 @@ export async function initStorage() {
         if (!dbCache.adminPassword) dbCache.adminPassword = dbCache.appPassword || 'ankara2025';
         if (!dbCache.staffPassword) dbCache.staffPassword = 'yazi2025';
         delete dbCache.appPassword;
-        if (dbCache.leaveRecords && Array.isArray(dbCache.leaveRecords)) {
-          dbCache.leaveRecords.forEach(r => delete r.raporKurum);
-        }
         if (!dbCache.mesaiSettings) {
           dbCache.mesaiSettings = { targetHours: 50, duzenleyen: { ad: 'Emine SÖKMEN', unvan: 'Bilgisayar İşletmeni' }, tasvip: { ad: '', unvan: '' }, tasdik: { ad: 'Dr. Arif Naci SUCUOĞLU', unvan: 'Cumhuriyet Başsavcı Vekili' } };
         }
+        sanitizeDbData(dbCache);
+
         // Sync to localStorage
         localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
         localStorage.setItem('udf_alici_makamlar_v1', JSON.stringify(dbCache.aliciMakamlar));
@@ -90,15 +135,23 @@ export async function initStorage() {
   dbCache.leaveTypes = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_TYPES) || '[]');
   dbCache.signatories = JSON.parse(localStorage.getItem(STORAGE_KEYS.SIGNATORIES) || '[]');
   dbCache.leaveRecords = JSON.parse(localStorage.getItem(STORAGE_KEYS.LEAVE_RECORDS) || '[]');
-  if (dbCache.leaveRecords && Array.isArray(dbCache.leaveRecords)) {
-    dbCache.leaveRecords.forEach(r => delete r.raporKurum);
-  }
+  
   if (!dbCache.mesaiSettings) {
     dbCache.mesaiSettings = { targetHours: 50, duzenleyen: { ad: 'Emine SÖKMEN', unvan: 'Bilgisayar İşletmeni' }, tasvip: { ad: '', unvan: '' }, tasdik: { ad: 'Dr. Arif Naci SUCUOĞLU', unvan: 'Cumhuriyet Başsavcı Vekili' } };
   }
   dbCache.adminPassword = localStorage.getItem('udf_admin_password') || localStorage.getItem('udf_app_password') || 'ankara2025';
   dbCache.staffPassword = localStorage.getItem('udf_staff_password') || 'yazi2025';
   delete dbCache.appPassword;
+
+  sanitizeDbData(dbCache);
+
+  // Sync sanitized data back to localStorage
+  localStorage.setItem(STORAGE_KEYS.PERSONNEL, JSON.stringify(dbCache.personnel));
+  localStorage.setItem('udf_alici_makamlar_v1', JSON.stringify(dbCache.aliciMakamlar));
+  localStorage.setItem(STORAGE_KEYS.LEAVE_TYPES, JSON.stringify(dbCache.leaveTypes));
+  localStorage.setItem(STORAGE_KEYS.SIGNATORIES, JSON.stringify(dbCache.signatories));
+  localStorage.setItem(STORAGE_KEYS.LEAVE_RECORDS, JSON.stringify(dbCache.leaveRecords));
+
   return false;
 }
 

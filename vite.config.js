@@ -31,13 +31,15 @@ function localJsonStoragePlugin() {
     if (req.url === '/api/db' && req.method === 'GET') {
       try {
         if (!fs.existsSync(DB_FILE)) {
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
           return res.end(JSON.stringify({}));
         }
         const data = fs.readFileSync(DB_FILE, 'utf-8');
-        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
         return res.end(data);
       } catch (err) {
         res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
         return res.end(JSON.stringify({ error: err.message }));
       }
     }
@@ -45,15 +47,16 @@ function localJsonStoragePlugin() {
     // Write JSON File to Disk
     if (req.url === '/api/db' && req.method === 'POST') {
       const senderClientId = req.headers['x-client-id'] || '';
-      let body = '';
+      const chunks = [];
       req.on('data', chunk => {
-        body += chunk.toString();
+        chunks.push(chunk);
       });
       req.on('end', () => {
         try {
           if (!fs.existsSync(DATA_DIR)) {
             fs.mkdirSync(DATA_DIR, { recursive: true });
           }
+          const body = Buffer.concat(chunks).toString('utf-8');
           const parsed = JSON.parse(body);
           fs.writeFileSync(DB_FILE, JSON.stringify(parsed, null, 2), 'utf-8');
           dbVersion = Date.now();
@@ -68,10 +71,11 @@ function localJsonStoragePlugin() {
             }
           }
 
-          res.setHeader('Content-Type', 'application/json');
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
           return res.end(JSON.stringify({ success: true, message: 'db.json dosyasına yazıldı' }));
         } catch (err) {
           res.statusCode = 500;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
           return res.end(JSON.stringify({ error: err.message }));
         }
       });

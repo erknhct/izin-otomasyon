@@ -25,6 +25,15 @@ function normalizeSearch(str) {
     .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c');
 }
 
+function getPersonnelTitleMap() {
+  const map = {};
+  getPersonnelList().forEach(p => {
+    if (p.id) map[p.id] = p.title;
+    if (p.name) map[p.name] = p.title;
+  });
+  return map;
+}
+
 // DOM Elements
 const navItems = document.querySelectorAll('.nav-item');
 const viewSections = document.querySelectorAll('.view-section');
@@ -602,9 +611,12 @@ function renderDashboard(forceResetTab = false) {
               </tr>
             </thead>
             <tbody>
-              ${dueList.map(item => `
+              ${dueList.map(item => {
+                const titleMap = getPersonnelTitleMap();
+                const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
+                return `
                 <tr style="background: rgba(239, 68, 68, 0.06);">
-                  <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${item.unvan}</small></td>
+                  <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${displayUnvan}</small></td>
                   <td>${item.sicil}</td>
                   <td><span class="badge badge-danger">${item.leaveTypeName}</span></td>
                   <td>${formatDateTR(item.ayrilisDate)}</td>
@@ -616,7 +628,7 @@ function renderDashboard(forceResetTab = false) {
                     </button>
                   </td>
                 </tr>
-              `).join('')}
+              `;}).join('')}
             </tbody>
           </table>
         </div>
@@ -651,9 +663,12 @@ function renderDashboard(forceResetTab = false) {
               </tr>
             </thead>
             <tbody>
-              ${upcomingList.map(item => `
+              ${upcomingList.map(item => {
+                const titleMap = getPersonnelTitleMap();
+                const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
+                return `
                 <tr>
-                  <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${item.unvan}</small></td>
+                  <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${displayUnvan}</small></td>
                   <td>${item.sicil}</td>
                   <td><span class="badge badge-info">${item.leaveTypeName}</span></td>
                   <td>${formatDateTR(item.ayrilisDate)}</td>
@@ -665,7 +680,7 @@ function renderDashboard(forceResetTab = false) {
                     </button>
                   </td>
                 </tr>
-              `).join('')}
+              `;}).join('')}
             </tbody>
           </table>
         </div>
@@ -700,9 +715,12 @@ function renderDashboard(forceResetTab = false) {
               </tr>
             </thead>
             <tbody>
-              ${completedList.map(item => `
+              ${completedList.map(item => {
+                const titleMap = getPersonnelTitleMap();
+                const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
+                return `
                 <tr>
-                  <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${item.unvan}</small></td>
+                  <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${displayUnvan}</small></td>
                   <td>${item.sicil}</td>
                   <td><span class="badge badge-info">${item.leaveTypeName}</span></td>
                   <td>${formatDateTR(item.ayrilisDate)}</td>
@@ -717,7 +735,7 @@ function renderDashboard(forceResetTab = false) {
                     </button>
                   </td>
                 </tr>
-              `).join('')}
+              `;}).join('')}
             </tbody>
           </table>
         </div>
@@ -1362,14 +1380,16 @@ function renderLeavesTable() {
   }
 
   const todayStr = new Date().toISOString().split('T')[0];
+  const titleMap = getPersonnelTitleMap();
 
   tbody.innerHTML = paginated.map(r => {
     const isDue = r.status === 'ayrilis_yapildi' && r.expectedReturnDate && r.expectedReturnDate <= todayStr;
     const rowStyle = isDue ? 'background: rgba(239, 68, 68, 0.12); border-left: 4px solid #ef4444;' : '';
+    const displayUnvan = titleMap[r.personnelId] || titleMap[r.personnelName] || r.unvan || '';
     
     return `
       <tr style="${rowStyle}">
-        <td><strong>${r.personnelName}</strong><br><small style="color: var(--text-muted);">${r.unvan}</small></td>
+        <td><strong>${r.personnelName}</strong><br><small style="color: var(--text-muted);">${displayUnvan}</small></td>
         <td><span class="badge ${isDue ? 'badge-danger' : 'badge-info'}">${r.leaveTypeName}</span></td>
         <td>${r.days} Gün</td>
         <td>${formatDateTR(r.ayrilisDate)}</td>
