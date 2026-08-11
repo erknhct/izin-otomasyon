@@ -361,10 +361,20 @@ function updateThemeToggleUI() {
 }
 
 // Modal Events
+let isMouseDownOnOverlay = false;
+
 function setupModalEvents() {
   modalClose.addEventListener('click', closeModal);
+
+  modalOverlay.addEventListener('mousedown', (e) => {
+    isMouseDownOnOverlay = (e.target === modalOverlay);
+  });
+
   modalOverlay.addEventListener('click', (e) => {
-    if (e.target === modalOverlay) closeModal();
+    if (e.target === modalOverlay && isMouseDownOnOverlay) {
+      closeModal();
+    }
+    isMouseDownOnOverlay = false;
   });
 }
 
@@ -1487,14 +1497,42 @@ function renderPersonnelTable() {
 
     document.getElementById('form-add-personnel')?.addEventListener('submit', (e) => {
       e.preventDefault();
+      const nameVal = document.getElementById('p-name').value.trim();
+      const sicilVal = document.getElementById('p-sicil').value.trim();
+      const tcVal = document.getElementById('p-tc').value.trim();
+      const titleVal = document.getElementById('p-title').value.trim();
+      const birimVal = document.getElementById('p-birim').value.trim();
+
       const current = getPersonnelList();
+
+      // Mükerrer kayıt kontrolü (Aynı Ad Soyad ve Sicil No)
+      const duplicateExact = current.find(p => 
+        (p.name || '').trim().toLowerCase() === nameVal.toLowerCase() && 
+        String(p.sicil || '').trim().toLowerCase() === sicilVal.toLowerCase()
+      );
+      if (duplicateExact) {
+        showToast(`⚠️ "${nameVal}" (${sicilVal}) sicilli personel sistemde zaten mevcuttur! Aynı ad soyad ve sicille tekrar kayıt oluşturulamaz.`, 'danger');
+        document.getElementById('p-sicil')?.focus();
+        return;
+      }
+
+      // Sicil No teklik kontrolü
+      const duplicateSicil = current.find(p => 
+        String(p.sicil || '').trim().toLowerCase() === sicilVal.toLowerCase()
+      );
+      if (duplicateSicil) {
+        showToast(`⚠️ "${sicilVal}" sicil numarası ile kayıtlı "${duplicateSicil.name}" isimli bir personel zaten mevcuttur!`, 'danger');
+        document.getElementById('p-sicil')?.focus();
+        return;
+      }
+
       current.push({
         id: Date.now().toString(),
-        name: document.getElementById('p-name').value,
-        sicil: document.getElementById('p-sicil').value,
-        tcNo: document.getElementById('p-tc').value,
-        title: document.getElementById('p-title').value,
-        birim: document.getElementById('p-birim').value,
+        name: nameVal,
+        sicil: sicilVal,
+        tcNo: tcVal,
+        title: titleVal,
+        birim: birimVal,
         status: 'active'
       });
       savePersonnelList(current);
@@ -1543,16 +1581,44 @@ function renderPersonnelTable() {
 
       document.getElementById('form-edit-personnel')?.addEventListener('submit', (e) => {
         e.preventDefault();
+        const editName = document.getElementById('edit-p-name').value.trim();
+        const editSicil = document.getElementById('edit-p-sicil').value.trim();
+        const editTc = document.getElementById('edit-p-tc').value.trim();
+        const editTitle = document.getElementById('edit-p-title').value.trim();
+        const editBirim = document.getElementById('edit-p-birim').value.trim();
+
         let current = getPersonnelList();
+
+        const duplicateExact = current.find(p => 
+          p.id !== id &&
+          (p.name || '').trim().toLowerCase() === editName.toLowerCase() && 
+          String(p.sicil || '').trim().toLowerCase() === editSicil.toLowerCase()
+        );
+        if (duplicateExact) {
+          showToast(`⚠️ "${editName}" (${editSicil}) sicilli başka bir personel sistemde mevcuttur! Aynı ad soyad ve sicille güncelleme yapılamaz.`, 'danger');
+          document.getElementById('edit-p-sicil')?.focus();
+          return;
+        }
+
+        const duplicateSicil = current.find(p => 
+          p.id !== id &&
+          String(p.sicil || '').trim().toLowerCase() === editSicil.toLowerCase()
+        );
+        if (duplicateSicil) {
+          showToast(`⚠️ "${editSicil}" sicil numarası ile kayıtlı başka bir personel ("${duplicateSicil.name}") sistemde mevcuttur!`, 'danger');
+          document.getElementById('edit-p-sicil')?.focus();
+          return;
+        }
+
         const index = current.findIndex(p => p.id === id);
         if (index !== -1) {
           current[index] = {
             ...current[index],
-            name: document.getElementById('edit-p-name').value,
-            sicil: document.getElementById('edit-p-sicil').value,
-            tcNo: document.getElementById('edit-p-tc').value,
-            title: document.getElementById('edit-p-title').value,
-            birim: document.getElementById('edit-p-birim').value
+            name: editName,
+            sicil: editSicil,
+            tcNo: editTc,
+            title: editTitle,
+            birim: editBirim
           };
           savePersonnelList(current);
           closeModal();
