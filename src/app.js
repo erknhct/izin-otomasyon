@@ -519,6 +519,23 @@ function renderDashboard(forceResetTab = false) {
   // Pending returns badge on sidebar nav
   const pendingList = getPendingReturnRecords();
   const dueList = pendingList.filter(r => r.isDue);
+  const upcomingList = pendingList.filter(r => !r.isDue);
+  const allRecords = getLeaveRecords();
+  const completedList = allRecords.filter(r => r.status === 'baslayis_yapildi' && !r.hiddenFromDashboard);
+
+  const sortByAyrilisDateDesc = (list) => {
+    list.sort((a, b) => {
+      if (a.ayrilisDate !== b.ayrilisDate) {
+        return a.ayrilisDate < b.ayrilisDate ? 1 : -1;
+      }
+      return (b.id || '') > (a.id || '') ? 1 : -1;
+    });
+  };
+
+  sortByAyrilisDateDesc(dueList);
+  sortByAyrilisDateDesc(upcomingList);
+  sortByAyrilisDateDesc(completedList);
+
   const badge = document.getElementById('nav-pending-badge');
   if (badge) {
     if (dueList.length > 0) {
@@ -531,9 +548,6 @@ function renderDashboard(forceResetTab = false) {
 
   // Pending and Completed returns list
   const pendingContainer = document.getElementById('pending-returns-container');
-  const allRecords = getLeaveRecords();
-  const upcomingList = pendingList.filter(r => !r.isDue);
-  const completedList = allRecords.filter(r => r.status === 'baslayis_yapildi' && !r.hiddenFromDashboard);
 
 
   if (pendingList.length === 0 && completedList.length === 0) {
@@ -1349,6 +1363,14 @@ function renderLeavesTable() {
     if (endDateInput && endDateInput.value && r.ayrilisDate > endDateInput.value) matchesDate = false;
     
     return matchesSearch && matchesType && matchesStatus && matchesDate;
+  });
+
+  // Sort by Ayrılış Tarihi descending (Newest to Oldest)
+  filtered.sort((a, b) => {
+    if (a.ayrilisDate !== b.ayrilisDate) {
+      return a.ayrilisDate < b.ayrilisDate ? 1 : -1;
+    }
+    return (b.id || '') > (a.id || '') ? 1 : -1;
   });
 
   // Pagination
