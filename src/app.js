@@ -1,6 +1,6 @@
 import { downloadUdfFile, buildUdfXml, generateDocumentPreviewHtml, formatDateTR } from './udfGenerator.js';
 import {
-  initStorage, exportDbJsonFile, importDbJsonData,
+  initStorage, initLiveSync, exportDbJsonFile, importDbJsonData,
   getPersonnelList, savePersonnelList,
   getLeaveTypes, saveLeaveTypes,
   getSignatories, saveSignatories,
@@ -214,6 +214,11 @@ async function initApp() {
   renderSettings();
   initMesaiView();
 
+  // Initialize LAN real-time live sync across devices
+  initLiveSync((isFromRemote) => {
+    refreshUIFromStorage(isFromRemote);
+  });
+
   // Global delegation for PDF report button
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('#btn-export-reports-pdf');
@@ -222,6 +227,23 @@ async function initApp() {
       exportReportsPdf();
     }
   });
+}
+
+async function refreshUIFromStorage(showNotification = false) {
+  await initStorage();
+  updateUserRoleUI();
+  renderDashboard();
+  populateWizardOptions(true);
+  renderPersonnelTable();
+  renderLeavesTable();
+  renderReports();
+  renderSettings();
+  if (typeof renderMesaiView === 'function') {
+    renderMesaiView(true);
+  }
+  if (showNotification) {
+    showToast('🔄 Ağdaki başka bir bilgisayardan değişiklik yapıldı (Veriler yenilendi).', 'info');
+  }
 }
 
 // Initialize App
@@ -797,11 +819,17 @@ function renderDashboard(forceResetTab = false) {
 }
 
 // 2. DOCUMENT FORM SETUP
-function populateWizardOptions() {
+function populateWizardOptions(preserveSelections = false) {
+  const currentP = preserveSelections ? document.getElementById('wiz-personnel-select')?.value : null;
+  const currentL = preserveSelections ? document.getElementById('wiz-leave-type')?.value : null;
+  const currentS = preserveSelections ? document.getElementById('wiz-imzalayan')?.value : null;
+  const currentM = preserveSelections ? document.getElementById('wiz-alici-makam')?.value : null;
+
   // 1. Personnel (50 Personnel)
   const personnelList = getPersonnelList();
   const personSelect = document.getElementById('wiz-personnel-select');
   personSelect.innerHTML = personnelList.map(p => `<option value="${p.id}">${p.name} (${p.sicil}) - ${p.title}</option>`).join('');
+  if (currentP && personnelList.some(p => p.id === currentP)) personSelect.value = currentP;
   
   const wizCount = document.getElementById('wiz-personnel-count');
   if (wizCount) wizCount.textContent = `(${personnelList.length} Personel)`;
@@ -810,11 +838,13 @@ function populateWizardOptions() {
   const leaveTypes = getLeaveTypes();
   const leaveSelect = document.getElementById('wiz-leave-type');
   leaveSelect.innerHTML = leaveTypes.map(l => `<option value="${l.code}">${l.name}</option>`).join('');
+  if (currentL && leaveTypes.some(l => l.code === currentL)) leaveSelect.value = currentL;
 
   // 3. Signatories
   const signatories = getSignatories();
   const signerSelect = document.getElementById('wiz-imzalayan');
   signerSelect.innerHTML = signatories.map(s => `<option value="${s.id}" ${s.default ? 'selected' : ''}>${s.name} (${s.title})</option>`).join('');
+  if (currentS && signatories.some(s => s.id === currentS)) signerSelect.value = currentS;
 
   // 4. Alici Makamlar
   const makamlar = getAliciMakamlar();
@@ -823,16 +853,22 @@ function populateWizardOptions() {
     let optionsHtml = makamlar.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
     optionsHtml += `<option value="ozel">Özel Makam Yaz (Manuel)</option>`;
     makamSelect.innerHTML = optionsHtml;
+    if (currentM && (currentM === 'ozel' || makamlar.some(m => m.id === currentM))) makamSelect.value = currentM;
   }
 
-  // Default dates
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('wiz-ayrilis-tarih').value = today;
+  // Default dates only if not preserving or empty
+  const ayrilisInput = document.getElementById('wiz-ayrilis-tarih');
+  if (ayrilisInput && (!preserveSelections || !ayrilisInput.value)) {
+    const today = new Date().toISOString().split('T')[0];
+    ayrilisInput.value = today;
+  }
   
-  const izinSuresiInput = document.getElementById('wiz-izin-suresi');
-  if (izinSuresiInput) {
-    izinSuresiInput.value = ''; // Varsayılan olarak boş gelsin (Kullanıcı kendi yazsın)
-    document.getElementById('wiz-baslayis-tarih').value = '';
+  if (!preserveSelections) {
+    const izinSuresiInput = document.getElementById('wiz-izin-suresi');
+    if (izinSuresiInput) {
+      izinSuresiInput.value = ''; // Varsayılan olarak boş gelsin (Kullanıcı kendi yazsın)
+      document.getElementById('wiz-baslayis-tarih').value = '';
+    }
   }
 }
 

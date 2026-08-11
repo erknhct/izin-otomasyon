@@ -29,12 +29,23 @@ let dbCache = {
   staffPassword: 'yazi2025'
 };
 
+// Unique Client Identifier for LAN real-time synchronization
+export const CLIENT_ID = Math.random().toString(36).substring(2) + Date.now().toString(36);
+
+function getDbHash(obj) {
+  try {
+    return JSON.stringify(obj).length + '_' + (obj.personnel ? obj.personnel.length : 0) + '_' + (obj.leaveRecords ? obj.leaveRecords.length : 0);
+  } catch (e) {
+    return '';
+  }
+}
+
 /**
  * Initializes database by reading data/db.json from backend API
  */
 export async function initStorage() {
   try {
-    const res = await fetch(DB_API_URL);
+    const res = await fetch(DB_API_URL, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (data.personnel && Array.isArray(data.personnel)) {
@@ -109,12 +120,81 @@ export async function syncToDiskFile() {
   try {
     await fetch(DB_API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-Id': CLIENT_ID
+      },
       body: JSON.stringify(dbCache, null, 2)
     });
   } catch (err) {
     console.error('db.json dosyasına yazılırken hata oluştu:', err);
   }
+}
+
+/**
+ * Initializes real-time synchronization across LAN clients
+ * @param {Function} onRemoteUpdate Callback when data is changed by another PC
+ */
+export function initLiveSync(onRemoteUpdate) {
+  let eventSource = null;
+
+  function connectSSE() {
+    if (eventSource) eventSource.close();
+    try {
+      eventSource = new EventSource('/api/events');
+
+      eventSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type === 'db-updated') {
+            if (data.sender !== CLIENT_ID) {
+              onRemoteUpdate(true);
+            }
+          }
+        } catch (err) {
+          console.error('SSE mesaj ayrıştırma hatası:', err);
+        }
+      };
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        setTimeout(connectSSE, 5000);
+      };
+    } catch (e) {
+      console.warn('SSE başlatılamadı:', e);
+    }
+  }
+
+  connectSSE();
+
+  // Polling fallback (every 5s check if db structure changed remotely)
+  setInterval(async () => {
+    try {
+      const res = await fetch(DB_API_URL, { cache: 'no-store' });
+      if (res.ok) {
+        const remoteData = await res.json();
+        if (getDbHash(remoteData) !== getDbHash(dbCache)) {
+          console.log('Periyodik kontrol ile uzaktan veri değişikliği algılandı, yenileniyor...');
+          onRemoteUpdate(true);
+        }
+      }
+    } catch (e) {}
+  }, 5000);
+
+  // Tab visibility fallback
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState === 'visible') {
+      try {
+        const res = await fetch(DB_API_URL, { cache: 'no-store' });
+        if (res.ok) {
+          const remoteData = await res.json();
+          if (getDbHash(remoteData) !== getDbHash(dbCache)) {
+            onRemoteUpdate(true);
+          }
+        }
+      } catch (e) {}
+    }
+  });
 }
 
 // 1. PERSONNEL

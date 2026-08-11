@@ -10,22 +10,6 @@
       "tcNo": "10021104212"
     },
     {
-      "id": "2",
-      "name": "Erdal ŞİMŞEK",
-      "sicil": "96214",
-      "title": "Bilgisayar İşletmeni",
-      "birim": "Bilgi İşlem Müdürlüğü",
-      "status": "active"
-    },
-    {
-      "id": "3",
-      "name": "Öznur YILDIRIM",
-      "sicil": "125768",
-      "title": "Teknisyen",
-      "birim": "Bilgi İşlem Müdürlüğü",
-      "status": "active"
-    },
-    {
       "id": "4",
       "name": "Hasan KARAKOÇLAR",
       "sicil": "142055",
@@ -392,6 +376,15 @@
       "title": "Zabıt Katibi",
       "birim": "Bilgi İşlem Müdürlüğü",
       "status": "active"
+    },
+    {
+      "id": "1786435117335",
+      "name": "AHMET EKİN",
+      "sicil": "123444",
+      "tcNo": "",
+      "title": "Zabıt Katibi",
+      "birim": "Bilgi İşlem Müdürlüğü",
+      "status": "active"
     }
   ],
   "leaveTypes": [
@@ -448,7 +441,7 @@
       "name": "Evlilik İzni",
       "code": "evlilik",
       "subjectText": "Evlilik İzni",
-      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) evlilik izninden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
+      "ayrilisTemplate": "{birim}müzde görevli {unvan} {personel} ({sicil}) evlilik izninden {gun} günün�� kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.",
       "baslayisTemplate": "İlgi sayılı yazımız ile {gun} günlük evlilik iznini kullanmak üzere görevinden ayrılışını bildirdiğimiz {birim}müzde görev yapan {unvan} {personel} ({sicil}) bu iznini kullanarak {donusNotu}{baslayisTarihi} tarihinde görevine başlamıştır."
     }
   ],
@@ -461,6 +454,40 @@
     }
   ],
   "leaveRecords": [
+    {
+      "id": "rec-1786435170085",
+      "personnelId": "1786435117335",
+      "personnelName": "AHMET EKİN",
+      "sicil": "123444",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-03",
+      "expectedReturnDate": "2026-08-10",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-11"
+    },
+    {
+      "id": "rec-1786374203629",
+      "personnelId": "45",
+      "personnelName": "Ceren KILIÇ",
+      "sicil": "497992",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-10",
+      "expectedReturnDate": "2026-08-17",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
     {
       "id": "rec-1786370878593",
       "personnelId": "36",
@@ -948,7 +975,8 @@
       "aliciMakam": "bakanlik",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-08-08"
+      "baslayisDate": "2026-08-08",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786141552735",
@@ -981,7 +1009,8 @@
       "aliciMakam": "komisyon",
       "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": "2026-08-07"
+      "baslayisDate": "2026-08-07",
+      "hiddenFromDashboard": true
     },
     {
       "id": "rec-1786141235117",
@@ -1024,7 +1053,7 @@
       "sicil": "115678",
       "unvan": "Bilgisayar İşletmeni",
       "leaveType": "rapor",
-      "leaveTypeName": "İstirahat Raporu / Sağlık İzni",
+      "leaveTypeName": "İstirahat Raporu / Sağl��k İzni",
       "days": 17,
       "ayrilisDate": "2026-08-07",
       "expectedReturnDate": "2026-08-24",
