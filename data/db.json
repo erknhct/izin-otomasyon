@@ -546,6 +546,23 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786514836612",
+      "personnelId": "1786450334205",
+      "personnelName": "Sadullah SARICA",
+      "sicil": "238460",
+      "unvan": "Hizmetli",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 2,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-07-16",
+      "expectedReturnDate": "2026-07-20",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786456679176",
       "personnelId": "1786451309107",
       "personnelName": "Emre ALTIN",

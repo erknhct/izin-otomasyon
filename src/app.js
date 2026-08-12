@@ -49,6 +49,11 @@ let currentTheme = localStorage.getItem('udf_theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 updateThemeToggleUI();
 
+let completedLeavesState = {
+  currentPage: 1,
+  pageSize: 10
+};
+
 // =============================================
 // GÜVENLİK & ROL TABANLI GİRİŞ SİSTEMİ
 // =============================================
@@ -536,6 +541,16 @@ function renderDashboard(forceResetTab = false) {
   sortByAyrilisDateDesc(upcomingList);
   sortByAyrilisDateDesc(completedList);
 
+  // Completed leaves pagination calculations
+  const totalCompletedRecords = completedList.length;
+  const totalCompletedPages = Math.ceil(totalCompletedRecords / completedLeavesState.pageSize) || 1;
+  if (completedLeavesState.currentPage > totalCompletedPages) completedLeavesState.currentPage = totalCompletedPages;
+  if (completedLeavesState.currentPage < 1) completedLeavesState.currentPage = 1;
+
+  const completedStartIndex = (completedLeavesState.currentPage - 1) * completedLeavesState.pageSize;
+  const completedEndIndex = Math.min(completedStartIndex + completedLeavesState.pageSize, totalCompletedRecords);
+  const paginatedCompletedList = completedList.slice(completedStartIndex, completedEndIndex);
+
   const badge = document.getElementById('nav-pending-badge');
   if (badge) {
     if (dueList.length > 0) {
@@ -729,7 +744,7 @@ function renderDashboard(forceResetTab = false) {
               </tr>
             </thead>
             <tbody>
-              ${completedList.map(item => {
+              ${paginatedCompletedList.map(item => {
                 const titleMap = getPersonnelTitleMap();
                 const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
                 return `
@@ -752,6 +767,32 @@ function renderDashboard(forceResetTab = false) {
               `;}).join('')}
             </tbody>
           </table>
+        </div>
+
+        <!-- Pagination Bar for Completed Leaves -->
+        <div class="pagination-bar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Sayfa başı:</span>
+            <select id="completed-page-size" style="width: 70px; padding: 0.25rem 0.5rem; font-size: 0.85rem;">
+              <option value="5" ${completedLeavesState.pageSize === 5 ? 'selected' : ''}>5</option>
+              <option value="10" ${completedLeavesState.pageSize === 10 ? 'selected' : ''}>10</option>
+              <option value="20" ${completedLeavesState.pageSize === 20 ? 'selected' : ''}>20</option>
+              <option value="50" ${completedLeavesState.pageSize === 50 ? 'selected' : ''}>50</option>
+            </select>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">${totalCompletedRecords === 0 ? '0-0 / 0 Kayıt' : `${completedStartIndex + 1}-${completedEndIndex} / ${totalCompletedRecords} Kayıt`}</span>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button class="btn btn-sm btn-secondary" id="btn-completed-prev-page" ${completedLeavesState.currentPage <= 1 ? 'disabled' : ''}>
+              <i class="fa-solid fa-chevron-left"></i> Önceki
+            </button>
+            <span style="font-weight: 600; font-size: 0.9rem; padding: 0 0.5rem;">
+              Sayfa ${completedLeavesState.currentPage} / ${totalCompletedPages}
+            </span>
+            <button class="btn btn-sm btn-secondary" id="btn-completed-next-page" ${completedLeavesState.currentPage >= totalCompletedPages ? 'disabled' : ''}>
+              Sonraki <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -858,6 +899,36 @@ function renderDashboard(forceResetTab = false) {
       });
     });
   });
+
+  // Add listeners for completed leaves pagination
+  const completedPageSizeSelect = pendingContainer.querySelector('#completed-page-size');
+  if (completedPageSizeSelect) {
+    completedPageSizeSelect.addEventListener('change', (e) => {
+      completedLeavesState.pageSize = parseInt(e.target.value, 10) || 10;
+      completedLeavesState.currentPage = 1;
+      renderDashboard();
+    });
+  }
+
+  const completedPrevBtn = pendingContainer.querySelector('#btn-completed-prev-page');
+  if (completedPrevBtn) {
+    completedPrevBtn.addEventListener('click', () => {
+      if (completedLeavesState.currentPage > 1) {
+        completedLeavesState.currentPage--;
+        renderDashboard();
+      }
+    });
+  }
+
+  const completedNextBtn = pendingContainer.querySelector('#btn-completed-next-page');
+  if (completedNextBtn) {
+    completedNextBtn.addEventListener('click', () => {
+      if (completedLeavesState.currentPage < totalCompletedPages) {
+        completedLeavesState.currentPage++;
+        renderDashboard();
+      }
+    });
+  }
 }
 
 // 2. DOCUMENT FORM SETUP
@@ -2423,7 +2494,7 @@ function renderReports() {
       topYillikSplittersContainer.innerHTML = `
         <div style="padding: 0.75rem 0; text-align: center; color: var(--text-muted);">
           <i class="fa-solid fa-circle-check" style="color: var(--accent-success); font-size: 1.5rem; margin-bottom: 0.3rem;"></i>
-          <p style="font-size: 0.82rem; margin: 0;">Yıllık iznini 2'den fazla parçaya bölerek kullanan personel bulunmuyor.</p>
+          <p style="font-size: 0.82rem; margin: 0;">Yıllık iznini 3 veya daha fazla parçada kullanan personel bulunmuyor.</p>
         </div>
       `;
     } else {
@@ -2684,7 +2755,7 @@ function exportReportsPdf() {
       <span><strong>${s.person.name}</strong> <small>(${s.person.sicil})</small></span>
       <span style="color: #d97706; font-weight: bold;">⚠️ ${s.yillikCount} Parça (${s.yillikDays} Gün)</span>
     </div>
-  `).join('') : '<div style="font-size: 8pt; color: #166534; font-weight: 600;">✅ Yıllık iznini 2\'den fazla parçaya bölerek kullanan personel bulunmuyor.</div>';
+  `).join('') : '<div style="font-size: 8pt; color: #166534; font-weight: 600;">✅ Yıllık iznini 3 veya daha fazla parçada kullanan personel bulunmuyor.</div>';
 
   const pdfHtml = `
     <!DOCTYPE html>
@@ -2769,7 +2840,7 @@ function exportReportsPdf() {
         </div>
         <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
           <div style="font-weight:800; font-size:8.5pt; color:#d97706; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
-            ⚠️ YILLIK İZNİNİ 2'DEN FAZLA PARÇAYA BÖLENLER
+            ⚠️ YILLIK İZNİNİ 3 VEYA DAHA FAZLA PARÇADA KULLANANLAR
           </div>
           ${topSplittersPdfHtml}
         </div>
