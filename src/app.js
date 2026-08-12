@@ -2950,6 +2950,121 @@ function renderReports() {
     `).join('') || '<p style="color: var(--text-muted); padding: 0.5rem 0; font-size: 0.85rem;">Sistemde sıhhi izin/rapor alan personel kaydı yok.</p>';
   }
 
+  // Top 5 Annual Leave Users
+  const topYillikUsersContainer = document.getElementById('reports-top-yillik-users');
+  if (topYillikUsersContainer) {
+    const top5Yillik = [...personStats]
+      .filter(s => s.yillikDays > 0)
+      .sort((a, b) => b.yillikDays - a.yillikDays || b.yillikCount - a.yillikCount)
+      .slice(0, 5);
+
+    topYillikUsersContainer.innerHTML = top5Yillik.map((s, idx) => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="width: 24px; height: 24px; border-radius: 50%; background: ${idx === 0 ? 'var(--accent-primary)' : idx === 1 ? '#8b5cf6' : idx === 2 ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; color: #fff; font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center;">${idx + 1}</span>
+          <div>
+            <strong>${s.person.name}</strong><br>
+            <small style="color: var(--text-muted);">${s.person.title} | ${s.person.sicil}</small>
+          </div>
+        </div>
+        <span class="badge badge-info" style="font-size: 0.8rem; font-weight: 800;"><i class="fa-solid fa-umbrella-beach"></i> ${s.yillikCount} Kez (${s.yillikDays} Gün)</span>
+      </div>
+    `).join('') || '<p style="color: var(--text-muted); padding: 0.5rem 0; font-size: 0.85rem;">Sistemde yıllık izin kullanan personel kaydı yok.</p>';
+  }
+
+  // Monthly Trend Distribution
+  const monthlyTrendContainer = document.getElementById('reports-monthly-trend');
+  if (monthlyTrendContainer) {
+    const monthNames = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylüm', 'Ekim', 'Kasım', 'Aralık'];
+    const monthMap = {};
+    monthNames.forEach((m, i) => monthMap[i] = { name: m, count: 0, days: 0 });
+
+    allRecords.forEach(r => {
+      if (!r.ayrilisDate) return;
+      const d = new Date(r.ayrilisDate);
+      if (isNaN(d.getTime())) return;
+      const mIdx = d.getMonth();
+      const days = parseInt(r.days || 0, 10);
+      if (monthMap[mIdx]) {
+        monthMap[mIdx].count++;
+        monthMap[mIdx].days += days;
+      }
+    });
+
+    const activeMonths = Object.values(monthMap).filter(m => m.days > 0);
+    const maxMonthDays = Math.max(...activeMonths.map(m => m.days), 1);
+
+    if (activeMonths.length === 0) {
+      monthlyTrendContainer.innerHTML = '<p style="color: var(--text-muted); padding: 0.5rem 0; font-size: 0.85rem;">Döneme ait izin verisi bulunamadı.</p>';
+    } else {
+      monthlyTrendContainer.innerHTML = activeMonths.map(m => {
+        const pct = Math.round((m.days / maxMonthDays) * 100);
+        return `
+          <div style="margin-bottom: 0.65rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 0.2rem;">
+              <strong>${m.name}</strong>
+              <span style="color: var(--text-muted);"><strong>${m.days} Gün</strong> (${m.count} İzin)</span>
+            </div>
+            <div style="width: 100%; height: 7px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; overflow: hidden;">
+              <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #10b981, #6366f1); border-radius: 4px;"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  // Weekend-Connected Health Reports (Monday / Friday Top 5)
+  const weekendReportsContainer = document.getElementById('reports-weekend-reports');
+  if (weekendReportsContainer) {
+    const weekendReportStats = personnelList.map(p => {
+      const pRecords = allRecords.filter(r => r.personnelId === p.id);
+      let count = 0;
+      let days = 0;
+
+      pRecords.forEach(r => {
+        const code = (r.leaveType || '').toLowerCase();
+        const name = (r.leaveTypeName || '').toLowerCase();
+        if (code === 'rapor' || name.includes('rapor') || name.includes('sağlık')) {
+          if (r.ayrilisDate) {
+            const d = new Date(r.ayrilisDate);
+            const dayOfWeek = d.getDay(); // 1: Monday, 5: Friday
+            if (dayOfWeek === 1 || dayOfWeek === 5) {
+              count++;
+              days += parseInt(r.days || 0, 10);
+            }
+          }
+        }
+      });
+
+      return { person: p, count, days };
+    }).filter(s => s.count > 0).sort((a, b) => b.count - a.count || b.days - a.days).slice(0, 5);
+
+    if (weekendReportStats.length === 0) {
+      weekendReportsContainer.innerHTML = `
+        <div style="padding: 0.75rem 0; text-align: center; color: var(--text-muted);">
+          <i class="fa-solid fa-circle-check" style="color: var(--accent-success); font-size: 1.5rem; margin-bottom: 0.3rem;"></i>
+          <p style="font-size: 0.82rem; margin: 0;">Pazartesi veya Cuma günü başlayan sıhhi rapor bulunmuyor.</p>
+        </div>
+      `;
+    } else {
+      weekendReportsContainer.innerHTML = weekendReportStats.map((s, idx) => `
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <span style="width: 24px; height: 24px; border-radius: 50%; background: ${idx === 0 ? '#f43f5e' : idx === 1 ? '#fb7185' : '#fda4af'}; color: #fff; font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center;">${idx + 1}</span>
+            <div>
+              <strong>${s.person.name}</strong><br>
+              <small style="color: var(--text-muted);">${s.person.title} | ${s.person.sicil}</small>
+            </div>
+          </div>
+          <span class="badge badge-danger" style="font-size: 0.8rem; font-weight: 800; background: rgba(244, 63, 94, 0.15); color: #f43f5e; border-color: rgba(244, 63, 94, 0.3);">
+            🗓️ ${s.count} Kez Pzt/Cuma (${s.days} Gün)
+          </span>
+        </div>
+      `).join('');
+    }
+  }
+
   // Yearly Leave Multi-Splitters (2+ parts)
   const topYillikSplittersContainer = document.getElementById('reports-top-yillik-splitters');
   if (topYillikSplittersContainer) {
@@ -3212,6 +3327,72 @@ function exportReportsPdf() {
     </div>
   `).join('') || '<div style="font-size: 8pt; color: #64748b;">Rapor alan yok.</div>';
 
+  // Top 5 Annual Leave Users for PDF
+  const top5YillikPdf = [...personStats]
+    .filter(s => s.yillikDays > 0)
+    .sort((a, b) => b.yillikDays - a.yillikDays || b.yillikCount - a.yillikCount)
+    .slice(0, 5);
+
+  const topYillikPdfHtml = top5YillikPdf.map((s, idx) => `
+    <div style="font-size: 8pt; margin-bottom: 3px; display: flex; justify-content: space-between;">
+      <span><strong>${idx + 1}. ${s.person.name}</strong> <small>(${s.person.sicil})</small></span>
+      <span style="color: #2563eb; font-weight: bold;">${s.yillikCount} Kez (${s.yillikDays} Gün)</span>
+    </div>
+  `).join('') || '<div style="font-size: 8pt; color: #64748b;">Yıllık izin kullanan yok.</div>';
+
+  // Monthly Trend for PDF
+  const monthNamesPdf = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+  const monthMapPdf = {};
+  monthNamesPdf.forEach((m, i) => monthMapPdf[i] = { name: m, count: 0, days: 0 });
+
+  allRecords.forEach(r => {
+    if (!r.ayrilisDate) return;
+    const d = new Date(r.ayrilisDate);
+    if (isNaN(d.getTime())) return;
+    const mIdx = d.getMonth();
+    const days = parseInt(r.days || 0, 10);
+    if (monthMapPdf[mIdx]) {
+      monthMapPdf[mIdx].count++;
+      monthMapPdf[mIdx].days += days;
+    }
+  });
+
+  const activeMonthsPdf = Object.values(monthMapPdf).filter(m => m.days > 0);
+  const monthlyTrendPdfHtml = activeMonthsPdf.map(m => `
+    <div style="font-size: 8pt; margin-bottom: 3px; display: flex; justify-content: space-between;">
+      <span><strong>${m.name}</strong></span>
+      <span style="color: #059669; font-weight: bold;">${m.days} Gün (${m.count} İzin)</span>
+    </div>
+  `).join('') || '<div style="font-size: 8pt; color: #64748b;">Dönemde kayıt yok.</div>';
+
+  // Weekend-Connected Health Reports for PDF
+  const weekendReportStatsPdf = personnelList.map(p => {
+    const pRecords = allRecords.filter(r => r.personnelId === p.id);
+    let count = 0, days = 0;
+    pRecords.forEach(r => {
+      const code = (r.leaveType || '').toLowerCase();
+      const name = (r.leaveTypeName || '').toLowerCase();
+      if (code === 'rapor' || name.includes('rapor') || name.includes('sağlık')) {
+        if (r.ayrilisDate) {
+          const d = new Date(r.ayrilisDate);
+          const dayOfWeek = d.getDay();
+          if (dayOfWeek === 1 || dayOfWeek === 5) {
+            count++;
+            days += parseInt(r.days || 0, 10);
+          }
+        }
+      }
+    });
+    return { person: p, count, days };
+  }).filter(s => s.count > 0).sort((a, b) => b.count - a.count || b.days - a.days).slice(0, 5);
+
+  const weekendReportsPdfHtml = weekendReportStatsPdf.map((s, idx) => `
+    <div style="font-size: 8pt; margin-bottom: 3px; display: flex; justify-content: space-between;">
+      <span><strong>${idx + 1}. ${s.person.name}</strong> <small>(${s.person.sicil})</small></span>
+      <span style="color: #e11d48; font-weight: bold;">🗓️ ${s.count} Kez Pzt/Cuma (${s.days} G)</span>
+    </div>
+  `).join('') || '<div style="font-size: 8pt; color: #166534; font-weight: 600;">✅ Pazartesi/Cuma başlayan sıhhi rapor bulunmuyor.</div>';
+
   // 3. Yearly Leave Multi-Splitters (2+ parts) for PDF
   const splittersPdf = [...personStats]
     .filter(s => s.yillikCount > 2)
@@ -3292,7 +3473,7 @@ function exportReportsPdf() {
         </div>
       </div>
 
-      <div style="display:flex; flex-direction:row; gap:12px; margin-bottom:18px;">
+      <div style="display:flex; flex-direction:row; gap:12px; margin-bottom:10px;">
         <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
           <div style="font-weight:800; font-size:8.5pt; color:#0f172a; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
             📊 İZİN TÜRLERİNE GÖRE DAĞILIM
@@ -3306,8 +3487,29 @@ function exportReportsPdf() {
           ${topRaporPdfHtml}
         </div>
         <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
+          <div style="font-weight:800; font-size:8.5pt; color:#2563eb; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
+            🏖️ EN ÇOK YILLIK İZİN KULLANANLAR (TOP 5)
+          </div>
+          ${topYillikPdfHtml}
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:row; gap:12px; margin-bottom:18px;">
+        <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
+          <div style="font-weight:800; font-size:8.5pt; color:#059669; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
+            📅 AYLARA GÖRE İZİN/RAPOR YOĞUNLUĞU
+          </div>
+          ${monthlyTrendPdfHtml}
+        </div>
+        <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
+          <div style="font-weight:800; font-size:8.5pt; color:#e11d48; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
+            🗓️ HAFTA SONU İLE BİRLEŞTİRİLEN RAPORLAR (PZT/CUMA)
+          </div>
+          ${weekendReportsPdfHtml}
+        </div>
+        <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
           <div style="font-weight:800; font-size:8.5pt; color:#d97706; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
-            ⚠️ YILLIK İZNİNİ 3 VEYA DAHA FAZLA PARÇADA KULLANANLAR
+            ⚠️ YILLIK İZNİNİ 3+ PARÇADA KULLANANLAR
           </div>
           ${topSplittersPdfHtml}
         </div>

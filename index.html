@@ -458,7 +458,7 @@
         </div>
 
         <!-- 2. Leave Type Summary & Distribution Cards -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
           <div class="glass-card" style="margin-bottom: 0;">
             <div class="card-title">
               <span><i class="fa-solid fa-chart-bar" style="color: var(--accent-warning); margin-right: 8px;"></i> İzin Türlerine Göre Dağılım</span>
@@ -473,6 +473,33 @@
               <span><i class="fa-solid fa-stethoscope" style="color: #ef4444; margin-right: 8px;"></i> En Çok Rapor Alanlar (Top 5)</span>
             </div>
             <div id="reports-top-rapor-users">
+              <!-- Dynamic list -->
+            </div>
+          </div>
+
+          <div class="glass-card" style="margin-bottom: 0;">
+            <div class="card-title">
+              <span><i class="fa-solid fa-umbrella-beach" style="color: var(--accent-primary); margin-right: 8px;"></i> En Çok Yıllık İzin Kullananlar (Top 5)</span>
+            </div>
+            <div id="reports-top-yillik-users">
+              <!-- Dynamic list -->
+            </div>
+          </div>
+
+          <div class="glass-card" style="margin-bottom: 0;">
+            <div class="card-title">
+              <span><i class="fa-solid fa-calendar-days" style="color: var(--accent-success); margin-right: 8px;"></i> Aylara Göre İzin/Rapor Yoğunluğu (Aylık Trend)</span>
+            </div>
+            <div id="reports-monthly-trend">
+              <!-- Dynamic list -->
+            </div>
+          </div>
+
+          <div class="glass-card" style="margin-bottom: 0;">
+            <div class="card-title">
+              <span><i class="fa-solid fa-calendar-week" style="color: #f43f5e; margin-right: 8px;"></i> Hafta Sonu İle Birleştirilen Raporlar (Pzt/Cuma Top 5)</span>
+            </div>
+            <div id="reports-weekend-reports">
               <!-- Dynamic list -->
             </div>
           </div>
