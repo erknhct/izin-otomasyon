@@ -10,7 +10,7 @@ import {
   getMesaiSettingsDB, saveMesaiSettingsDB,
   getAliciMakamlar, saveAliciMakamlar
 } from './storage.js';
-import { calculateExpectedReturn, calculateDaysFromReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats } from './leaveTracker.js';
+import { calculateExpectedReturn, calculateDaysFromReturn, getReturnReasonNotu, checkLeaveConflict, getPendingReturnRecords, getDashboardStats, isWeekendOrHoliday } from './leaveTracker.js';
 import {
   generateMesaiForMonth, renderMesaiTable, clearMesaiForMonth,
   getMesaiSignatories, saveMesaiSignatories, hasMesaiDataForMonth,
@@ -67,7 +67,7 @@ let completedLeavesState = {
 // =============================================
 // GÜVENLİK & ROL TABANLI GİRİŞ SİSTEMİ
 // =============================================
-const SESSION_KEY      = 'udf_session_auth';
+const SESSION_KEY = 'udf_session_auth';
 const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 saat (ms)
 
 function isSessionValid() {
@@ -94,9 +94,9 @@ function isAdmin() {
 }
 
 function updateUserRoleUI() {
-  const pillEl   = document.getElementById('top-user-pill');
+  const pillEl = document.getElementById('top-user-pill');
   const avatarEl = document.getElementById('top-user-avatar');
-  const textEl   = document.getElementById('top-user-role-text');
+  const textEl = document.getElementById('top-user-role-text');
 
   if (isAdmin()) {
     if (avatarEl) {
@@ -127,7 +127,7 @@ function updateUserRoleUI() {
   }
 }
 
-window.handleLogin = function() {
+window.handleLogin = function () {
   const input = document.getElementById('login-password-input');
   const errEl = document.getElementById('login-error');
   const enteredPw = (input.value || '').trim();
@@ -162,7 +162,7 @@ window.handleLogin = function() {
   }
 };
 
-window.logoutApp = function() {
+window.logoutApp = function () {
   showConfirmModal({
     title: '🔒 Oturumu Kapat',
     message: 'Sistemden çıkış yapmak üzeresiniz. Devam etmek istediğinizden emin misiniz?',
@@ -175,11 +175,11 @@ window.logoutApp = function() {
   });
 };
 
-window.changeAppPassword = function() {
+window.changeAppPassword = function () {
   const targetRole = document.getElementById('sec-target-role')?.value || 'admin';
   const current = document.getElementById('sec-current-pw')?.value || '';
-  const newPw   = document.getElementById('sec-new-pw')?.value || '';
-  const newPw2  = document.getElementById('sec-new-pw2')?.value || '';
+  const newPw = document.getElementById('sec-new-pw')?.value || '';
+  const newPw2 = document.getElementById('sec-new-pw2')?.value || '';
 
   const activeRolePw = isAdmin() ? getAdminPasswordStored() : getStaffPasswordStored();
   if (current !== activeRolePw) {
@@ -243,12 +243,20 @@ async function initApp() {
     refreshUIFromStorage(isFromRemote);
   });
 
-  // Global delegation for PDF report button
+  // Global delegation for PDF report button & Yol Yardımı Excel button
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('#btn-export-reports-pdf');
-    if (btn) {
+    const btnPdf = e.target.closest('#btn-export-reports-pdf');
+    if (btnPdf) {
       e.preventDefault();
       exportReportsPdf();
+      return;
+    }
+    const btnExcel = e.target.closest('#btn-export-yol-yardimi-excel');
+    if (btnExcel) {
+      e.preventDefault();
+      exportYolYardimiExcel();
+      showToast('📊 Yol Yardımı Kesintisi İzin Listesi Excel olarak indirildi!', 'success');
+      return;
     }
   });
 }
@@ -671,9 +679,9 @@ function renderDashboard(forceResetTab = false) {
             </thead>
             <tbody>
               ${paginatedDueList.map(item => {
-                const titleMap = getPersonnelTitleMap();
-                const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
-                return `
+      const titleMap = getPersonnelTitleMap();
+      const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
+      return `
                 <tr style="background: rgba(239, 68, 68, 0.06);">
                   <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${displayUnvan}</small></td>
                   <td>${item.sicil}</td>
@@ -692,7 +700,8 @@ function renderDashboard(forceResetTab = false) {
                     </button>
                   </td>
                 </tr>
-              `;}).join('')}
+              `;
+    }).join('')}
             </tbody>
           </table>
         </div>
@@ -754,9 +763,9 @@ function renderDashboard(forceResetTab = false) {
             </thead>
             <tbody>
               ${paginatedUpcomingList.map(item => {
-                const titleMap = getPersonnelTitleMap();
-                const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
-                return `
+      const titleMap = getPersonnelTitleMap();
+      const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
+      return `
                 <tr>
                   <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${displayUnvan}</small></td>
                   <td>${item.sicil}</td>
@@ -775,7 +784,8 @@ function renderDashboard(forceResetTab = false) {
                     </button>
                   </td>
                 </tr>
-              `;}).join('')}
+              `;
+    }).join('')}
             </tbody>
           </table>
         </div>
@@ -837,9 +847,9 @@ function renderDashboard(forceResetTab = false) {
             </thead>
             <tbody>
               ${paginatedCompletedList.map(item => {
-                const titleMap = getPersonnelTitleMap();
-                const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
-                return `
+      const titleMap = getPersonnelTitleMap();
+      const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
+      return `
                 <tr>
                   <td><strong>${item.personnelName}</strong><br><small style="color: var(--text-muted);">${displayUnvan}</small></td>
                   <td>${item.sicil}</td>
@@ -861,7 +871,8 @@ function renderDashboard(forceResetTab = false) {
                     </button>
                   </td>
                 </tr>
-              `;}).join('')}
+              `;
+    }).join('')}
             </tbody>
           </table>
         </div>
@@ -923,7 +934,7 @@ function renderDashboard(forceResetTab = false) {
         b.style.padding = '0.6rem 1.25rem';
         b.style.fontSize = '1rem';
         b.style.fontWeight = '600';
-        
+
         const badge = b.querySelector('.badge');
         if (b.getAttribute('data-type') === 'danger') badge.className = 'badge badge-danger';
         if (b.getAttribute('data-type') === 'primary') badge.className = 'badge badge-info';
@@ -931,7 +942,7 @@ function renderDashboard(forceResetTab = false) {
       });
       // Hide all panes
       pendingContainer.querySelectorAll('.tab-content .tab-pane').forEach(p => p.style.display = 'none');
-      
+
       // Set active tab
       const targetId = btn.getAttribute('data-target');
       const type = btn.getAttribute('data-type');
@@ -943,7 +954,7 @@ function renderDashboard(forceResetTab = false) {
       btn.style.padding = '0.6rem 1.25rem';
       btn.style.fontSize = '1rem';
       btn.style.fontWeight = '600';
-      
+
       const badge = btn.querySelector('.badge');
       badge.className = 'badge badge-light';
 
@@ -1283,7 +1294,7 @@ function populateWizardOptions(preserveSelections = false) {
   const personSelect = document.getElementById('wiz-personnel-select');
   personSelect.innerHTML = personnelList.map(p => `<option value="${p.id}">${p.name} (${p.sicil}) - ${p.title}</option>`).join('');
   if (currentP && personnelList.some(p => p.id === currentP)) personSelect.value = currentP;
-  
+
   const wizCount = document.getElementById('wiz-personnel-count');
   if (wizCount) wizCount.textContent = `(${personnelList.length} Personel)`;
 
@@ -1317,7 +1328,7 @@ function populateWizardOptions(preserveSelections = false) {
     const today = new Date().toISOString().split('T')[0];
     ayrilisInput.value = today;
   }
-  
+
   if (!preserveSelections) {
     const izinSuresiInput = document.getElementById('wiz-izin-suresi');
     if (izinSuresiInput) {
@@ -1417,10 +1428,10 @@ function setupWizardForm() {
   document.getElementById('btn-preview-xml')?.addEventListener('click', () => {
     try {
       const payload = getWizardPayload();
-      
+
       const payloadAyrilis = { ...payload, actionType: 'ayrilis', docType: payload.leaveType + '_ayrilis' };
       const payloadBaslayis = { ...payload, actionType: 'baslayis', docType: payload.leaveType + '_baslayis' };
-      
+
       if (!payloadBaslayis.ilgiEvrak) {
         payloadBaslayis.ilgiEvrak = `${formatDateTR(payload.ayrilisTarihi)} tarihli yazımız.`;
       }
@@ -1476,13 +1487,13 @@ function setupWizardForm() {
       if (!isBaslayis) {
         const expReturn = calculateExpectedReturn(payload.ayrilisTarihi, payload.izinSuresi);
         const conflict = checkLeaveConflict(payload.personnelId, payload.ayrilisTarihi, expReturn);
-        
+
         if (conflict) {
           showToast(`⚠️ ${payload.personnelName} için ${formatDateTR(conflict.ayrilisDate)} - ${formatDateTR(conflict.expectedReturnDate)} tarihleri arasında zaten aktif (${conflict.leaveTypeName}) kaydı mevcuttur! Aynı personel için çakışan tarihte 2. bir izin kaydı oluşturulamaz.`, 'danger');
           return;
         }
       }
-      
+
       const filename = `${payload.personnelName}_${payload.leaveType}_${payload.actionType}.udf`;
       await downloadUdfFile(payload, filename);
       showToast(`${filename} UDF olarak oluşturuldu ve indirildi!`, 'success');
@@ -1600,10 +1611,10 @@ async function startBaslayisWizardForRecord(recId) {
   actionTypeSelect.dispatchEvent(new Event('change'));
 
   document.getElementById('wiz-izin-suresi').value = rec.days;
-  
+
   const formattedAyrilisDate = formatDateTR(rec.ayrilisDate);
   document.getElementById('wiz-ilgi-evrak').value = `${formattedAyrilisDate} tarihli yazımız.`;
-  
+
   const todayStr = new Date().toISOString().split('T')[0];
   const baslayisDateVal = (rec.expectedReturnDate && rec.expectedReturnDate <= todayStr) ? todayStr : (rec.expectedReturnDate || todayStr);
   document.getElementById('wiz-baslayis-tarih').value = baslayisDateVal;
@@ -1623,7 +1634,7 @@ async function startBaslayisWizardForRecord(recId) {
     document.getElementById('form-udf-wizard').reset();
     populateWizardOptions();
     actionTypeSelect.dispatchEvent(new Event('change'));
-    
+
     showToast(`✅ ${rec.personnelName} için Göreve Başlayış UDF belgesi indirildi ve işlem tamamlandı!`, 'success');
     renderDashboard();
     renderLeavesTable();
@@ -1698,7 +1709,7 @@ function setupLeavesTableFilters() {
 
   if (btnThisMonth) {
     btnThisMonth.addEventListener('click', () => {
-      const fmt = (d) => { const pad = n => n<10?'0'+n:n; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+      const fmt = (d) => { const pad = n => n < 10 ? '0' + n : n; return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
       const now = new Date();
       if (startDateInput) startDateInput.value = fmt(new Date(now.getFullYear(), now.getMonth(), 1));
       if (endDateInput) endDateInput.value = fmt(new Date(now.getFullYear(), now.getMonth() + 1, 0));
@@ -1847,20 +1858,20 @@ function renderLeavesTable() {
 
   if (typeSelect && typeSelect.options.length <= 1) {
     const leaveTypes = getLeaveTypes();
-    typeSelect.innerHTML = `<option value="">Tüm İzin Türleri</option>` + 
+    typeSelect.innerHTML = `<option value="">Tüm İzin Türleri</option>` +
       leaveTypes.map(l => `<option value="${l.code}">${l.name}</option>`).join('');
   }
 
   const startDateInput = document.getElementById('leaves-global-start');
   const endDateInput = document.getElementById('leaves-global-end');
-  
+
   // Highlight buttons logic
   const btnThisMonth = document.getElementById('btn-leaves-filter-this-month');
   const btnThisYear = document.getElementById('btn-leaves-filter-this-year');
   const clearDatesBtn = document.getElementById('btn-leaves-clear-dates');
-  
+
   if (startDateInput && endDateInput && btnThisMonth && btnThisYear && clearDatesBtn) {
-    const fmtStr = (d) => { const pad = n => n<10?'0'+n:n; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+    const fmtStr = (d) => { const pad = n => n < 10 ? '0' + n : n; return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
     const currN = new Date();
     const ms = fmtStr(new Date(currN.getFullYear(), currN.getMonth(), 1));
     const me = fmtStr(new Date(currN.getFullYear(), currN.getMonth() + 1, 0));
@@ -1878,16 +1889,16 @@ function renderLeavesTable() {
   // Filtering
   const filtered = records.filter(r => {
     const search = normalizeSearch(leavesState.searchQuery);
-    const matchesSearch = !search || 
-      normalizeSearch(r.personnelName).includes(search) || 
+    const matchesSearch = !search ||
+      normalizeSearch(r.personnelName).includes(search) ||
       (r.sicil && r.sicil.includes(search));
     const matchesType = !leavesState.typeFilter || r.leaveType === leavesState.typeFilter;
     const matchesStatus = !leavesState.statusFilter || r.status === leavesState.statusFilter;
-    
+
     let matchesDate = true;
     if (startDateInput && startDateInput.value && r.ayrilisDate < startDateInput.value) matchesDate = false;
     if (endDateInput && endDateInput.value && r.ayrilisDate > endDateInput.value) matchesDate = false;
-    
+
     return matchesSearch && matchesType && matchesStatus && matchesDate;
   });
 
@@ -1934,7 +1945,7 @@ function renderLeavesTable() {
     const isDue = r.status === 'ayrilis_yapildi' && r.expectedReturnDate && r.expectedReturnDate <= todayStr;
     const rowStyle = isDue ? 'background: rgba(239, 68, 68, 0.12); border-left: 4px solid #ef4444;' : '';
     const displayUnvan = titleMap[r.personnelId] || titleMap[r.personnelName] || r.unvan || '';
-    
+
     return `
       <tr style="${rowStyle}">
         <td><strong>${r.personnelName}</strong><br><small style="color: var(--text-muted);">${displayUnvan}</small></td>
@@ -1942,22 +1953,22 @@ function renderLeavesTable() {
         <td>${r.days} Gün</td>
         <td>${formatDateTR(r.ayrilisDate)}</td>
         <td>
-          ${isDue 
-            ? `<span class="badge badge-danger" style="animation: pulseDanger 2s infinite;"><i class="fa-solid fa-clock"></i> ${formatDateTR(r.expectedReturnDate)} (SÜRESİ DOLDU)</span>` 
-            : formatDateTR(r.expectedReturnDate)}
+          ${isDue
+        ? `<span class="badge badge-danger" style="animation: pulseDanger 2s infinite;"><i class="fa-solid fa-clock"></i> ${formatDateTR(r.expectedReturnDate)} (SÜRESİ DOLDU)</span>`
+        : formatDateTR(r.expectedReturnDate)}
         </td>
         <td>
-          ${r.status === 'baslayis_yapildi' 
-            ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>' 
-            : isDue
-              ? '<span class="badge badge-danger" style="animation: pulseDanger 2s infinite;"><i class="fa-solid fa-triangle-exclamation"></i> 🚨 GÜNÜ GELDİ (ACİL)</span>'
-              : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İzinde (Ayrılış Yapıldı)</span>'}
+          ${r.status === 'baslayis_yapildi'
+        ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>'
+        : isDue
+          ? '<span class="badge badge-danger" style="animation: pulseDanger 2s infinite;"><i class="fa-solid fa-triangle-exclamation"></i> 🚨 GÜNÜ GELDİ (ACİL)</span>'
+          : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İzinde (Ayrılış Yapıldı)</span>'}
         </td>
         <td style="display: flex; gap: 0.5rem; align-items: center;">
           <div style="width: 110px; flex-shrink: 0; display: inline-flex; align-items: center;">
-            ${r.status === 'ayrilis_yapildi' 
-              ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}" style="width: 100%; justify-content: center; ${isDue ? 'font-weight: 800; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);' : ''}"><i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ</button>`
-              : `<span style="width: 100%; text-align: center; color: var(--text-muted); font-size: 0.85rem; font-weight: 500;">Tamamlandı</span>`}
+            ${r.status === 'ayrilis_yapildi'
+        ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}" style="width: 100%; justify-content: center; ${isDue ? 'font-weight: 800; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);' : ''}"><i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ</button>`
+        : `<span style="width: 100%; text-align: center; color: var(--text-muted); font-size: 0.85rem; font-weight: 500;">Tamamlandı</span>`}
           </div>
           <button class="btn btn-sm btn-primary btn-edit-leave-record" data-record-id="${r.id}">
             <i class="fa-solid fa-pen-to-square"></i> Düzenle
@@ -2011,7 +2022,7 @@ function renderLeavesTable() {
 // 4. PERSONNEL MANAGEMENT
 function renderPersonnelTable() {
   const list = getPersonnelList();
-  
+
   const sidebarCount = document.getElementById('sidebar-personnel-count');
   if (sidebarCount) sidebarCount.textContent = `(${list.length})`;
 
@@ -2047,7 +2058,7 @@ function renderPersonnelTable() {
   if (btnAdd && !btnAdd.dataset.hasListener) {
     btnAdd.dataset.hasListener = "true";
     btnAdd.addEventListener('click', () => {
-    openModal('Yeni Personel Ekle', `
+      openModal('Yeni Personel Ekle', `
       <form id="form-add-personnel" class="form-grid">
         <div class="form-group">
           <label>Adı Soyadı</label>
@@ -2075,53 +2086,53 @@ function renderPersonnelTable() {
       </form>
     `);
 
-    document.getElementById('form-add-personnel')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const nameVal = document.getElementById('p-name').value.trim();
-      const sicilVal = document.getElementById('p-sicil').value.trim();
-      const tcVal = document.getElementById('p-tc').value.trim();
-      const titleVal = document.getElementById('p-title').value.trim();
-      const birimVal = document.getElementById('p-birim').value.trim();
+      document.getElementById('form-add-personnel')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nameVal = document.getElementById('p-name').value.trim();
+        const sicilVal = document.getElementById('p-sicil').value.trim();
+        const tcVal = document.getElementById('p-tc').value.trim();
+        const titleVal = document.getElementById('p-title').value.trim();
+        const birimVal = document.getElementById('p-birim').value.trim();
 
-      const current = getPersonnelList();
+        const current = getPersonnelList();
 
-      // Mükerrer kayıt kontrolü (Aynı Ad Soyad ve Sicil No)
-      const duplicateExact = current.find(p => 
-        (p.name || '').trim().toLowerCase() === nameVal.toLowerCase() && 
-        String(p.sicil || '').trim().toLowerCase() === sicilVal.toLowerCase()
-      );
-      if (duplicateExact) {
-        showToast(`⚠️ "${nameVal}" (${sicilVal}) sicilli personel sistemde zaten mevcuttur! Aynı ad soyad ve sicille tekrar kayıt oluşturulamaz.`, 'danger');
-        document.getElementById('p-sicil')?.focus();
-        return;
-      }
+        // Mükerrer kayıt kontrolü (Aynı Ad Soyad ve Sicil No)
+        const duplicateExact = current.find(p =>
+          (p.name || '').trim().toLowerCase() === nameVal.toLowerCase() &&
+          String(p.sicil || '').trim().toLowerCase() === sicilVal.toLowerCase()
+        );
+        if (duplicateExact) {
+          showToast(`⚠️ "${nameVal}" (${sicilVal}) sicilli personel sistemde zaten mevcuttur! Aynı ad soyad ve sicille tekrar kayıt oluşturulamaz.`, 'danger');
+          document.getElementById('p-sicil')?.focus();
+          return;
+        }
 
-      // Sicil No teklik kontrolü
-      const duplicateSicil = current.find(p => 
-        String(p.sicil || '').trim().toLowerCase() === sicilVal.toLowerCase()
-      );
-      if (duplicateSicil) {
-        showToast(`⚠️ "${sicilVal}" sicil numarası ile kayıtlı "${duplicateSicil.name}" isimli bir personel zaten mevcuttur!`, 'danger');
-        document.getElementById('p-sicil')?.focus();
-        return;
-      }
+        // Sicil No teklik kontrolü
+        const duplicateSicil = current.find(p =>
+          String(p.sicil || '').trim().toLowerCase() === sicilVal.toLowerCase()
+        );
+        if (duplicateSicil) {
+          showToast(`⚠️ "${sicilVal}" sicil numarası ile kayıtlı "${duplicateSicil.name}" isimli bir personel zaten mevcuttur!`, 'danger');
+          document.getElementById('p-sicil')?.focus();
+          return;
+        }
 
-      current.push({
-        id: Date.now().toString(),
-        name: nameVal,
-        sicil: sicilVal,
-        tcNo: tcVal,
-        title: titleVal,
-        birim: birimVal,
-        status: 'active'
+        current.push({
+          id: Date.now().toString(),
+          name: nameVal,
+          sicil: sicilVal,
+          tcNo: tcVal,
+          title: titleVal,
+          birim: birimVal,
+          status: 'active'
+        });
+        savePersonnelList(current);
+        closeModal();
+        showToast('Personel eklendi ve db.json dosyasına kaydedildi!', 'success');
+        renderPersonnelTable();
+        populateWizardOptions();
       });
-      savePersonnelList(current);
-      closeModal();
-      showToast('Personel eklendi ve db.json dosyasına kaydedildi!', 'success');
-      renderPersonnelTable();
-      populateWizardOptions();
     });
-  });
   }
 
   // Edit Personnel Listener
@@ -2169,9 +2180,9 @@ function renderPersonnelTable() {
 
         let current = getPersonnelList();
 
-        const duplicateExact = current.find(p => 
+        const duplicateExact = current.find(p =>
           p.id !== id &&
-          (p.name || '').trim().toLowerCase() === editName.toLowerCase() && 
+          (p.name || '').trim().toLowerCase() === editName.toLowerCase() &&
           String(p.sicil || '').trim().toLowerCase() === editSicil.toLowerCase()
         );
         if (duplicateExact) {
@@ -2180,7 +2191,7 @@ function renderPersonnelTable() {
           return;
         }
 
-        const duplicateSicil = current.find(p => 
+        const duplicateSicil = current.find(p =>
           p.id !== id &&
           String(p.sicil || '').trim().toLowerCase() === editSicil.toLowerCase()
         );
@@ -2263,7 +2274,7 @@ function renderPersonnelTable() {
         e.preventDefault();
         row.style.borderTop = '';
         const targetIndex = parseInt(row.getAttribute('data-index'), 10);
-        
+
         if (draggedIndex !== null && draggedIndex !== targetIndex) {
           let current = getPersonnelList();
           const draggedItem = current.splice(draggedIndex, 1)[0];
@@ -2457,7 +2468,7 @@ function renderSettings() {
       if (!lt) return;
 
       const isRapor = lt.code === 'rapor';
-      const defaultAyrilisTpl = isRapor 
+      const defaultAyrilisTpl = isRapor
         ? `{birim}müzde {unvan} olarak görev yapan {personel} ({sicil}) ekte gönderilen {gun} günlük istirahat raporuyla {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`
         : `{birim}müzde görevli {unvan} {personel} ({sicil}) ${lt.name.toLowerCase()}nden {gun} gününü kullanmak üzere {ayrilisTarihi} tarihinde görevinden ayrılmıştır.`;
 
@@ -2672,10 +2683,10 @@ function renderReports() {
       const now = new Date();
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
       const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      
+
       // format YYYY-MM-DD keeping local timezone correctly
-      const fmt = (d) => { const pad = n => n<10?'0'+n:n; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
-      
+      const fmt = (d) => { const pad = n => n < 10 ? '0' + n : n; return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+
       if (startDateInput) startDateInput.value = fmt(start);
       if (endDateInput) endDateInput.value = fmt(end);
       renderReports();
@@ -2703,7 +2714,7 @@ function renderReports() {
 
   // Visual highlight logic for Quick Filter Buttons
   if (startDateInput && endDateInput && btnThisMonth && btnThisYear && clearDatesBtn) {
-    const fmtStr = (d) => { const pad = n => n<10?'0'+n:n; return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+    const fmtStr = (d) => { const pad = n => n < 10 ? '0' + n : n; return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
     const currN = new Date();
     const ms = fmtStr(new Date(currN.getFullYear(), currN.getMonth(), 1));
     const me = fmtStr(new Date(currN.getFullYear(), currN.getMonth() + 1, 0));
@@ -2793,7 +2804,7 @@ function renderReports() {
   const kpiGrid = document.getElementById('reports-kpi-grid');
   if (kpiGrid) {
     const raporAlanPersonelSayisi = personStats.filter(s => s.raporCount > 0).length;
-    const maxRaporPerson = [...personStats].sort((a,b) => b.raporDays - a.raporDays)[0];
+    const maxRaporPerson = [...personStats].sort((a, b) => b.raporDays - a.raporDays)[0];
 
     kpiGrid.innerHTML = `
       <div class="stat-card">
@@ -2842,10 +2853,10 @@ function renderReports() {
 
   // Filtered Person Stats Table
   const filteredPersonStats = personStats.filter(s => {
-    const matchesSearch = !searchQuery || 
-      normalizeSearch(s.person.name).includes(searchQuery) || 
+    const matchesSearch = !searchQuery ||
+      normalizeSearch(s.person.name).includes(searchQuery) ||
       s.person.sicil.includes(searchQuery);
-    
+
     if (!matchesSearch) return false;
     if (typeFilter === 'rapor') return s.raporCount > 0;
     if (typeFilter === 'yillik') return s.yillikCount > 0;
@@ -2864,19 +2875,19 @@ function renderReports() {
           <td>${s.person.sicil}</td>
           <td><small style="color: var(--text-muted);">${s.person.title}</small></td>
           <td>
-            ${s.raporCount > 0 
-              ? `<span class="badge badge-danger" style="font-weight: 700;"><i class="fa-solid fa-stethoscope"></i> ${s.raporCount} Kez (${s.raporDays} Gün)</span>` 
-              : `<small style="color: var(--text-muted);">0 Kez</small>`}
+            ${s.raporCount > 0
+          ? `<span class="badge badge-danger" style="font-weight: 700;"><i class="fa-solid fa-stethoscope"></i> ${s.raporCount} Kez (${s.raporDays} Gün)</span>`
+          : `<small style="color: var(--text-muted);">0 Kez</small>`}
           </td>
           <td>
-            ${s.yillikCount > 0 
-              ? `<span class="badge badge-info" style="font-weight: 700;"><i class="fa-solid fa-umbrella-beach"></i> ${s.yillikCount} Kez (${s.yillikDays} Gün)</span>` 
-              : `<small style="color: var(--text-muted);">0 Kez</small>`}
+            ${s.yillikCount > 0
+          ? `<span class="badge badge-info" style="font-weight: 700;"><i class="fa-solid fa-umbrella-beach"></i> ${s.yillikCount} Kez (${s.yillikDays} Gün)</span>`
+          : `<small style="color: var(--text-muted);">0 Kez</small>`}
           </td>
           <td>
-            ${Object.keys(s.otherMap).length > 0 
-              ? Object.entries(s.otherMap).map(([tName, tData]) => `<span class="badge badge-warning" style="font-weight: 700; margin: 1px 0; display: inline-block;"><i class="fa-solid fa-tag"></i> ${tName}: ${tData.count} Kez (${tData.days} Gün)</span>`).join('<br>')
-              : `<small style="color: var(--text-muted);">0 Kez</small>`}
+            ${Object.keys(s.otherMap).length > 0
+          ? Object.entries(s.otherMap).map(([tName, tData]) => `<span class="badge badge-warning" style="font-weight: 700; margin: 1px 0; display: inline-block;"><i class="fa-solid fa-tag"></i> ${tName}: ${tData.count} Kez (${tData.days} Gün)</span>`).join('<br>')
+          : `<small style="color: var(--text-muted);">0 Kez</small>`}
           </td>
           <td>
             <strong>${s.totalDays} Gün</strong> <small style="color: var(--text-muted);">(${s.totalCount} Kez)</small>
@@ -2910,7 +2921,7 @@ function renderReports() {
       typeMap[typeName].days += days;
     });
 
-    const typeList = Object.entries(typeMap).sort((a,b) => b[1].days - a[1].days);
+    const typeList = Object.entries(typeMap).sort((a, b) => b[1].days - a[1].days);
 
     typeDistContainer.innerHTML = typeList.map(([name, data]) => {
       const percentage = totalAllDays > 0 ? Math.round((data.days / totalAllDays) * 100) : 0;
@@ -3102,7 +3113,7 @@ function openPersonHistoryModal(personId) {
   const person = getPersonnelList().find(p => p.id === personId);
   if (!person) return;
 
-  const records = getLeaveRecords().filter(r => r.personnelId === personId).sort((a,b) => (a.ayrilisDate < b.ayrilisDate ? 1 : -1));
+  const records = getLeaveRecords().filter(r => r.personnelId === personId).sort((a, b) => (a.ayrilisDate < b.ayrilisDate ? 1 : -1));
 
   let totalDays = 0;
   let totalRaporDays = 0;
@@ -3123,9 +3134,9 @@ function openPersonHistoryModal(personId) {
       <td>${formatDateTR(r.ayrilisDate)}</td>
       <td>${formatDateTR(r.expectedReturnDate)}</td>
       <td>
-        ${r.status === 'baslayis_yapildi' 
-          ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>' 
-          : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İzinde (Ayrılış Yapıldı)</span>'}
+        ${r.status === 'baslayis_yapildi'
+      ? '<span class="badge badge-success"><i class="fa-solid fa-check"></i> Göreve Başladı</span>'
+      : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İzinde (Ayrılış Yapıldı)</span>'}
       </td>
     </tr>
   `).join('');
@@ -3187,7 +3198,7 @@ function exportReportsPdf() {
   } else if (endDateInput && endDateInput.value) {
     filterParts.push(`Tarih: ${formatDateTR(endDateInput.value)} Öncesi`);
   }
-  
+
   if (typeFilter) {
     const leaveTypes = getLeaveTypes();
     const lObj = leaveTypes.find(l => l.code === typeFilter) || { name: 'Özel Tür' };
@@ -3195,7 +3206,7 @@ function exportReportsPdf() {
     else if (typeFilter === 'yillik') filterParts.push('İzin Türü: Yıllık İzin');
     else filterParts.push(`İzin Türü: ${lObj.name}`);
   }
-  
+
   if (searchQuery) {
     filterParts.push(`Arama: "${searchQuery}"`);
   }
@@ -3263,10 +3274,10 @@ function exportReportsPdf() {
   });
 
   const filteredPersonStats = personStats.filter(s => {
-    const matchesSearch = !searchQuery || 
-      normalizeSearch(s.person.name).includes(searchQuery) || 
+    const matchesSearch = !searchQuery ||
+      normalizeSearch(s.person.name).includes(searchQuery) ||
       s.person.sicil.includes(searchQuery);
-    
+
     if (!matchesSearch) return false;
     if (typeFilter === 'rapor') return s.raporCount > 0;
     if (typeFilter === 'yillik') return s.yillikCount > 0;
@@ -3305,7 +3316,7 @@ function exportReportsPdf() {
     typeMap[typeName].count++;
     typeMap[typeName].days += days;
   });
-  const typeList = Object.entries(typeMap).sort((a,b) => b[1].days - a[1].days);
+  const typeList = Object.entries(typeMap).sort((a, b) => b[1].days - a[1].days);
   const typeListPdfHtml = typeList.map(([name, data]) => {
     const pct = totalAllDays > 0 ? Math.round((data.days / totalAllDays) * 100) : 0;
     return `<div style="font-size: 8pt; margin-bottom: 3px; display: flex; justify-content: space-between;">
@@ -3596,7 +3607,7 @@ function escapeHtml(text) {
 // MESAİ CETVELİ MODÜLÜ CONTROLLER
 // =============================================
 
-let mesaiCurrentYear  = new Date().getFullYear();
+let mesaiCurrentYear = new Date().getFullYear();
 let mesaiCurrentMonth = new Date().getMonth() + 1;
 
 function initMesaiView() {
@@ -3646,19 +3657,19 @@ function initMesaiView() {
 
   // İmza alanı değerleri localStorage'dan yükle
   const sigs = getMesaiSignatories();
-  const duzAdiEl   = document.getElementById('mesai-duzenleyen-adi');
-  const duzUnvEl   = document.getElementById('mesai-duzenleyen-unvan');
+  const duzAdiEl = document.getElementById('mesai-duzenleyen-adi');
+  const duzUnvEl = document.getElementById('mesai-duzenleyen-unvan');
   const tasvipAdiEl = document.getElementById('mesai-tasvip-adi');
   const tasvipUnvEl = document.getElementById('mesai-tasvip-unvan');
-  const tasAdiEl   = document.getElementById('mesai-tasdik-adi');
-  const tasUnvEl   = document.getElementById('mesai-tasdik-unvan');
+  const tasAdiEl = document.getElementById('mesai-tasdik-adi');
+  const tasUnvEl = document.getElementById('mesai-tasdik-unvan');
 
-  if (duzAdiEl) duzAdiEl.value     = sigs.duzenleyen?.ad    || '';
-  if (duzUnvEl) duzUnvEl.value     = sigs.duzenleyen?.unvan || '';
-  if (tasvipAdiEl) tasvipAdiEl.value = sigs.tasvip?.ad       || '';
-  if (tasvipUnvEl) tasvipUnvEl.value = sigs.tasvip?.unvan    || '';
-  if (tasAdiEl) tasAdiEl.value     = sigs.tasdik?.ad        || '';
-  if (tasUnvEl) tasUnvEl.value     = sigs.tasdik?.unvan     || '';
+  if (duzAdiEl) duzAdiEl.value = sigs.duzenleyen?.ad || '';
+  if (duzUnvEl) duzUnvEl.value = sigs.duzenleyen?.unvan || '';
+  if (tasvipAdiEl) tasvipAdiEl.value = sigs.tasvip?.ad || '';
+  if (tasvipUnvEl) tasvipUnvEl.value = sigs.tasvip?.unvan || '';
+  if (tasAdiEl) tasAdiEl.value = sigs.tasdik?.ad || '';
+  if (tasUnvEl) tasUnvEl.value = sigs.tasdik?.unvan || '';
 
   // İmza alanı değişince otomatik kaydet
   [duzAdiEl, duzUnvEl, tasvipAdiEl, tasvipUnvEl, tasAdiEl, tasUnvEl].forEach(el => {
@@ -3689,35 +3700,35 @@ function renderMesaiView(forceRebuild = false) {
 function saveMesaiSigs() {
   saveMesaiSignatories({
     duzenleyen: {
-      ad:    document.getElementById('mesai-duzenleyen-adi')?.value  || '',
+      ad: document.getElementById('mesai-duzenleyen-adi')?.value || '',
       unvan: document.getElementById('mesai-duzenleyen-unvan')?.value || ''
     },
     tasvip: {
-      ad:    document.getElementById('mesai-tasvip-adi')?.value   || '',
-      unvan: document.getElementById('mesai-tasvip-unvan')?.value  || ''
+      ad: document.getElementById('mesai-tasvip-adi')?.value || '',
+      unvan: document.getElementById('mesai-tasvip-unvan')?.value || ''
     },
     tasdik: {
-      ad:    document.getElementById('mesai-tasdik-adi')?.value   || '',
-      unvan: document.getElementById('mesai-tasdik-unvan')?.value  || ''
+      ad: document.getElementById('mesai-tasdik-adi')?.value || '',
+      unvan: document.getElementById('mesai-tasdik-unvan')?.value || ''
     }
   });
 }
 
 function getMesaiSigs() {
   return {
-    duzAd:       document.getElementById('mesai-duzenleyen-adi')?.value    || '',
-    duzUnvan:    document.getElementById('mesai-duzenleyen-unvan')?.value   || '',
-    tasvipAd:    document.getElementById('mesai-tasvip-adi')?.value        || '',
-    tasvipUnvan: document.getElementById('mesai-tasvip-unvan')?.value     || '',
-    tasAd:       document.getElementById('mesai-tasdik-adi')?.value        || '',
-    tasUnvan:    document.getElementById('mesai-tasdik-unvan')?.value       || ''
+    duzAd: document.getElementById('mesai-duzenleyen-adi')?.value || '',
+    duzUnvan: document.getElementById('mesai-duzenleyen-unvan')?.value || '',
+    tasvipAd: document.getElementById('mesai-tasvip-adi')?.value || '',
+    tasvipUnvan: document.getElementById('mesai-tasvip-unvan')?.value || '',
+    tasAd: document.getElementById('mesai-tasdik-adi')?.value || '',
+    tasUnvan: document.getElementById('mesai-tasdik-unvan')?.value || ''
   };
 }
 
-const monthNamesList = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+const monthNamesList = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 
 // Global mesai action functions (called from inline onclick in index.html)
-window.generateMesaiCetveli = function() {
+window.generateMesaiCetveli = function () {
   const targetEl = document.getElementById('mesai-global-target');
   const globalTarget = targetEl ? parseInt(targetEl.value, 10) : 45;
   const monthName = monthNamesList[mesaiCurrentMonth - 1];
@@ -3744,7 +3755,7 @@ window.generateMesaiCetveli = function() {
   });
 };
 
-window.clearMesaiMonth = function() {
+window.clearMesaiMonth = function () {
   const monthName = monthNamesList[mesaiCurrentMonth - 1];
   showConfirmModal({
     title: '🗑️ Aylık Mesai Verilerini Temizle',
@@ -3759,7 +3770,7 @@ window.clearMesaiMonth = function() {
   });
 };
 
-window.exportMesaiExcel = async function() {
+window.exportMesaiExcel = async function () {
   const sigs = getMesaiSigs();
   saveMesaiSigs();
   try {
@@ -3770,13 +3781,13 @@ window.exportMesaiExcel = async function() {
   }
 };
 
-window.printMesaiCetveli = function() {
+window.printMesaiCetveli = function () {
   const sigs = getMesaiSigs();
   saveMesaiSigs();
   printMesaiView(mesaiCurrentYear, mesaiCurrentMonth, sigs.duzAd, sigs.duzUnvan, sigs.tasvipAd, sigs.tasvipUnvan, sigs.tasAd, sigs.tasUnvan);
 };
 
-window.mesaiCellEdit = function(pid, y, m, d, tdEl) {
+window.mesaiCellEdit = function (pid, y, m, d, tdEl) {
   const currentVal = tdEl.querySelector('span')?.textContent?.trim() || 'X';
   const person = getPersonnelList().find(p => p.id === pid);
   const personName = person ? person.name : 'Personel';
@@ -3836,4 +3847,273 @@ window.mesaiCellEdit = function(pid, y, m, d, tdEl) {
     showToast(`✅ ${personName} — ${dateLabel} mesai saati güncellendi.`, 'success');
   });
 };
+
+
+// =============================================
+// YOL YARDIMI KESİNTİSİ İZİN LİSTESİ (EXCEL) EXPORT
+// =============================================
+
+function splitNameComponents(fullName) {
+  if (!fullName) return { name: '', surname: '' };
+  const parts = fullName.trim().split(/\s+/);
+  if (parts.length === 1) return { name: parts[0], surname: '' };
+  const surname = parts.pop();
+  const name = parts.join(' ');
+  return { name, surname };
+}
+
+function formatDateDotTR(dateStr) {
+  if (!dateStr) return '';
+  if (dateStr.includes('.')) return dateStr;
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parseInt(parts[2], 10)}.${parseInt(parts[1], 10)}.${parts[0]}`;
+  }
+  return dateStr;
+}
+
+function formatLongDateWithDayTR(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+
+  const monthNames = [
+    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+  ];
+  const dayNames = [
+    'Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'
+  ];
+
+  const day = d.getDate();
+  const monthName = monthNames[d.getMonth()];
+  const year = d.getFullYear();
+  const dayName = dayNames[d.getDay()];
+
+  return `${day} ${monthName} ${year} ${dayName}`;
+}
+
+function calculateWorkDaysInRange(startDateStr, endDateStr) {
+  if (!startDateStr || !endDateStr) return 0;
+  const start = new Date(startDateStr);
+  const end = new Date(endDateStr);
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return 0;
+
+  let count = 0;
+  const curr = new Date(start);
+  while (curr <= end) {
+    if (!isWeekendOrHoliday(curr)) {
+      count++;
+    }
+    curr.setDate(curr.getDate() + 1);
+  }
+  return count;
+}
+
+export async function exportYolYardimiExcel() {
+  if (typeof ExcelJS === 'undefined') {
+    alert('Excel kütüphanesi (ExcelJS) yüklenemedi. Lütfen sayfayı yenileyin.');
+    return;
+  }
+
+  const personnelList = getPersonnelList();
+  let allRecords = getLeaveRecords();
+
+  const startDateInput = document.getElementById('report-global-start');
+  const endDateInput = document.getElementById('report-global-end');
+  const searchInput = document.getElementById('report-search-personnel');
+  const typeFilterSelect = document.getElementById('report-type-filter');
+
+  const searchQuery = normalizeSearch(searchInput?.value || '');
+  const typeFilter = typeFilterSelect?.value || '';
+
+  // Filter records by global date range
+  if (startDateInput && startDateInput.value) {
+    allRecords = allRecords.filter(r => r.ayrilisDate >= startDateInput.value);
+  }
+  if (endDateInput && endDateInput.value) {
+    allRecords = allRecords.filter(r => r.ayrilisDate <= endDateInput.value);
+  }
+
+  // Sort records by ayrilisDate ascending
+  allRecords.sort((a, b) => (a.ayrilisDate > b.ayrilisDate ? 1 : -1));
+
+  // Determine Title Text
+  let titleText = 'YOL YARDIMI LİSTESİ';
+  if (startDateInput && startDateInput.value) {
+    const d = new Date(startDateInput.value);
+    if (!isNaN(d.getTime())) {
+      const monthNamesUpper = ['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'];
+      titleText = `${d.getFullYear()} YILI ${monthNamesUpper[d.getMonth()]} AYI YOL YARDIMI LİSTESİ`;
+    }
+  } else {
+    const today = new Date();
+    const monthNamesUpper = ['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'];
+    titleText = `${today.getFullYear()} YILI ${monthNamesUpper[today.getMonth()]} AYI YOL YARDIMI LİSTESİ`;
+  }
+
+  const workbook = new ExcelJS.Workbook();
+  const ws = workbook.addWorksheet('Yol Yardımı Listesi');
+
+  // Page setup for printing
+  ws.pageSetup.orientation = 'landscape';
+  ws.pageSetup.fitToPage = true;
+  ws.pageSetup.fitToWidth = 1;
+
+  // Title Row (Row 1)
+  ws.mergeCells('A1:L1');
+  const titleCell = ws.getCell('A1');
+  titleCell.value = titleText;
+  titleCell.font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: 'FFC00000' } };
+  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  ws.getRow(1).height = 28;
+
+  // Table Headers (Row 2)
+  const headers = [
+    'SIRA\nNO',
+    'BKN\nSİCİL NO',
+    'TC KİMLİK\nNO',
+    'AD',
+    'SOYAD',
+    'UNVAN',
+    'GÖREV YERİ',
+    'İZİNE AYRILIŞ\nTARİHİ\n(İZNİN İLK GÜNÜ)',
+    'İZİN BİTİŞ TARİHİ\n(İZNİN SON GÜNÜ)',
+    'GÖREVE BAŞLAMA\nTARİHİ',
+    'İZİN TÜRÜ\n(LİSTEDEN SEÇİNİZ)',
+    'İŞ GÜNÜ\n(OTOMATİK HESAPLANIR)'
+  ];
+
+  ws.getRow(2).values = headers;
+  ws.getRow(2).height = 36;
+
+  const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
+  const thinBorder = {
+    top: { style: 'thin', color: { argb: 'FF000000' } },
+    left: { style: 'thin', color: { argb: 'FF000000' } },
+    bottom: { style: 'thin', color: { argb: 'FF000000' } },
+    right: { style: 'thin', color: { argb: 'FF000000' } }
+  };
+
+  for (let c = 1; c <= 12; c++) {
+    const cell = ws.getCell(2, c);
+    cell.fill = headerFill;
+    cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: 'FF000000' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.border = thinBorder;
+  }
+
+  // Populate Rows
+  let rowIdx = 3;
+  let count = 0;
+
+  allRecords.forEach(r => {
+    const p = personnelList.find(p => p.id === r.personnelId);
+    const fullName = p ? p.name : r.personnelName;
+
+    if (searchQuery) {
+      const matchName = normalizeSearch(fullName).includes(searchQuery);
+      const matchSicil = p ? p.sicil.includes(searchQuery) : false;
+      if (!matchName && !matchSicil) return;
+    }
+
+    if (typeFilter) {
+      const code = (r.leaveType || '').toLowerCase();
+      if (typeFilter === 'rapor' && !code.includes('rapor')) return;
+      if (typeFilter === 'yillik' && !code.includes('yillik')) return;
+    }
+
+    count++;
+    const { name, surname } = splitNameComponents(fullName);
+    const tcNo = p ? (p.tcNo || p.tc || '') : '';
+    const sicil = p ? p.sicil : '';
+    const unvan = p ? p.title : (r.unvan || '');
+    const gorevYeri = p ? (p.birim || 'BİLGİ İŞLEM MÜDÜRLÜĞÜ') : 'BİLGİ İŞLEM MÜDÜRLÜĞÜ';
+
+    // Calculate last leave day (1 day before expectedReturnDate)
+    let bitisDateStr = '';
+    if (r.expectedReturnDate) {
+      const retDate = new Date(r.expectedReturnDate);
+      if (!isNaN(retDate.getTime())) {
+        retDate.setDate(retDate.getDate() - 1);
+        bitisDateStr = retDate.toISOString().split('T')[0];
+      }
+    }
+
+    const ayrilisFormatted = formatDateDotTR(r.ayrilisDate);
+    const bitisFormatted = formatDateDotTR(bitisDateStr || r.ayrilisDate);
+    const returnFormatted = formatLongDateWithDayTR(r.expectedReturnDate);
+    let leaveTypeNameUpper = (r.leaveTypeName || 'YILLIK İZİN').toLocaleUpperCase('tr-TR');
+    const typeCode = (r.leaveType || '').toLowerCase();
+    if (typeCode === 'rapor' || leaveTypeNameUpper.includes('RAPOR') || leaveTypeNameUpper.includes('RAHAT') || leaveTypeNameUpper.includes('İSTİRAHAT') || leaveTypeNameUpper.includes('SAĞLIK')) {
+      leaveTypeNameUpper = 'SAĞLIK RAPORU';
+    }
+    const isGunu = calculateWorkDaysInRange(r.ayrilisDate, bitisDateStr || r.ayrilisDate);
+
+    const row = ws.getRow(rowIdx);
+    row.height = 22;
+
+    row.getCell(1).value = count;
+    row.getCell(2).value = sicil ? (isNaN(sicil) ? sicil : parseInt(sicil, 10)) : '';
+    row.getCell(3).value = tcNo;
+    row.getCell(4).value = name.toLocaleUpperCase('tr-TR');
+    row.getCell(5).value = surname.toLocaleUpperCase('tr-TR');
+    row.getCell(6).value = unvan.toLocaleUpperCase('tr-TR');
+    row.getCell(7).value = gorevYeri.toLocaleUpperCase('tr-TR');
+    row.getCell(8).value = ayrilisFormatted;
+    row.getCell(9).value = bitisFormatted;
+    row.getCell(10).value = returnFormatted;
+    row.getCell(11).value = leaveTypeNameUpper.toLocaleUpperCase('tr-TR');
+    row.getCell(12).value = isGunu;
+
+    // Formatting each cell in row
+    for (let col = 1; col <= 12; col++) {
+      const cell = row.getCell(col);
+      cell.border = thinBorder;
+      cell.font = { name: 'Segoe UI', size: 9, bold: (col === 1 || col === 2 || col === 4 || col === 5 || col === 12) };
+
+      if (col === 12) {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE9EDF4' } };
+      }
+
+      if ([1, 2, 3, 8, 9, 10, 11, 12].includes(col)) {
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      } else {
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
+      }
+    }
+
+    rowIdx++;
+  });
+
+  // Set column widths
+  ws.columns = [
+    { width: 8 },  // A: SIRA NO
+    { width: 14 }, // B: BKN SİCİL NO
+    { width: 16 }, // C: TC KİMLİK NO
+    { width: 18 }, // D: AD
+    { width: 18 }, // E: SOYAD
+    { width: 22 }, // F: UNVAN
+    { width: 26 }, // G: GÖREV YERİ
+    { width: 18 }, // H: İZİNE AYRILIŞ
+    { width: 18 }, // I: İZİN BİTİŞ
+    { width: 26 }, // J: GÖREVE BAŞLAMA
+    { width: 20 }, // K: İZİN TÜRÜ
+    { width: 14 }  // L: İŞ GÜNÜ
+  ];
+
+  // Download buffer as Excel file
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const todayStr = new Date().toISOString().split('T')[0];
+  a.download = `Yol_Yardimi_Kesintisi_Izin_Listesi_${todayStr}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 
