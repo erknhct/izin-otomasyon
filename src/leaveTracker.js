@@ -136,8 +136,10 @@ export function checkLeaveConflict(personnelId, ayrilisDate, expectedReturnDate,
     
     if (!existingStart || !existingEnd) return false;
 
-    // Check date overlap: (StartA <= EndB) and (EndA >= StartB)
-    const isOverlap = (ayrilisDate <= existingEnd && expectedReturnDate >= existingStart);
+    // Check date overlap: (StartA < EndB) and (EndA > StartB)
+    // Note: expectedReturnDate is the return-to-work day (exclusive upper bound of leave period).
+    // Starting a new leave on the expectedReturnDate (ayrilisDate === existingEnd) is allowed.
+    const isOverlap = (ayrilisDate < existingEnd && expectedReturnDate > existingStart);
     return isOverlap ? r : null;
   });
 }
