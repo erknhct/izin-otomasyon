@@ -11,14 +11,18 @@
  *  - İzin kenarlı hafta sonlarına X işlenir
  */
 
-import { getPersonnelList, getLeaveRecords, getMesaiSettingsDB, saveMesaiSettingsDB } from './storage.js';
+import { getPersonnelList, getLeaveRecords, getMesaiSettingsDB, saveMesaiSettingsDB, getMesaiDataDB, saveMesaiDataDB } from './storage.js';
 
 // ─────────────────────────────────────────────────────────
-// STORAGE (localStorage tabanlı, hafif)
+// STORAGE (db.json + localStorage yedekli)
 // ─────────────────────────────────────────────────────────
 const MESAI_STORAGE_KEY = 'izin_otomasyon_mesai_v1';
 
 function loadMesaiData() {
+  const dbData = getMesaiDataDB();
+  if (dbData && dbData.mesaiShifts && Object.keys(dbData.mesaiShifts).length > 0) {
+    return dbData;
+  }
   try {
     return JSON.parse(localStorage.getItem(MESAI_STORAGE_KEY) || '{}');
   } catch (e) {
@@ -28,6 +32,7 @@ function loadMesaiData() {
 
 function saveMesaiData(data) {
   localStorage.setItem(MESAI_STORAGE_KEY, JSON.stringify(data));
+  saveMesaiDataDB(data);
 }
 
 let mesaiData = loadMesaiData();

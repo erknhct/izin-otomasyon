@@ -385,3 +385,13 @@ export function saveMesaiSettingsDB(settings) {
   syncToDiskFile();
 }
 
+export function getMesaiDataDB() {
+  return dbCache.mesaiData || { mesaiShifts: {}, pastMesaiHours: {}, signatories: {} };
+}
+
+export function saveMesaiDataDB(data) {
+  dbCache.mesaiData = data;
+  syncToDiskFile();
+}
+
+
