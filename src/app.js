@@ -49,6 +49,16 @@ let currentTheme = localStorage.getItem('udf_theme') || 'dark';
 document.documentElement.setAttribute('data-theme', currentTheme);
 updateThemeToggleUI();
 
+let dueLeavesState = {
+  currentPage: 1,
+  pageSize: 10
+};
+
+let upcomingLeavesState = {
+  currentPage: 1,
+  pageSize: 10
+};
+
 let completedLeavesState = {
   currentPage: 1,
   pageSize: 10
@@ -541,6 +551,26 @@ function renderDashboard(forceResetTab = false) {
   sortByAyrilisDateDesc(upcomingList);
   sortByAyrilisDateDesc(completedList);
 
+  // Due leaves pagination calculations
+  const totalDueRecords = dueList.length;
+  const totalDuePages = Math.ceil(totalDueRecords / dueLeavesState.pageSize) || 1;
+  if (dueLeavesState.currentPage > totalDuePages) dueLeavesState.currentPage = totalDuePages;
+  if (dueLeavesState.currentPage < 1) dueLeavesState.currentPage = 1;
+
+  const dueStartIndex = (dueLeavesState.currentPage - 1) * dueLeavesState.pageSize;
+  const dueEndIndex = Math.min(dueStartIndex + dueLeavesState.pageSize, totalDueRecords);
+  const paginatedDueList = dueList.slice(dueStartIndex, dueEndIndex);
+
+  // Upcoming leaves pagination calculations
+  const totalUpcomingRecords = upcomingList.length;
+  const totalUpcomingPages = Math.ceil(totalUpcomingRecords / upcomingLeavesState.pageSize) || 1;
+  if (upcomingLeavesState.currentPage > totalUpcomingPages) upcomingLeavesState.currentPage = totalUpcomingPages;
+  if (upcomingLeavesState.currentPage < 1) upcomingLeavesState.currentPage = 1;
+
+  const upcomingStartIndex = (upcomingLeavesState.currentPage - 1) * upcomingLeavesState.pageSize;
+  const upcomingEndIndex = Math.min(upcomingStartIndex + upcomingLeavesState.pageSize, totalUpcomingRecords);
+  const paginatedUpcomingList = upcomingList.slice(upcomingStartIndex, upcomingEndIndex);
+
   // Completed leaves pagination calculations
   const totalCompletedRecords = completedList.length;
   const totalCompletedPages = Math.ceil(totalCompletedRecords / completedLeavesState.pageSize) || 1;
@@ -640,7 +670,7 @@ function renderDashboard(forceResetTab = false) {
               </tr>
             </thead>
             <tbody>
-              ${dueList.map(item => {
+              ${paginatedDueList.map(item => {
                 const titleMap = getPersonnelTitleMap();
                 const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
                 return `
@@ -660,6 +690,32 @@ function renderDashboard(forceResetTab = false) {
               `;}).join('')}
             </tbody>
           </table>
+        </div>
+
+        <!-- Pagination Bar for Due Leaves -->
+        <div class="pagination-bar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Sayfa başı:</span>
+            <select id="due-page-size" style="width: 70px; padding: 0.25rem 0.5rem; font-size: 0.85rem;">
+              <option value="5" ${dueLeavesState.pageSize === 5 ? 'selected' : ''}>5</option>
+              <option value="10" ${dueLeavesState.pageSize === 10 ? 'selected' : ''}>10</option>
+              <option value="20" ${dueLeavesState.pageSize === 20 ? 'selected' : ''}>20</option>
+              <option value="50" ${dueLeavesState.pageSize === 50 ? 'selected' : ''}>50</option>
+            </select>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">${totalDueRecords === 0 ? '0-0 / 0 Kayıt' : `${dueStartIndex + 1}-${dueEndIndex} / ${totalDueRecords} Kayıt`}</span>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button class="btn btn-sm btn-secondary" id="btn-due-prev-page" ${dueLeavesState.currentPage <= 1 ? 'disabled' : ''}>
+              <i class="fa-solid fa-chevron-left"></i> Önceki
+            </button>
+            <span style="font-weight: 600; font-size: 0.9rem; padding: 0 0.5rem;">
+              Sayfa ${dueLeavesState.currentPage} / ${totalDuePages}
+            </span>
+            <button class="btn btn-sm btn-secondary" id="btn-due-next-page" ${dueLeavesState.currentPage >= totalDuePages ? 'disabled' : ''}>
+              Sonraki <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -692,7 +748,7 @@ function renderDashboard(forceResetTab = false) {
               </tr>
             </thead>
             <tbody>
-              ${upcomingList.map(item => {
+              ${paginatedUpcomingList.map(item => {
                 const titleMap = getPersonnelTitleMap();
                 const displayUnvan = titleMap[item.personnelId] || titleMap[item.personnelName] || item.unvan || '';
                 return `
@@ -712,6 +768,32 @@ function renderDashboard(forceResetTab = false) {
               `;}).join('')}
             </tbody>
           </table>
+        </div>
+
+        <!-- Pagination Bar for Upcoming Leaves -->
+        <div class="pagination-bar" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Sayfa başı:</span>
+            <select id="upcoming-page-size" style="width: 70px; padding: 0.25rem 0.5rem; font-size: 0.85rem;">
+              <option value="5" ${upcomingLeavesState.pageSize === 5 ? 'selected' : ''}>5</option>
+              <option value="10" ${upcomingLeavesState.pageSize === 10 ? 'selected' : ''}>10</option>
+              <option value="20" ${upcomingLeavesState.pageSize === 20 ? 'selected' : ''}>20</option>
+              <option value="50" ${upcomingLeavesState.pageSize === 50 ? 'selected' : ''}>50</option>
+            </select>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">${totalUpcomingRecords === 0 ? '0-0 / 0 Kayıt' : `${upcomingStartIndex + 1}-${upcomingEndIndex} / ${totalUpcomingRecords} Kayıt`}</span>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button class="btn btn-sm btn-secondary" id="btn-upcoming-prev-page" ${upcomingLeavesState.currentPage <= 1 ? 'disabled' : ''}>
+              <i class="fa-solid fa-chevron-left"></i> Önceki
+            </button>
+            <span style="font-weight: 600; font-size: 0.9rem; padding: 0 0.5rem;">
+              Sayfa ${upcomingLeavesState.currentPage} / ${totalUpcomingPages}
+            </span>
+            <button class="btn btn-sm btn-secondary" id="btn-upcoming-next-page" ${upcomingLeavesState.currentPage >= totalUpcomingPages ? 'disabled' : ''}>
+              Sonraki <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -899,6 +981,66 @@ function renderDashboard(forceResetTab = false) {
       });
     });
   });
+
+  // Add listeners for due leaves pagination
+  const duePageSizeSelect = pendingContainer.querySelector('#due-page-size');
+  if (duePageSizeSelect) {
+    duePageSizeSelect.addEventListener('change', (e) => {
+      dueLeavesState.pageSize = parseInt(e.target.value, 10) || 10;
+      dueLeavesState.currentPage = 1;
+      renderDashboard();
+    });
+  }
+
+  const duePrevBtn = pendingContainer.querySelector('#btn-due-prev-page');
+  if (duePrevBtn) {
+    duePrevBtn.addEventListener('click', () => {
+      if (dueLeavesState.currentPage > 1) {
+        dueLeavesState.currentPage--;
+        renderDashboard();
+      }
+    });
+  }
+
+  const dueNextBtn = pendingContainer.querySelector('#btn-due-next-page');
+  if (dueNextBtn) {
+    dueNextBtn.addEventListener('click', () => {
+      if (dueLeavesState.currentPage < totalDuePages) {
+        dueLeavesState.currentPage++;
+        renderDashboard();
+      }
+    });
+  }
+
+  // Add listeners for upcoming leaves pagination
+  const upcomingPageSizeSelect = pendingContainer.querySelector('#upcoming-page-size');
+  if (upcomingPageSizeSelect) {
+    upcomingPageSizeSelect.addEventListener('change', (e) => {
+      upcomingLeavesState.pageSize = parseInt(e.target.value, 10) || 10;
+      upcomingLeavesState.currentPage = 1;
+      renderDashboard();
+    });
+  }
+
+  const upcomingPrevBtn = pendingContainer.querySelector('#btn-upcoming-prev-page');
+  if (upcomingPrevBtn) {
+    upcomingPrevBtn.addEventListener('click', () => {
+      if (upcomingLeavesState.currentPage > 1) {
+        upcomingLeavesState.currentPage--;
+        renderDashboard();
+      }
+    });
+  }
+
+  const upcomingNextBtn = pendingContainer.querySelector('#btn-upcoming-next-page');
+  if (upcomingNextBtn) {
+    upcomingNextBtn.addEventListener('click', () => {
+      if (upcomingLeavesState.currentPage < totalUpcomingPages) {
+        upcomingLeavesState.currentPage++;
+        renderDashboard();
+      }
+    });
+  }
 
   // Add listeners for completed leaves pagination
   const completedPageSizeSelect = pendingContainer.querySelector('#completed-page-size');
