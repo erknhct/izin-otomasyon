@@ -546,6 +546,23 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786539932818",
+      "personnelId": "1786449940891",
+      "personnelName": "Engin GÖÇEROĞLU",
+      "sicil": "304771",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-07-27",
+      "expectedReturnDate": "2026-08-03",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-12"
+    },
+    {
       "id": "rec-1786529588219",
       "personnelId": "1786450753562",
       "personnelName": "Muhammed ÇAMURDAŞ",

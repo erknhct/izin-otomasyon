@@ -2807,7 +2807,26 @@ function renderReports() {
     const raporAlanPersonelSayisi = personStats.filter(s => s.raporCount > 0).length;
     const maxRaporPerson = [...personStats].sort((a, b) => b.raporDays - a.raporDays)[0];
 
+    const todayStr = new Date().toISOString().split('T')[0];
+    const allPersonnel = getPersonnelList();
+    const totalStaffCount = allPersonnel.length;
+    const activeLeaveRecords = allRecords.filter(r => r.status === 'ayrilis_yapildi' && r.ayrilisDate <= todayStr && r.expectedReturnDate > todayStr);
+    const activeLeaveStaffIds = new Set(activeLeaveRecords.map(r => r.personnelId));
+    const activeLeaveCount = activeLeaveStaffIds.size;
+    const activeOnDutyCount = Math.max(0, totalStaffCount - activeLeaveCount);
+    const capacityPercentage = totalStaffCount > 0 ? Math.round((activeOnDutyCount / totalStaffCount) * 100) : 100;
+
     kpiGrid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-icon success">
+          <i class="fa-solid fa-chart-pie"></i>
+        </div>
+        <div>
+          <div class="stat-value" style="color: #10b981;">%${capacityPercentage} Görevde</div>
+          <div class="stat-label">Kurumsal Kapasite Oranı (${activeOnDutyCount} / ${totalStaffCount} Personel)</div>
+        </div>
+      </div>
+
       <div class="stat-card">
         <div class="stat-icon danger">
           <i class="fa-solid fa-stethoscope"></i>
@@ -2982,6 +3001,29 @@ function renderReports() {
         <span class="badge badge-info" style="font-size: 0.8rem; font-weight: 800;"><i class="fa-solid fa-umbrella-beach"></i> ${s.yillikCount} Kez (${s.yillikDays} Gün)</span>
       </div>
     `).join('') || '<p style="color: var(--text-muted); padding: 0.5rem 0; font-size: 0.85rem;">Sistemde yıllık izin kullanan personel kaydı yok.</p>';
+  }
+
+  // Top 5 Least Leave Users (Most Hardworking)
+  const topLeastLeaveContainer = document.getElementById('reports-top-least-leave-users');
+  if (topLeastLeaveContainer) {
+    const top5Least = [...personStats]
+      .sort((a, b) => a.totalDays - b.totalDays || a.totalCount - b.totalCount)
+      .slice(0, 5);
+
+    topLeastLeaveContainer.innerHTML = top5Least.map((s, idx) => `
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.55rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <span style="width: 24px; height: 24px; border-radius: 50%; background: ${idx === 0 ? '#eab308' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : 'rgba(255,255,255,0.1)'}; color: #fff; font-weight: 800; font-size: 0.75rem; display: flex; align-items: center; justify-content: center;">${idx + 1}</span>
+          <div>
+            <strong>${s.person.name}</strong><br>
+            <small style="color: var(--text-muted);">${s.person.title} | ${s.person.sicil}</small>
+          </div>
+        </div>
+        <span class="badge badge-success" style="font-size: 0.8rem; font-weight: 800; background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">
+          <i class="fa-solid fa-award"></i> ${s.totalDays === 0 ? '0 Gün İzin (Tam Mesai)' : `${s.totalDays} Gün İzin (${s.totalCount} Kez)`}
+        </span>
+      </div>
+    `).join('') || '<p style="color: var(--text-muted); padding: 0.5rem 0; font-size: 0.85rem;">Sistemde personel verisi bulunmuyor.</p>';
   }
 
   // Monthly Trend Distribution
@@ -3352,6 +3394,18 @@ function exportReportsPdf() {
     </div>
   `).join('') || '<div style="font-size: 8pt; color: #64748b;">Yıllık izin kullanan yok.</div>';
 
+  // Top 5 Least Leave Users for PDF
+  const top5LeastPdf = [...personStats]
+    .sort((a, b) => a.totalDays - b.totalDays || a.totalCount - b.totalCount)
+    .slice(0, 5);
+
+  const topLeastLeavePdfHtml = top5LeastPdf.map((s, idx) => `
+    <div style="font-size: 8pt; margin-bottom: 3px; display: flex; justify-content: space-between;">
+      <span><strong>${idx + 1}. ${s.person.name}</strong> <small>(${s.person.sicil})</small></span>
+      <span style="color: #059669; font-weight: bold;">🏆 ${s.totalDays === 0 ? '0 Gün İzin' : `${s.totalDays} Gün (${s.totalCount} İzin)`}</span>
+    </div>
+  `).join('') || '<div style="font-size: 8pt; color: #64748b;">Personel kaydı yok.</div>';
+
   // Monthly Trend for PDF
   const monthNamesPdf = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
   const monthMapPdf = {};
@@ -3467,6 +3521,10 @@ function exportReportsPdf() {
       </table>
 
       <div style="display:flex; flex-direction:row; gap:12px; margin-bottom:14px; justify-content:space-between;">
+        <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #10b981; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
+          <div style="font-size:14pt; font-weight:800; color:#059669;">%${Math.round(((personnelList.length - new Set(allRecords.filter(r => r.status === 'ayrilis_yapildi' && r.ayrilisDate <= new Date().toISOString().split('T')[0] && r.expectedReturnDate > new Date().toISOString().split('T')[0]).map(r => r.personnelId)).size) / (personnelList.length || 1)) * 100)} Görevde</div>
+          <div style="font-size:7.5pt; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px;">Kurumsal Kapasite / Görevde Olma Oranı</div>
+        </div>
         <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #ef4444; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
           <div style="font-size:14pt; font-weight:800; color:#dc2626;">${totalRaporDays} Gün</div>
           <div style="font-size:7.5pt; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px;">Toplam İstirahat İzni / Rapor (${totalRaporCount} Kez)</div>
@@ -3479,7 +3537,7 @@ function exportReportsPdf() {
           <div style="font-size:14pt; font-weight:800; color:#0f172a;">${totalOtherDays} Gün</div>
           <div style="font-size:7.5pt; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px;">Diğer Mazeret İzinleri</div>
         </div>
-        <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #10b981; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
+        <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #6366f1; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
           <div style="font-size:14pt; font-weight:800; color:#0f172a;">${totalAllDays} Gün</div>
           <div style="font-size:7.5pt; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px;">Genel İzin &amp; Rapor Gün Toplamı</div>
         </div>
@@ -3503,6 +3561,12 @@ function exportReportsPdf() {
             🏖️ EN ÇOK YILLIK İZİN KULLANANLAR (TOP 5)
           </div>
           ${topYillikPdfHtml}
+        </div>
+        <div style="flex:1; border:1px solid #cbd5e1; border-radius:6px; padding:8px 10px; background:#f8fafc;">
+          <div style="font-weight:800; font-size:8.5pt; color:#059669; margin-bottom:6px; border-bottom:1px solid #cbd5e1; padding-bottom:3px;">
+            🏆 EN AZ İZİN/RAPOR KULLANANLAR (TOP 5)
+          </div>
+          ${topLeastLeavePdfHtml}
         </div>
       </div>
 
