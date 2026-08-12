@@ -14,7 +14,8 @@ import { calculateExpectedReturn, calculateDaysFromReturn, getReturnReasonNotu, 
 import {
   generateMesaiForMonth, renderMesaiTable, clearMesaiForMonth,
   getMesaiSignatories, saveMesaiSignatories, hasMesaiDataForMonth,
-  updateMesaiCell, exportMesaiToExcelFile, printMesaiView
+  updateMesaiCell, exportMesaiToExcelFile, printMesaiView,
+  renderMesaiArchiveSection
 } from './mesai.js';
 
 // Custom Search Normalizer for Turkish Characters
@@ -271,7 +272,7 @@ async function refreshUIFromStorage(showNotification = false) {
   renderReports();
   renderSettings();
   if (typeof renderMesaiView === 'function') {
-    renderMesaiView(true);
+    renderMesaiView(false);
   }
   if (showNotification) {
     showToast('🔄 Ağdaki başka bir bilgisayardan değişiklik yapıldı (Veriler yenilendi).', 'info');
@@ -3624,22 +3625,22 @@ function initMesaiView() {
     if (mesaiCurrentMonth === 1) { mesaiCurrentMonth = 12; mesaiCurrentYear--; }
     else mesaiCurrentMonth--;
     syncMesaiSelects();
-    renderMesaiView(true);
+    renderMesaiView(false);
   });
   if (nextBtn) nextBtn.addEventListener('click', () => {
     if (mesaiCurrentMonth === 12) { mesaiCurrentMonth = 1; mesaiCurrentYear++; }
     else mesaiCurrentMonth++;
     syncMesaiSelects();
-    renderMesaiView(true);
+    renderMesaiView(false);
   });
 
   if (mSel) mSel.addEventListener('change', () => {
     mesaiCurrentMonth = parseInt(mSel.value, 10);
-    renderMesaiView(true);
+    renderMesaiView(false);
   });
   if (ySel) ySel.addEventListener('change', () => {
     mesaiCurrentYear = parseInt(ySel.value, 10);
-    renderMesaiView(true);
+    renderMesaiView(false);
   });
   const targetEl = document.getElementById('mesai-global-target');
   if (targetEl) {
@@ -3651,7 +3652,7 @@ function initMesaiView() {
       const s = getMesaiSettingsDB() || { targetHours: 50 };
       s.targetHours = targetEl.value;
       saveMesaiSettingsDB(s);
-      renderMesaiView(true);
+      renderMesaiView(false);
     });
   }
 
@@ -3690,11 +3691,51 @@ function renderMesaiView(forceRebuild = false) {
   const targetEl = document.getElementById('mesai-global-target');
   const globalTarget = targetEl ? parseInt(targetEl.value, 10) : 50;
 
-  if (forceRebuild || !hasMesaiDataForMonth(mesaiCurrentYear, mesaiCurrentMonth)) {
+  if (forceRebuild) {
     generateMesaiForMonth(mesaiCurrentYear, mesaiCurrentMonth, globalTarget);
   }
 
   renderMesaiTable(mesaiCurrentYear, mesaiCurrentMonth);
+  renderArchiveSection();
+}
+
+function renderArchiveSection() {
+  renderMesaiArchiveSection(
+    (y, m) => {
+      mesaiCurrentYear = y;
+      mesaiCurrentMonth = m;
+      syncMesaiSelects();
+      renderMesaiView(false);
+      showToast(`📅 ${m}. Ay / ${y} mesai cetveli görüntülendi.`, 'info');
+    },
+    async (y, m) => {
+      const sigs = getMesaiSigs();
+      try {
+        await exportMesaiToExcelFile(y, m, sigs.duzAd, sigs.duzUnvan, sigs.tasvipAd, sigs.tasvipUnvan, sigs.tasAd, sigs.tasUnvan);
+        showToast(`📊 ${m}/${y} mesai cetveli Excel olarak indirildi!`, 'success');
+      } catch (err) {
+        showToast('Excel oluşturulamadı: ' + err.message, 'danger');
+      }
+    },
+    (y, m) => {
+      const sigs = getMesaiSigs();
+      printMesaiView(y, m, sigs.duzAd, sigs.duzUnvan, sigs.tasvipAd, sigs.tasvipUnvan, sigs.tasAd, sigs.tasUnvan);
+    },
+    (y, m) => {
+      const monthName = monthNamesList[m - 1] || `${m}. Ay`;
+      showConfirmModal({
+        title: '🗑️ Dönem Verilerini Temizle',
+        message: `<strong>${monthName} ${y}</strong> dönemine ait tüm mesai verilerini silmek istediğinizden emin misiniz?`,
+        confirmText: 'Evet, Sil',
+        cancelText: 'Vazgeç',
+        onConfirm: () => {
+          clearMesaiForMonth(y, m);
+          renderMesaiView(false);
+          showToast(`🗑️ ${monthName} ${y} mesai verileri temizlendi.`, 'info');
+        }
+      });
+    }
+  );
 }
 
 function saveMesaiSigs() {

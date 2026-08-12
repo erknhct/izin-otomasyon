@@ -824,3 +824,161 @@ export async function exportMesaiToExcelFile(y, m, duzenleyenAd, duzenleyenUnvan
     alert('Şablon dosyası bulunamadı! Lütfen public klasöründe boş bir "mesai_sablon.xlsx" dosyası olduğundan emin olun.');
   }
 }
+
+// ─────────────────────────────────────────────────────────
+// GEÇMİŞ MESAİ CETVELLERİ ARŞİVİ
+// ─────────────────────────────────────────────────────────
+
+export function getSavedMesaiArchive() {
+  const archiveMap = {};
+
+  if (!mesaiData || !mesaiData.mesaiShifts) return [];
+
+  Object.keys(mesaiData.mesaiShifts).forEach(key => {
+    const [datePart, pid] = key.split('_');
+    if (!datePart || !pid) return;
+
+    const parts = datePart.split('-');
+    if (parts.length < 3) return;
+
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (isNaN(y) || isNaN(m)) return;
+
+    const periodKey = `${y}-${fz(m)}`;
+    if (!archiveMap[periodKey]) {
+      archiveMap[periodKey] = {
+        year: y,
+        month: m,
+        periodKey,
+        personnelSet: new Set(),
+        totalHours: 0,
+        leaveDaysCount: 0,
+        entriesCount: 0
+      };
+    }
+
+    const val = mesaiData.mesaiShifts[key];
+    archiveMap[periodKey].personnelSet.add(pid);
+    archiveMap[periodKey].entriesCount++;
+
+    if (val === 'X') {
+      archiveMap[periodKey].leaveDaysCount++;
+    } else {
+      const num = parseInt(val, 10);
+      if (!isNaN(num) && num > 0) {
+        archiveMap[periodKey].totalHours += num;
+      }
+    }
+  });
+
+  const archiveList = Object.values(archiveMap).map(item => ({
+    year: item.year,
+    month: item.month,
+    monthName: monthNames[item.month - 1] || `${item.month}. Ay`,
+    personnelCount: item.personnelSet.size,
+    totalHours: item.totalHours,
+    leaveDaysCount: item.leaveDaysCount,
+    entriesCount: item.entriesCount
+  }));
+
+  archiveList.sort((a, b) => b.year - a.year || b.month - a.month);
+  return archiveList;
+}
+
+export function renderMesaiArchiveSection(onSwitchPeriod, onExportExcel, onPrintMesai, onClearMonth) {
+  const container = document.getElementById('mesai-archive-container');
+  const countBadge = document.getElementById('mesai-archive-count');
+  if (!container) return;
+
+  const archive = getSavedMesaiArchive();
+
+  if (countBadge) {
+    countBadge.textContent = `${archive.length} Dönem Kayıtlı`;
+  }
+
+  if (archive.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 1.5rem 1rem; text-align: center; color: var(--text-muted); background: rgba(255,255,255,0.02); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
+        <i class="fa-solid fa-folder-open" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 0.5rem; opacity: 0.5;"></i>
+        <p style="margin: 0; font-size: 0.9rem; font-weight: 500;">Henüz geçmiş dönem mesai cetveli kaydı bulunmuyor.</p>
+        <small style="opacity: 0.7;">"Otomatik Oluştur" butonuna basarak herhangi bir ay için mesai cetveli oluşturduğunuzda burada arşivlenecektir.</small>
+      </div>
+    `;
+    return;
+  }
+
+  const currentY = parseInt(document.getElementById('mesai-year-select')?.value || new Date().getFullYear(), 10);
+  const currentM = parseInt(document.getElementById('mesai-month-select')?.value || (new Date().getMonth() + 1), 10);
+
+  container.innerHTML = archive.map(item => {
+    const isCurrent = item.year === currentY && item.month === currentM;
+    return `
+      <div class="archive-card-item" style="background: ${isCurrent ? 'rgba(99, 102, 241, 0.12)' : 'rgba(255, 255, 255, 0.03)'}; border: 1px solid ${isCurrent ? 'var(--accent-primary)' : 'var(--border-color)'}; border-radius: var(--radius-md); padding: 1rem; transition: all 0.2s ease;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+          <div style="font-weight: 800; font-size: 1rem; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fa-solid fa-calendar-check" style="color: ${isCurrent ? 'var(--accent-primary)' : 'var(--accent-success)'};"></i>
+            <span>${item.monthName} ${item.year}</span>
+          </div>
+          ${isCurrent ? '<span class="badge badge-primary" style="font-size: 0.72rem;"><i class="fa-solid fa-eye"></i> Aktif Dönem</span>' : ''}
+        </div>
+
+        <div style="display: flex; gap: 0.75rem; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.85rem; flex-wrap: wrap; background: rgba(0,0,0,0.15); padding: 0.5rem; border-radius: 6px;">
+          <div><strong style="color: var(--text-main);">${item.personnelCount}</strong> Personel</div>
+          <div>•</div>
+          <div><strong style="color: var(--accent-success);">${item.totalHours}</strong> Saat Mesai</div>
+          <div>•</div>
+          <div><strong style="color: #ef4444;">${item.leaveDaysCount}</strong> Gün İzin (X)</div>
+        </div>
+
+        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+          <button class="btn btn-sm ${isCurrent ? 'btn-primary' : 'btn-secondary'} btn-switch-mesai-archive" data-year="${item.year}" data-month="${item.month}" style="flex: 1; font-size: 0.78rem; justify-content: center;">
+            <i class="fa-solid fa-eye"></i> Görüntüle
+          </button>
+          <button class="btn btn-sm btn-success btn-excel-mesai-archive" data-year="${item.year}" data-month="${item.month}" style="font-size: 0.78rem;" title="Excel olarak indir">
+            <i class="fa-solid fa-file-excel"></i> Excel
+          </button>
+          <button class="btn btn-sm btn-secondary btn-print-mesai-archive" data-year="${item.year}" data-month="${item.month}" style="font-size: 0.78rem;" title="Yazdır">
+            <i class="fa-solid fa-print"></i>
+          </button>
+          <button class="btn btn-sm btn-danger btn-clear-mesai-archive" data-year="${item.year}" data-month="${item.month}" style="font-size: 0.78rem;" title="Bu Ayı Temizle">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.btn-switch-mesai-archive').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const y = parseInt(btn.getAttribute('data-year'), 10);
+      const m = parseInt(btn.getAttribute('data-month'), 10);
+      if (typeof onSwitchPeriod === 'function') onSwitchPeriod(y, m);
+    });
+  });
+
+  container.querySelectorAll('.btn-excel-mesai-archive').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const y = parseInt(btn.getAttribute('data-year'), 10);
+      const m = parseInt(btn.getAttribute('data-month'), 10);
+      if (typeof onExportExcel === 'function') onExportExcel(y, m);
+    });
+  });
+
+  container.querySelectorAll('.btn-print-mesai-archive').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const y = parseInt(btn.getAttribute('data-year'), 10);
+      const m = parseInt(btn.getAttribute('data-month'), 10);
+      if (typeof onPrintMesai === 'function') onPrintMesai(y, m);
+    });
+  });
+
+  container.querySelectorAll('.btn-clear-mesai-archive').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const y = parseInt(btn.getAttribute('data-year'), 10);
+      const m = parseInt(btn.getAttribute('data-month'), 10);
+      if (typeof onClearMonth === 'function') onClearMonth(y, m);
+    });
+  });
+}
+

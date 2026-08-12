@@ -754,6 +754,17 @@
           </div>
         </div>
 
+        <!-- Geçmiş & Kayıtlı Mesai Cetvelleri Arşivi -->
+        <div class="glass-card" id="mesai-archive-card" style="margin-bottom: 1.5rem;">
+          <div class="card-title" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+            <span><i class="fa-solid fa-folder-open" style="color: var(--accent-primary); margin-right: 8px;"></i> Kayıtlı &amp; Geçmiş Mesai Cetvelleri Arşivi</span>
+            <span class="badge badge-info" id="mesai-archive-count">0 Dönem Kayıtlı</span>
+          </div>
+          <div id="mesai-archive-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <!-- Dynamic archive items will be injected here -->
+          </div>
+        </div>
+
         <!-- Mesai Cetveli Tablosu -->
         <div class="glass-card" style="padding: 0; overflow: hidden;">
           <div style="overflow-x: auto;">
