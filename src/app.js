@@ -4045,17 +4045,38 @@ export async function exportYolYardimiExcel() {
   allRecords.sort((a, b) => (a.ayrilisDate > b.ayrilisDate ? 1 : -1));
 
   // Determine Title Text
-  let titleText = 'YOL YARDIMI LİSTESİ';
-  if (startDateInput && startDateInput.value) {
-    const d = new Date(startDateInput.value);
-    if (!isNaN(d.getTime())) {
-      const monthNamesUpper = ['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'];
-      titleText = `${d.getFullYear()} YILI ${monthNamesUpper[d.getMonth()]} AYI YOL YARDIMI LİSTESİ`;
+  let titleText = 'PERSONEL İZİN VE GÖREVE BAŞLAYIŞ CETVELİ';
+  const monthNamesUpper = ['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'];
+
+  const hasStart = startDateInput && startDateInput.value;
+  const hasEnd = endDateInput && endDateInput.value;
+
+  if (hasStart && hasEnd) {
+    const dStart = new Date(startDateInput.value);
+    const dEnd = new Date(endDateInput.value);
+    if (!isNaN(dStart.getTime()) && !isNaN(dEnd.getTime())) {
+      const startYear = dStart.getFullYear();
+      const startMonth = dStart.getMonth();
+      const endYear = dEnd.getFullYear();
+      const endMonth = dEnd.getMonth();
+
+      if (startYear === endYear && startMonth === endMonth) {
+        titleText = `${startYear} YILI ${monthNamesUpper[startMonth]} AYI PERSONEL İZİN VE GÖREVE BAŞLAYIŞ CETVELİ`;
+      } else if (startYear === endYear) {
+        titleText = `${startYear} YILI (${monthNamesUpper[startMonth]} - ${monthNamesUpper[endMonth]}) PERSONEL İZİN VE GÖREVE BAŞLAYIŞ CETVELİ`;
+      } else {
+        titleText = `${startYear} - ${endYear} DÖNEMİ PERSONEL İZİN VE GÖREVE BAŞLAYIŞ CETVELİ`;
+      }
+    } else {
+      titleText = 'PERSONEL İZİN VE GÖREVE BAŞLAYIŞ CETVELİ (TÜM ZAMANLAR)';
+    }
+  } else if (hasStart) {
+    const dStart = new Date(startDateInput.value);
+    if (!isNaN(dStart.getTime())) {
+      titleText = `${dStart.getFullYear()} YILI ${monthNamesUpper[dStart.getMonth()]} AYI PERSONEL İZİN VE GÖREVE BAŞLAYIŞ CETVELİ`;
     }
   } else {
-    const today = new Date();
-    const monthNamesUpper = ['OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN', 'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'];
-    titleText = `${today.getFullYear()} YILI ${monthNamesUpper[today.getMonth()]} AYI YOL YARDIMI LİSTESİ`;
+    titleText = 'PERSONEL İZİN VE GÖREVE BAŞLAYIŞ CETVELİ (TÜM ZAMANLAR)';
   }
 
   const workbook = new ExcelJS.Workbook();
@@ -4086,8 +4107,8 @@ export async function exportYolYardimiExcel() {
     'İZİNE AYRILIŞ\nTARİHİ\n(İZNİN İLK GÜNÜ)',
     'İZİN BİTİŞ TARİHİ\n(İZNİN SON GÜNÜ)',
     'GÖREVE BAŞLAMA\nTARİHİ',
-    'İZİN TÜRÜ\n(LİSTEDEN SEÇİNİZ)',
-    'İŞ GÜNÜ\n(OTOMATİK HESAPLANIR)'
+    'İZİN TÜRÜ',
+    'İŞ GÜNÜ'
   ];
 
   ws.getRow(2).values = headers;
@@ -4215,7 +4236,7 @@ export async function exportYolYardimiExcel() {
   const a = document.createElement('a');
   a.href = url;
   const todayStr = new Date().toISOString().split('T')[0];
-  a.download = `Yol_Yardimi_Kesintisi_Izin_Listesi_${todayStr}.xlsx`;
+  a.download = `Personel_Izin_ve_Goreve_Baslayis_Cetveli_${todayStr}.xlsx`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
