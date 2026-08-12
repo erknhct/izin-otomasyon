@@ -2810,7 +2810,8 @@ function renderReports() {
     const todayStr = new Date().toISOString().split('T')[0];
     const allPersonnel = getPersonnelList();
     const totalStaffCount = allPersonnel.length;
-    const activeLeaveRecords = allRecords.filter(r => r.status === 'ayrilis_yapildi' && r.ayrilisDate <= todayStr && r.expectedReturnDate > todayStr);
+    const unfilteredRecords = getLeaveRecords();
+    const activeLeaveRecords = unfilteredRecords.filter(r => r.status === 'ayrilis_yapildi' && r.ayrilisDate <= todayStr && r.expectedReturnDate > todayStr);
     const activeLeaveStaffIds = new Set(activeLeaveRecords.map(r => r.personnelId));
     const activeLeaveCount = activeLeaveStaffIds.size;
     const activeOnDutyCount = Math.max(0, totalStaffCount - activeLeaveCount);
@@ -3522,7 +3523,7 @@ function exportReportsPdf() {
 
       <div style="display:flex; flex-direction:row; gap:12px; margin-bottom:14px; justify-content:space-between;">
         <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #10b981; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
-          <div style="font-size:14pt; font-weight:800; color:#059669;">%${Math.round(((personnelList.length - new Set(allRecords.filter(r => r.status === 'ayrilis_yapildi' && r.ayrilisDate <= new Date().toISOString().split('T')[0] && r.expectedReturnDate > new Date().toISOString().split('T')[0]).map(r => r.personnelId)).size) / (personnelList.length || 1)) * 100)} Görevde</div>
+          <div style="font-size:14pt; font-weight:800; color:#059669;">%${Math.round(((personnelList.length - new Set(getLeaveRecords().filter(r => r.status === 'ayrilis_yapildi' && r.ayrilisDate <= new Date().toISOString().split('T')[0] && r.expectedReturnDate > new Date().toISOString().split('T')[0]).map(r => r.personnelId)).size) / (personnelList.length || 1)) * 100)} Görevde</div>
           <div style="font-size:7.5pt; color:#475569; font-weight:600; text-transform:uppercase; margin-top:3px;">Kurumsal Kapasite / Görevde Olma Oranı</div>
         </div>
         <div style="flex:1; border:1px solid #cbd5e1; border-left:4px solid #ef4444; border-radius:6px; padding:10px; background:#f8fafc; text-align:center;">
