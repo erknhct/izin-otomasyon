@@ -2612,5 +2612,23 @@
       "id": "Bakanlık Muhabere",
       "name": "ANKARA CUMHURİYET BAŞSAVCILIĞI\nBakanlık Muhabere Bürosu'na"
     }
-  ]
+  ],
+  "mesaiData": {
+    "mesaiShifts": {},
+    "pastMesaiHours": {},
+    "signatories": {
+      "duzenleyen": {
+        "ad": "",
+        "unvan": ""
+      },
+      "tasvip": {
+        "ad": "",
+        "unvan": ""
+      },
+      "tasdik": {
+        "ad": "",
+        "unvan": ""
+      }
+    }
+  }
 }
