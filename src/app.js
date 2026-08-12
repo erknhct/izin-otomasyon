@@ -681,9 +681,14 @@ function renderDashboard(forceResetTab = false) {
                   <td>${formatDateTR(item.ayrilisDate)}</td>
                   <td>${item.days} Gün</td>
                   <td><span class="badge badge-danger">${formatDateTR(item.expectedReturnDate)} (SÜRESİ DOLDU)</span></td>
-                  <td style="display: flex; gap: 0.4rem; align-items: center;">
-                    <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}" style="font-weight: 700;">
-                      <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
+                  <td style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div style="width: 110px; flex-shrink: 0; display: inline-flex; align-items: center;">
+                      <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}" style="width: 100%; justify-content: center; font-weight: 700;">
+                        <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
+                      </button>
+                    </div>
+                    <button class="btn btn-sm btn-primary btn-edit-leave-record" data-record-id="${item.id}">
+                      <i class="fa-solid fa-pen-to-square"></i> Düzenle
                     </button>
                   </td>
                 </tr>
@@ -759,9 +764,14 @@ function renderDashboard(forceResetTab = false) {
                   <td>${formatDateTR(item.ayrilisDate)}</td>
                   <td>${item.days} Gün</td>
                   <td><span class="badge badge-info">${formatDateTR(item.expectedReturnDate)}</span></td>
-                  <td style="display: flex; gap: 0.4rem; align-items: center;">
-                    <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}">
-                      <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
+                  <td style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div style="width: 110px; flex-shrink: 0; display: inline-flex; align-items: center;">
+                      <button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${item.id}" style="width: 100%; justify-content: center;">
+                        <i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ
+                      </button>
+                    </div>
+                    <button class="btn btn-sm btn-primary btn-edit-leave-record" data-record-id="${item.id}">
+                      <i class="fa-solid fa-pen-to-square"></i> Düzenle
                     </button>
                   </td>
                 </tr>
@@ -837,9 +847,14 @@ function renderDashboard(forceResetTab = false) {
                   <td>${formatDateTR(item.ayrilisDate)}</td>
                   <td>${formatDateTR(item.expectedReturnDate)}</td>
                   <td><span class="badge badge-success"><i class="fa-solid fa-check"></i> BAŞLAYIŞ YAPILDI</span></td>
-                  <td style="display: flex; gap: 0.4rem; align-items: center;">
-                    <button class="btn btn-sm btn-primary btn-re-download-baslayis" data-record-id="${item.id}">
-                      <i class="fa-solid fa-download"></i> UDF İndir
+                  <td style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div style="width: 110px; flex-shrink: 0; display: inline-flex; align-items: center;">
+                      <button class="btn btn-sm btn-primary btn-re-download-baslayis" data-record-id="${item.id}" style="width: 100%; justify-content: center;">
+                        <i class="fa-solid fa-download"></i> UDF İndir
+                      </button>
+                    </div>
+                    <button class="btn btn-sm btn-secondary btn-edit-leave-record" data-record-id="${item.id}">
+                      <i class="fa-solid fa-pen-to-square"></i> Düzenle
                     </button>
                     <button class="btn btn-sm btn-secondary btn-delete-leave-record" data-record-id="${item.id}" title="Ana Sayfa Panosundan Kaldır">
                       <i class="fa-solid fa-eye-slash"></i> Panodan Kaldır
@@ -957,6 +972,13 @@ function renderDashboard(forceResetTab = false) {
     btn.addEventListener('click', async () => {
       const recId = btn.getAttribute('data-record-id');
       await startBaslayisWizardForRecord(recId);
+    });
+  });
+
+  pendingContainer.querySelectorAll('.btn-edit-leave-record').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const recId = btn.getAttribute('data-record-id');
+      openEditLeaveRecordModal(recId);
     });
   });
 
@@ -1527,6 +1549,119 @@ function setupLeavesTableFilters() {
   }
 }
 
+function openEditLeaveRecordModal(recordId) {
+  const rec = getLeaveRecords().find(r => r.id === recordId);
+  if (!rec) {
+    showToast('Düzenlenecek izin kaydı bulunamadı.', 'danger');
+    return;
+  }
+
+  const leaveTypes = getLeaveTypes();
+
+  const modalHtml = `
+    <form id="form-edit-leave-record" class="form-grid" style="display: grid; gap: 1rem;">
+      <div class="form-group" style="grid-column: span 2;">
+        <label style="font-weight: 600; margin-bottom: 0.25rem; display: block; font-size: 0.88rem; color: var(--text-muted);">Personel Bilgisi</label>
+        <input type="text" class="form-control" value="${rec.personnelName} (${rec.sicil || ''}) - ${rec.unvan || ''}" disabled style="background: rgba(255,255,255,0.05); font-weight: 600;" />
+      </div>
+
+      <div class="form-group">
+        <label style="font-weight: 600; margin-bottom: 0.25rem; display: block; font-size: 0.88rem;">İzin Türü <span style="color: red;">*</span></label>
+        <select id="edit-leave-type" class="form-control" required>
+          ${leaveTypes.map(lt => `<option value="${lt.code}" ${lt.code === rec.leaveType ? 'selected' : ''}>${lt.name}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label style="font-weight: 600; margin-bottom: 0.25rem; display: block; font-size: 0.88rem;">Ayrılış Tarihi <span style="color: red;">*</span></label>
+        <input type="date" id="edit-ayrilis-date" class="form-control" value="${rec.ayrilisDate || ''}" required />
+      </div>
+
+      <div class="form-group">
+        <label style="font-weight: 600; margin-bottom: 0.25rem; display: block; font-size: 0.88rem;">İzin Süresi (Gün) <span style="color: red;">*</span></label>
+        <input type="number" id="edit-days" class="form-control" min="1" max="365" value="${rec.days || 1}" required />
+      </div>
+
+      <div class="form-group">
+        <label style="font-weight: 600; margin-bottom: 0.25rem; display: block; font-size: 0.88rem;">Beklenen Başlayış Tarihi <span style="color: red;">*</span></label>
+        <input type="date" id="edit-expected-return" class="form-control" value="${rec.expectedReturnDate || ''}" required />
+      </div>
+
+      <div class="form-group" style="grid-column: span 2; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+        <input type="checkbox" id="edit-yol-izni" ${rec.isYolIzniDahil ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;" />
+        <label for="edit-yol-izni" style="cursor: pointer; user-select: none; margin: 0; font-weight: 500;">Yol İzni Dahil</label>
+      </div>
+
+      <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-edit-leave">Vazgeç</button>
+        <button type="submit" class="btn btn-primary" style="font-weight: 700;">
+          <i class="fa-solid fa-floppy-disk"></i> Değişiklikleri Kaydet
+        </button>
+      </div>
+    </form>
+  `;
+
+  openModal('📝 İzin Kaydını Düzenle', modalHtml);
+
+  const ayrilisInput = document.getElementById('edit-ayrilis-date');
+  const daysInput = document.getElementById('edit-days');
+  const returnInput = document.getElementById('edit-expected-return');
+
+  function recalculateReturn() {
+    const sDate = ayrilisInput?.value;
+    const dVal = parseInt(daysInput?.value, 10);
+    if (sDate && dVal > 0) {
+      const calcReturn = calculateExpectedReturn(sDate, dVal);
+      if (returnInput && calcReturn) {
+        returnInput.value = calcReturn;
+      }
+    }
+  }
+
+  ayrilisInput?.addEventListener('change', recalculateReturn);
+  daysInput?.addEventListener('input', recalculateReturn);
+
+  document.getElementById('btn-cancel-edit-leave')?.addEventListener('click', closeModal);
+
+  document.getElementById('form-edit-leave-record')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newLeaveTypeCode = document.getElementById('edit-leave-type').value;
+    const newAyrilisDate = document.getElementById('edit-ayrilis-date').value;
+    const newDays = parseInt(document.getElementById('edit-days').value, 10);
+    const newExpectedReturn = document.getElementById('edit-expected-return').value;
+    const newYolIzni = document.getElementById('edit-yol-izni').checked;
+
+    if (!newAyrilisDate || !newDays || !newExpectedReturn) {
+      showToast('Lütfen tüm zorunlu alanları doldurunuz.', 'warning');
+      return;
+    }
+
+    // Check for conflict with other leave records of the same personnel
+    const conflict = checkLeaveConflict(rec.personnelId, newAyrilisDate, newExpectedReturn, rec.id);
+    if (conflict) {
+      showToast(`⚠️ ${rec.personnelName} için ${formatDateTR(conflict.ayrilisDate)} - ${formatDateTR(conflict.expectedReturnDate)} tarihleri arasında zaten aktif (${conflict.leaveTypeName}) kaydı mevcuttur! Aynı personel için çakışan tarihte 2. bir izin kaydı oluşturulamaz.`, 'danger');
+      return;
+    }
+
+    const ltObj = leaveTypes.find(l => l.code === newLeaveTypeCode) || { name: 'İzin' };
+
+    updateLeaveRecord(rec.id, {
+      leaveType: newLeaveTypeCode,
+      leaveTypeName: ltObj.name,
+      ayrilisDate: newAyrilisDate,
+      days: newDays,
+      expectedReturnDate: newExpectedReturn,
+      isYolIzniDahil: newYolIzni
+    });
+
+    closeModal();
+    showToast('İzin kaydı başarıyla güncellendi!', 'success');
+    renderDashboard();
+    renderLeavesTable();
+    renderNotificationBell();
+  });
+}
+
 function renderLeavesTable() {
   const records = getLeaveRecords();
   const tbody = document.querySelector('#table-leaves tbody');
@@ -1640,10 +1775,15 @@ function renderLeavesTable() {
               ? '<span class="badge badge-danger" style="animation: pulseDanger 2s infinite;"><i class="fa-solid fa-triangle-exclamation"></i> 🚨 GÜNÜ GELDİ (ACİL)</span>'
               : '<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> İzinde (Ayrılış Yapıldı)</span>'}
         </td>
-        <td style="display: flex; gap: 0.4rem; align-items: center;">
-          ${r.status === 'ayrilis_yapildi' 
-            ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}" style="${isDue ? 'font-weight: 800; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);' : ''}"><i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ</button>`
-            : `<small style="color: var(--text-muted);">Tamamlandı</small>`}
+        <td style="display: flex; gap: 0.5rem; align-items: center;">
+          <div style="width: 110px; flex-shrink: 0; display: inline-flex; align-items: center;">
+            ${r.status === 'ayrilis_yapildi' 
+              ? `<button class="btn btn-sm btn-success btn-create-baslayis" data-record-id="${r.id}" style="width: 100%; justify-content: center; ${isDue ? 'font-weight: 800; box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);' : ''}"><i class="fa-solid fa-paper-plane"></i> BAŞLAYIŞ</button>`
+              : `<span style="width: 100%; text-align: center; color: var(--text-muted); font-size: 0.85rem; font-weight: 500;">Tamamlandı</span>`}
+          </div>
+          <button class="btn btn-sm btn-primary btn-edit-leave-record" data-record-id="${r.id}">
+            <i class="fa-solid fa-pen-to-square"></i> Düzenle
+          </button>
           ${isAdmin() ? `<button class="btn btn-sm btn-danger btn-delete-leave-record" data-record-id="${r.id}"><i class="fa-solid fa-trash"></i> Sil</button>` : ''}
         </td>
       </tr>
@@ -1653,6 +1793,13 @@ function renderLeavesTable() {
   tbody.querySelectorAll('.btn-create-baslayis').forEach(btn => {
     btn.addEventListener('click', async () => {
       await startBaslayisWizardForRecord(btn.getAttribute('data-record-id'));
+    });
+  });
+
+  tbody.querySelectorAll('.btn-edit-leave-record').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const recId = btn.getAttribute('data-record-id');
+      openEditLeaveRecordModal(recId);
     });
   });
 
