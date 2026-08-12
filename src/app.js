@@ -1095,6 +1095,182 @@ function renderDashboard(forceResetTab = false) {
   }
 }
 
+// Turkish-aware string normalization for accurate searching
+function trNormalize(text) {
+  if (!text) return '';
+  return text.toString()
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'ı')
+    .toLowerCase()
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c');
+}
+
+function setupSearchablePersonnelSelect() {
+  const personSelect = document.getElementById('wiz-personnel-select');
+  if (!personSelect) return;
+
+  personSelect.style.display = 'none';
+
+  let wrapper = document.getElementById('custom-searchable-personnel');
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.id = 'custom-searchable-personnel';
+    wrapper.className = 'custom-searchable-select';
+    personSelect.parentNode.insertBefore(wrapper, personSelect.nextSibling);
+
+    wrapper.innerHTML = `
+      <div class="select-trigger" tabindex="0" role="button" aria-haspopup="listbox">
+        <span class="selected-text">Personel Seçiniz...</span>
+        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+      </div>
+      <div class="select-dropdown">
+        <div class="search-box-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" class="search-input" placeholder="Personel Adı, Sicil veya Unvan Ara... (ör: Engin)" autocomplete="off" />
+        </div>
+        <div class="options-list" role="listbox">
+        </div>
+      </div>
+    `;
+
+    const trigger = wrapper.querySelector('.select-trigger');
+    const searchInput = wrapper.querySelector('.search-input');
+
+    // Toggle dropdown
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isActive = wrapper.classList.contains('active');
+      document.querySelectorAll('.custom-searchable-select.active').forEach(el => el.classList.remove('active'));
+      if (!isActive) {
+        wrapper.classList.add('active');
+        searchInput.value = '';
+        filterSearchablePersonnelOptions('');
+        setTimeout(() => searchInput.focus(), 50);
+      }
+    });
+
+    trigger.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        trigger.click();
+      }
+    });
+
+    searchInput.addEventListener('click', (e) => e.stopPropagation());
+
+    searchInput.addEventListener('input', (e) => {
+      filterSearchablePersonnelOptions(e.target.value);
+    });
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+      if (!wrapper.contains(e.target)) {
+        wrapper.classList.remove('active');
+      }
+    });
+
+    // Close on Escape
+    wrapper.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        wrapper.classList.remove('active');
+        trigger.focus();
+      }
+    });
+
+    personSelect.addEventListener('change', () => {
+      refreshSearchablePersonnelSelect();
+    });
+  }
+
+  refreshSearchablePersonnelSelect();
+}
+
+function refreshSearchablePersonnelSelect() {
+  const personSelect = document.getElementById('wiz-personnel-select');
+  const wrapper = document.getElementById('custom-searchable-personnel');
+  if (!personSelect || !wrapper) return;
+
+  const triggerText = wrapper.querySelector('.selected-text');
+  const optionsContainer = wrapper.querySelector('.options-list');
+  const personnelList = getPersonnelList();
+
+  const selectedVal = personSelect.value;
+  const selectedPerson = personnelList.find(p => p.id === selectedVal) || personnelList[0];
+
+  if (selectedPerson) {
+    triggerText.textContent = `${selectedPerson.name} (${selectedPerson.sicil}) - ${selectedPerson.title}`;
+    if (personSelect.value !== selectedPerson.id) {
+      personSelect.value = selectedPerson.id;
+    }
+  } else {
+    triggerText.textContent = 'Personel Seçiniz...';
+  }
+
+  optionsContainer.innerHTML = personnelList.map(p => {
+    const isSelected = selectedPerson && p.id === selectedPerson.id;
+    return `
+      <div class="option-item ${isSelected ? 'selected' : ''}" data-value="${p.id}" data-search="${trNormalize(`${p.name} ${p.sicil} ${p.title}`)}">
+        <div>
+          <strong>${p.name}</strong> <small style="opacity: 0.8; margin-left: 4px;">(${p.sicil})</small>
+          <div style="font-size: 0.78rem; opacity: 0.75;">${p.title}</div>
+        </div>
+        ${isSelected ? '<i class="fa-solid fa-check" style="color: #ffffff; font-size: 0.85rem;"></i>' : ''}
+      </div>
+    `;
+  }).join('');
+
+  optionsContainer.querySelectorAll('.option-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const val = item.getAttribute('data-value');
+      personSelect.value = val;
+
+      const pObj = personnelList.find(p => p.id === val);
+      if (pObj) {
+        triggerText.textContent = `${pObj.name} (${pObj.sicil}) - ${pObj.title}`;
+      }
+
+      wrapper.classList.remove('active');
+      personSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+}
+
+function filterSearchablePersonnelOptions(query) {
+  const wrapper = document.getElementById('custom-searchable-personnel');
+  if (!wrapper) return;
+  const options = wrapper.querySelectorAll('.option-item');
+  const normQuery = trNormalize(query.trim());
+  let visibleCount = 0;
+
+  options.forEach(opt => {
+    const searchText = opt.getAttribute('data-search') || '';
+    if (!normQuery || searchText.includes(normQuery)) {
+      opt.style.display = 'flex';
+      visibleCount++;
+    } else {
+      opt.style.display = 'none';
+    }
+  });
+
+  let noRes = wrapper.querySelector('.no-results');
+  if (visibleCount === 0) {
+    if (!noRes) {
+      noRes = document.createElement('div');
+      noRes.className = 'no-results';
+      noRes.textContent = 'Aramanıza uygun personel bulunamadı.';
+      wrapper.querySelector('.options-list').appendChild(noRes);
+    }
+    noRes.style.display = 'block';
+  } else if (noRes) {
+    noRes.style.display = 'none';
+  }
+}
+
 // 2. DOCUMENT FORM SETUP
 function populateWizardOptions(preserveSelections = false) {
   const currentP = preserveSelections ? document.getElementById('wiz-personnel-select')?.value : null;
@@ -1110,6 +1286,8 @@ function populateWizardOptions(preserveSelections = false) {
   
   const wizCount = document.getElementById('wiz-personnel-count');
   if (wizCount) wizCount.textContent = `(${personnelList.length} Personel)`;
+
+  setupSearchablePersonnelSelect();
 
   // 2. Leave Types
   const leaveTypes = getLeaveTypes();

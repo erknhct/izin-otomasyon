@@ -546,7 +546,7 @@
   ],
   "leaveRecords": [
     {
-      "id": "rec-1786528621604",
+      "id": "rec-1786529588219",
       "personnelId": "1786450753562",
       "personnelName": "Muhammed ÇAMURDAŞ",
       "sicil": "237938",
@@ -558,9 +558,9 @@
       "ayrilisDate": "2026-07-13",
       "expectedReturnDate": "2026-07-20",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-12"
     },
     {
       "id": "rec-1786523316455",
