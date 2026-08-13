@@ -421,17 +421,35 @@ function closeModal() {
   modalOverlay.classList.remove('active');
 }
 
-function showConfirmModal({ title, message, confirmText = 'Evet, Onayla', cancelText = 'Vazgeç', onConfirm }) {
+function showConfirmModal({ title, message, confirmText = 'Evet, Onayla', cancelText = 'Vazgeç', type = 'danger', onConfirm }) {
+  let iconHtml = `<i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; color: #ef4444;"></i>`;
+  let iconWrapperStyle = `background: rgba(239, 68, 68, 0.12); border: 2px solid rgba(239, 68, 68, 0.3); box-shadow: 0 0 25px rgba(239, 68, 68, 0.3);`;
+  let confirmBtnStyle = `background: linear-gradient(135deg, #ef4444, #dc2626); border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);`;
+
+  if (type === 'warning') {
+    iconHtml = `<i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; color: #f59e0b;"></i>`;
+    iconWrapperStyle = `background: rgba(245, 158, 11, 0.12); border: 2px solid rgba(245, 158, 11, 0.3); box-shadow: 0 0 25px rgba(245, 158, 11, 0.3);`;
+    confirmBtnStyle = `background: linear-gradient(135deg, #f59e0b, #d97706); border: none; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);`;
+  } else if (type === 'success') {
+    iconHtml = `<i class="fa-solid fa-circle-check" style="font-size: 1.8rem; color: #10b981;"></i>`;
+    iconWrapperStyle = `background: rgba(16, 185, 129, 0.12); border: 2px solid rgba(16, 185, 129, 0.3); box-shadow: 0 0 25px rgba(16, 185, 129, 0.3);`;
+    confirmBtnStyle = `background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);`;
+  } else if (type === 'info') {
+    iconHtml = `<i class="fa-solid fa-paper-plane" style="font-size: 1.8rem; color: #6366f1;"></i>`;
+    iconWrapperStyle = `background: rgba(99, 102, 241, 0.12); border: 2px solid rgba(99, 102, 241, 0.3); box-shadow: 0 0 25px rgba(99, 102, 241, 0.3);`;
+    confirmBtnStyle = `background: linear-gradient(135deg, #6366f1, #4f46e5); border: none; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);`;
+  }
+
   const html = `
     <div style="text-align: center; padding: 1rem 0.5rem;">
-      <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); border: 2px solid rgba(239, 68, 68, 0.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto; box-shadow: 0 0 25px rgba(239, 68, 68, 0.3);">
-        <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; color: #ef4444;"></i>
+      <div style="width: 64px; height: 64px; border-radius: 50%; ${iconWrapperStyle} display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem auto;">
+        ${iconHtml}
       </div>
       <h3 style="font-size: 1.15rem; font-weight: 800; margin-bottom: 0.6rem; color: var(--text-main);">${title}</h3>
       <div style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.75rem;">${message}</div>
       <div style="display: flex; gap: 0.75rem; justify-content: center;">
         <button class="btn btn-secondary" id="confirm-modal-cancel" style="min-width: 110px; font-weight: 600;">${cancelText}</button>
-        <button class="btn btn-danger" id="confirm-modal-ok" style="min-width: 125px; font-weight: 800; color: #ffffff !important; background: linear-gradient(135deg, #ef4444, #dc2626); border: none; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);">
+        <button class="btn btn-danger" id="confirm-modal-ok" style="min-width: 125px; font-weight: 800; color: #ffffff !important; ${confirmBtnStyle}">
           ${confirmText}
         </button>
       </div>
@@ -1604,45 +1622,127 @@ async function startBaslayisWizardForRecord(recId) {
   const rec = records.find(r => r.id === recId);
   if (!rec) return;
 
-  document.getElementById('wiz-personnel-select').value = rec.personnelId;
-  document.getElementById('wiz-leave-type').value = rec.leaveType;
-
-  const actionTypeSelect = document.getElementById('wiz-action-type');
-  actionTypeSelect.value = 'baslayis';
-  actionTypeSelect.dispatchEvent(new Event('change'));
-
-  document.getElementById('wiz-izin-suresi').value = rec.days;
-
-  const formattedAyrilisDate = formatDateTR(rec.ayrilisDate);
-  document.getElementById('wiz-ilgi-evrak').value = `${formattedAyrilisDate} tarihli yazımız.`;
-
   const todayStr = new Date().toISOString().split('T')[0];
-  const baslayisDateVal = (rec.expectedReturnDate && rec.expectedReturnDate <= todayStr) ? todayStr : (rec.expectedReturnDate || todayStr);
-  document.getElementById('wiz-baslayis-tarih').value = baslayisDateVal;
-  document.getElementById('form-udf-wizard').dataset.linkedRecordId = rec.id;
+  const isCompleted = rec.status === 'baslayis_yapildi';
+  const isEarly = rec.expectedReturnDate && rec.expectedReturnDate > todayStr;
 
-  try {
-    const payload = getWizardPayload();
-    const filename = `${payload.personnelName}_${payload.leaveType}_baslayis.udf`;
-    await downloadUdfFile(payload, filename);
+  const executeBaslayis = async () => {
+    document.getElementById('wiz-personnel-select').value = rec.personnelId;
+    document.getElementById('wiz-leave-type').value = rec.leaveType;
 
-    updateLeaveRecord(rec.id, {
-      status: 'baslayis_yapildi',
-      baslayisDate: payload.baslayisTarihi
-    });
-
-    delete document.getElementById('form-udf-wizard').dataset.linkedRecordId;
-    document.getElementById('form-udf-wizard').reset();
-    populateWizardOptions();
+    const actionTypeSelect = document.getElementById('wiz-action-type');
+    actionTypeSelect.value = 'baslayis';
     actionTypeSelect.dispatchEvent(new Event('change'));
 
-    showToast(`✅ ${rec.personnelName} için Göreve Başlayış UDF belgesi indirildi ve işlem tamamlandı!`, 'success');
-    renderDashboard();
-    renderLeavesTable();
-    renderNotificationBell();
-  } catch (err) {
-    console.error('Başlayış UDF oluşturma hatası:', err);
-    showToast('Hata: ' + err.message, 'danger');
+    document.getElementById('wiz-izin-suresi').value = rec.days;
+
+    const formattedAyrilisDate = formatDateTR(rec.ayrilisDate);
+    document.getElementById('wiz-ilgi-evrak').value = `${formattedAyrilisDate} tarihli yazımız.`;
+
+    const baslayisDateVal = (rec.expectedReturnDate && rec.expectedReturnDate <= todayStr) ? todayStr : (rec.expectedReturnDate || todayStr);
+    document.getElementById('wiz-baslayis-tarih').value = baslayisDateVal;
+    document.getElementById('form-udf-wizard').dataset.linkedRecordId = rec.id;
+
+    try {
+      const payload = getWizardPayload();
+      const filename = `${payload.personnelName}_${payload.leaveType}_baslayis.udf`;
+      await downloadUdfFile(payload, filename);
+
+      updateLeaveRecord(rec.id, {
+        status: 'baslayis_yapildi',
+        baslayisDate: payload.baslayisTarihi
+      });
+
+      delete document.getElementById('form-udf-wizard').dataset.linkedRecordId;
+      document.getElementById('form-udf-wizard').reset();
+      populateWizardOptions();
+      actionTypeSelect.dispatchEvent(new Event('change'));
+
+      showToast(`✅ ${rec.personnelName} için Göreve Başlayış UDF belgesi indirildi ve işlem tamamlandı!`, 'success');
+      renderDashboard();
+      renderLeavesTable();
+      renderNotificationBell();
+    } catch (err) {
+      console.error('Başlayış UDF oluşturma hatası:', err);
+      showToast('Hata: ' + err.message, 'danger');
+    }
+  };
+
+  // If already completed, re-download directly without modal confirmation (per user request)
+  if (isCompleted) {
+    await executeBaslayis();
+    return;
+  }
+
+  const formattedReturnDate = formatDateTR(rec.expectedReturnDate);
+  const formattedToday = formatDateTR(todayStr);
+  const displayUnvan = rec.unvan || 'Personel';
+  const displaySicil = rec.sicil ? ` (${rec.sicil})` : '';
+
+  if (isEarly) {
+    // ERKEN BAŞLAYIŞ UYARISI (Tarih henüz gelmedi)
+    const messageHtml = `
+      <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem; text-align: left;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="font-weight: 700; color: var(--text-main); font-size: 1.05rem;">${rec.personnelName}</span>
+          <span class="badge badge-warning" style="font-size: 0.78rem;">${rec.leaveTypeName || 'İzin'}</span>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 0.5rem;">
+          <div><strong>Unvan / Sicil:</strong> ${displayUnvan}${displaySicil}</div>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; background: rgba(0,0,0,0.15); padding: 0.6rem 0.8rem; border-radius: 8px;">
+          <div><i class="fa-solid fa-calendar-dot" style="color: #f59e0b;"></i> <strong>Beklenen Başlayış:</strong><br><span style="color: #f59e0b; font-weight: 800; font-size: 0.95rem;">${formattedReturnDate}</span></div>
+          <div><i class="fa-solid fa-clock" style="color: var(--accent-primary);"></i> <strong>Bugünün Tarihi:</strong><br><span style="color: var(--text-main); font-weight: 600;">${formattedToday}</span></div>
+        </div>
+      </div>
+      <p style="font-size: 0.95rem; margin: 0; color: #f59e0b; font-weight: 700;">
+        ⚠️ Kişinin göreve başlayış tarihi henüz GELMEMİŞTİR!
+      </p>
+      <p style="font-size: 0.86rem; color: var(--text-muted); margin-top: 0.4rem;">
+        Personelin beklenen başlayış tarihi <strong>${formattedReturnDate}</strong> olarak görünmektedir.<br>Tarihi gelmeden erken göreve başlayış evrakı (UDF) oluşturup kaydı tamamlamak istediğinizden emin misiniz?
+      </p>
+    `;
+
+    showConfirmModal({
+      title: '⚠️ ERKEN GÖREVE BAŞLAYIŞ UYARISI',
+      message: messageHtml,
+      type: 'warning',
+      confirmText: 'Evet, Erken Başlayış Yap',
+      cancelText: 'Vazgeç',
+      onConfirm: executeBaslayis
+    });
+  } else {
+    // ZAMANI GELMİŞ / GEÇMİŞ BAŞLAYIŞ ONAYI
+    const messageHtml = `
+      <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; padding: 1rem; margin-bottom: 1.25rem; text-align: left;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="font-weight: 700; color: var(--text-main); font-size: 1.05rem;">${rec.personnelName}</span>
+          <span class="badge badge-success" style="font-size: 0.78rem;">${rec.leaveTypeName || 'İzin'}</span>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 0.5rem;">
+          <div><strong>Unvan / Sicil:</strong> ${displayUnvan}${displaySicil}</div>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-muted); background: rgba(0,0,0,0.15); padding: 0.6rem 0.8rem; border-radius: 8px;">
+          <i class="fa-solid fa-calendar-check" style="color: #10b981;"></i> <strong>Beklenen Başlayış Tarihi:</strong>
+          <span style="color: #10b981; font-weight: 700; font-size: 0.95rem; margin-left: 0.4rem;">${formattedReturnDate}</span>
+        </div>
+      </div>
+      <p style="font-size: 0.95rem; margin: 0; color: var(--text-main); font-weight: 600;">
+        Göreve başlayış evrakını (UDF) oluşturmak istediğinizden emin misiniz?
+      </p>
+      <p style="font-size: 0.86rem; color: var(--text-muted); margin-top: 0.4rem;">
+        İşlem onaylandığında personelin göreve başlayış yazısı otomatik olarak bilgisayarınıza indirilecek ve kayıt tamamlanacaktır.
+      </p>
+    `;
+
+    showConfirmModal({
+      title: '📋 GÖREVE BAŞLAYIŞ ONAYI',
+      message: messageHtml,
+      type: 'success',
+      confirmText: 'Evet, Başlayış Yap',
+      cancelText: 'Vazgeç',
+      onConfirm: executeBaslayis
+    });
   }
 }
 
