@@ -45,6 +45,10 @@ function sanitizeDbData(cache) {
   const pMap = {};
   if (Array.isArray(cache.personnel)) {
     cache.personnel.forEach(p => {
+      if (p.name) p.name = p.name.replace(/\s+/g, ' ').trim();
+      if (p.title) p.title = p.title.replace(/\s+/g, ' ').trim();
+      if (p.birim) p.birim = p.birim.replace(/\s+/g, ' ').trim();
+      if (p.sicil) p.sicil = p.sicil.toString().trim();
       if (p.id) pMap[p.id] = p;
       if (p.name) pMap[p.name] = p;
     });
@@ -53,6 +57,9 @@ function sanitizeDbData(cache) {
   if (Array.isArray(cache.leaveRecords)) {
     cache.leaveRecords.forEach(r => {
       delete r.raporKurum;
+      if (r.personnelName) r.personnelName = r.personnelName.replace(/\s+/g, ' ').trim();
+      if (r.unvan) r.unvan = r.unvan.replace(/\s+/g, ' ').trim();
+      if (r.sicil) r.sicil = r.sicil.toString().trim();
       const p = pMap[r.personnelId] || pMap[r.personnelName];
       if (p) {
         if (p.title && (!r.unvan || r.unvan.includes('\uFFFD') || r.unvan === 'ef')) {

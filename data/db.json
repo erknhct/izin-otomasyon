@@ -236,7 +236,7 @@
     },
     {
       "id": "1786451219532",
-      "name": "Ali  YILDIZ",
+      "name": "Ali YILDIZ",
       "sicil": "185845",
       "tcNo": "",
       "title": "Zabıt Katibi",
@@ -546,6 +546,57 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786699435818",
+      "personnelId": "1786451046538",
+      "personnelName": "Oğuzhan ARDIÇ",
+      "sicil": "250990",
+      "unvan": "Teknisyen",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 12,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-08-31",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1786698591221",
+      "personnelId": "1786450186953",
+      "personnelName": "Hasan KARAKOÇLAR",
+      "sicil": "183579",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 19,
+      "isYolIzniDahil": true,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-09-07",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1786696576674",
+      "personnelId": "1786451266659",
+      "personnelName": "Ahmet Remzi SARIKAYA",
+      "sicil": "141985",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-08-24",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786695428838",
       "personnelId": "1786451448169",
       "personnelName": "Zelal KAZAN GÜRPINAR",
@@ -718,7 +769,7 @@
     {
       "id": "rec-1786523068952",
       "personnelId": "1786451219532",
-      "personnelName": "Ali  YILDIZ",
+      "personnelName": "Ali YILDIZ",
       "sicil": "185845",
       "unvan": "Zabıt Katibi",
       "leaveType": "rapor",
@@ -1476,9 +1527,9 @@
       "ayrilisDate": "2026-08-10",
       "expectedReturnDate": "2026-08-14",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-14"
     },
     {
       "id": "rec-1786519794885",
@@ -2044,7 +2095,7 @@
     {
       "id": "rec-1786517948564",
       "personnelId": "1786451219532",
-      "personnelName": "Ali  YILDIZ",
+      "personnelName": "Ali YILDIZ",
       "sicil": "185845",
       "unvan": "Zabıt Katibi",
       "leaveType": "yillik",

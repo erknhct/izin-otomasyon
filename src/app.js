@@ -18,12 +18,41 @@ import {
   renderMesaiArchiveSection
 } from './mesai.js';
 
-// Custom Search Normalizer for Turkish Characters
-function normalizeSearch(str) {
+// Custom Search Normalizer for Turkish Characters and Whitespaces
+export function normalizeSearch(str) {
   if (!str) return '';
-  return str.toLocaleLowerCase('tr-TR')
-    .replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g')
-    .replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c');
+  return str.toString()
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'i')
+    .replace(/ı/g, 'i')
+    .toLocaleLowerCase('tr-TR')
+    .replace(/ı/g, 'i')
+    .replace(/ş/g, 's')
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Multi-word and token-based search matching helper
+export function matchesSearchQuery(target, query) {
+  if (!query) return true;
+  const normQuery = normalizeSearch(query);
+  if (!normQuery) return true;
+  const normTarget = normalizeSearch(target);
+  if (!normTarget) return false;
+
+  // Direct substring match
+  if (normTarget.includes(normQuery)) return true;
+
+  // Multi-token match (all words in search query must be present in target)
+  const tokens = normQuery.split(' ').filter(Boolean);
+  if (tokens.length > 1) {
+    return tokens.every(token => normTarget.includes(token));
+  }
+  return false;
 }
 
 function getPersonnelTitleMap() {
@@ -1127,16 +1156,7 @@ function renderDashboard(forceResetTab = false) {
 
 // Turkish-aware string normalization for accurate searching
 function trNormalize(text) {
-  if (!text) return '';
-  return text.toString()
-    .replace(/İ/g, 'i')
-    .replace(/I/g, 'ı')
-    .toLowerCase()
-    .replace(/ğ/g, 'g')
-    .replace(/ü/g, 'u')
-    .replace(/ş/g, 's')
-    .replace(/ö/g, 'o')
-    .replace(/ç/g, 'c');
+  return normalizeSearch(text);
 }
 
 function setupSearchablePersonnelSelect() {
@@ -1158,28 +1178,24 @@ function setupSearchablePersonnelSelect() {
         <i class="fa-solid fa-chevron-down arrow-icon"></i>
       </div>
       <div class="select-dropdown">
-        <div class="search-box-wrapper">
-          <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input type="text" class="search-input" placeholder="Personel Adı, Sicil veya Unvan Ara... (ör: Engin)" autocomplete="off" />
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Personel ara (Ad, Sicil, Unvan)..." autocomplete="off" />
         </div>
-        <div class="options-list" role="listbox">
-        </div>
+        <div class="options-list" role="listbox"></div>
       </div>
     `;
 
     const trigger = wrapper.querySelector('.select-trigger');
-    const searchInput = wrapper.querySelector('.search-input');
+    const input = wrapper.querySelector('input');
 
-    // Toggle dropdown
     trigger.addEventListener('click', (e) => {
       e.stopPropagation();
-      const isActive = wrapper.classList.contains('active');
-      document.querySelectorAll('.custom-searchable-select.active').forEach(el => el.classList.remove('active'));
-      if (!isActive) {
-        wrapper.classList.add('active');
-        searchInput.value = '';
+      const isActive = wrapper.classList.toggle('active');
+      if (isActive) {
+        input.value = '';
         filterSearchablePersonnelOptions('');
-        setTimeout(() => searchInput.focus(), 50);
+        setTimeout(() => input.focus(), 50);
       }
     });
 
@@ -1190,52 +1206,26 @@ function setupSearchablePersonnelSelect() {
       }
     });
 
-    searchInput.addEventListener('click', (e) => e.stopPropagation());
-
-    searchInput.addEventListener('input', (e) => {
+    input.addEventListener('input', (e) => {
       filterSearchablePersonnelOptions(e.target.value);
     });
 
-    // Close on outside click
+    input.addEventListener('click', (e) => e.stopPropagation());
+
     document.addEventListener('click', (e) => {
       if (!wrapper.contains(e.target)) {
         wrapper.classList.remove('active');
       }
     });
-
-    // Close on Escape
-    wrapper.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        wrapper.classList.remove('active');
-        trigger.focus();
-      }
-    });
-
-    personSelect.addEventListener('change', () => {
-      refreshSearchablePersonnelSelect();
-    });
   }
 
-  refreshSearchablePersonnelSelect();
-}
-
-function refreshSearchablePersonnelSelect() {
-  const personSelect = document.getElementById('wiz-personnel-select');
-  const wrapper = document.getElementById('custom-searchable-personnel');
-  if (!personSelect || !wrapper) return;
-
-  const triggerText = wrapper.querySelector('.selected-text');
-  const optionsContainer = wrapper.querySelector('.options-list');
   const personnelList = getPersonnelList();
-
-  const selectedVal = personSelect.value;
-  const selectedPerson = personnelList.find(p => p.id === selectedVal) || personnelList[0];
+  const optionsContainer = wrapper.querySelector('.options-list');
+  const triggerText = wrapper.querySelector('.selected-text');
+  const selectedPerson = personnelList.find(p => p.id === personSelect.value);
 
   if (selectedPerson) {
     triggerText.textContent = `${selectedPerson.name} (${selectedPerson.sicil}) - ${selectedPerson.title}`;
-    if (personSelect.value !== selectedPerson.id) {
-      personSelect.value = selectedPerson.id;
-    }
   } else {
     triggerText.textContent = 'Personel Seçiniz...';
   }
@@ -1243,7 +1233,7 @@ function refreshSearchablePersonnelSelect() {
   optionsContainer.innerHTML = personnelList.map(p => {
     const isSelected = selectedPerson && p.id === selectedPerson.id;
     return `
-      <div class="option-item ${isSelected ? 'selected' : ''}" data-value="${p.id}" data-search="${trNormalize(`${p.name} ${p.sicil} ${p.title}`)}">
+      <div class="option-item ${isSelected ? 'selected' : ''}" data-value="${p.id}" data-search="${normalizeSearch(`${p.name} ${p.sicil} ${p.title}`)}">
         <div>
           <strong>${p.name}</strong> <small style="opacity: 0.8; margin-left: 4px;">(${p.sicil})</small>
           <div style="font-size: 0.78rem; opacity: 0.75;">${p.title}</div>
@@ -1258,28 +1248,26 @@ function refreshSearchablePersonnelSelect() {
       e.stopPropagation();
       const val = item.getAttribute('data-value');
       personSelect.value = val;
-
-      const pObj = personnelList.find(p => p.id === val);
-      if (pObj) {
-        triggerText.textContent = `${pObj.name} (${pObj.sicil}) - ${pObj.title}`;
-      }
-
-      wrapper.classList.remove('active');
       personSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      wrapper.classList.remove('active');
+      refreshSearchablePersonnelSelect();
     });
   });
+}
+
+function refreshSearchablePersonnelSelect() {
+  setupSearchablePersonnelSelect();
 }
 
 function filterSearchablePersonnelOptions(query) {
   const wrapper = document.getElementById('custom-searchable-personnel');
   if (!wrapper) return;
   const options = wrapper.querySelectorAll('.option-item');
-  const normQuery = trNormalize(query.trim());
   let visibleCount = 0;
 
   options.forEach(opt => {
     const searchText = opt.getAttribute('data-search') || '';
-    if (!normQuery || searchText.includes(normQuery)) {
+    if (!query || matchesSearchQuery(searchText, query)) {
       opt.style.display = 'flex';
       visibleCount++;
     } else {
@@ -1989,10 +1977,8 @@ function renderLeavesTable() {
 
   // Filtering
   const filtered = records.filter(r => {
-    const search = normalizeSearch(leavesState.searchQuery);
-    const matchesSearch = !search ||
-      normalizeSearch(r.personnelName).includes(search) ||
-      (r.sicil && r.sicil.includes(search));
+    const searchTarget = `${r.personnelName || ''} ${r.sicil || ''} ${r.unvan || ''}`;
+    const matchesSearch = !leavesState.searchQuery || matchesSearchQuery(searchTarget, leavesState.searchQuery);
     const matchesType = !leavesState.typeFilter || r.leaveType === leavesState.typeFilter;
     const matchesStatus = !leavesState.statusFilter || r.status === leavesState.statusFilter;
 
@@ -2128,10 +2114,12 @@ function renderPersonnelTable() {
   if (sidebarCount) sidebarCount.textContent = `(${list.length})`;
 
   const tbody = document.querySelector('#table-personnel tbody');
-  const searchInput = document.getElementById('search-personnel');
-  const query = normalizeSearch(searchInput?.value || '');
+  const query = (searchInput?.value || '').trim();
 
-  const filtered = list.filter(p => normalizeSearch(p.name).includes(query) || p.sicil.includes(query) || normalizeSearch(p.title).includes(query));
+  const filtered = list.filter(p => {
+    const target = `${p.name || ''} ${p.sicil || ''} ${p.title || ''} ${p.birim || ''}`;
+    return !query || matchesSearchQuery(target, query);
+  });
 
   const isFiltering = query !== '';
   tbody.innerHTML = filtered.map((p, index) => `
@@ -2974,9 +2962,8 @@ function renderReports() {
 
   // Filtered Person Stats Table
   const filteredPersonStats = personStats.filter(s => {
-    const matchesSearch = !searchQuery ||
-      normalizeSearch(s.person.name).includes(searchQuery) ||
-      s.person.sicil.includes(searchQuery);
+    const searchTarget = `${s.person.name || ''} ${s.person.sicil || ''} ${s.person.title || ''} ${s.person.birim || ''}`;
+    const matchesSearch = !searchQuery || matchesSearchQuery(searchTarget, searchQuery);
 
     if (!matchesSearch) return false;
     if (typeFilter === 'rapor') return s.raporCount > 0;
@@ -3418,9 +3405,8 @@ function exportReportsPdf() {
   });
 
   const filteredPersonStats = personStats.filter(s => {
-    const matchesSearch = !searchQuery ||
-      normalizeSearch(s.person.name).includes(searchQuery) ||
-      s.person.sicil.includes(searchQuery);
+    const searchTarget = `${s.person.name || ''} ${s.person.sicil || ''} ${s.person.title || ''} ${s.person.birim || ''}`;
+    const matchesSearch = !searchQuery || matchesSearchQuery(searchTarget, searchQuery);
 
     if (!matchesSearch) return false;
     if (typeFilter === 'rapor') return s.raporCount > 0;
@@ -4239,9 +4225,8 @@ export async function exportYolYardimiExcel() {
     const fullName = p ? p.name : r.personnelName;
 
     if (searchQuery) {
-      const matchName = normalizeSearch(fullName).includes(searchQuery);
-      const matchSicil = p ? p.sicil.includes(searchQuery) : false;
-      if (!matchName && !matchSicil) return;
+      const searchTarget = `${fullName || ''} ${p ? p.sicil : ''} ${p ? p.title : ''} ${p ? p.birim : ''}`;
+      if (!matchesSearchQuery(searchTarget, searchQuery)) return;
     }
 
     if (typeFilter) {
