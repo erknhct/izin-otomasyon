@@ -546,6 +546,23 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786695428838",
+      "personnelId": "1786451448169",
+      "personnelName": "Zelal KAZAN GÜRPINAR",
+      "sicil": "123312",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 12,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-08-31",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
       "id": "rec-1786615888487",
       "personnelId": "1786451007330",
       "personnelName": "İsa AKGÜN",
