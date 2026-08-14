@@ -663,20 +663,8 @@ function renderDashboard(forceResetTab = false) {
     return;
   }
 
-  if (forceResetTab) {
-    dashboardActiveTab = 'due';
-  }
-
-  // Fallbacks in case the list for the currently active tab becomes empty
-  if (dashboardActiveTab === 'due' && dueList.length === 0) {
-    if (upcomingList.length > 0) dashboardActiveTab = 'upcoming';
-    else if (completedList.length > 0) dashboardActiveTab = 'completed';
-  } else if (dashboardActiveTab === 'upcoming' && upcomingList.length === 0) {
-    if (dueList.length > 0) dashboardActiveTab = 'due';
-    else if (completedList.length > 0) dashboardActiveTab = 'completed';
-  } else if (dashboardActiveTab === 'completed' && completedList.length === 0) {
-    if (dueList.length > 0) dashboardActiveTab = 'due';
-    else if (upcomingList.length > 0) dashboardActiveTab = 'upcoming';
+  if (forceResetTab || !dashboardActiveTab) {
+    dashboardActiveTab = dueList.length > 0 ? 'due' : (upcomingList.length > 0 ? 'upcoming' : 'completed');
   }
 
   const activeTab = dashboardActiveTab;
@@ -980,7 +968,51 @@ function renderDashboard(forceResetTab = false) {
       else if (targetId === 'tab-upcoming') dashboardActiveTab = 'upcoming';
       else if (targetId === 'tab-completed') dashboardActiveTab = 'completed';
 
-      renderDashboard();
+      // Reset all tabs
+      pendingContainer.querySelectorAll('.dashboard-tabs .tab-btn').forEach(b => {
+        b.className = 'btn btn-secondary tab-btn';
+        b.style.flexShrink = '0';
+        b.style.display = 'flex';
+        b.style.alignItems = 'center';
+        b.style.gap = '0.5rem';
+        b.style.padding = '0.6rem 1.25rem';
+        b.style.fontSize = '1rem';
+        b.style.fontWeight = '600';
+
+        const badge = b.querySelector('.badge');
+        if (b.getAttribute('data-type') === 'danger') badge.className = 'badge badge-danger';
+        if (b.getAttribute('data-type') === 'primary') badge.className = 'badge badge-info';
+        if (b.getAttribute('data-type') === 'success') badge.className = 'badge badge-success';
+      });
+      // Hide all panes
+      pendingContainer.querySelectorAll('.tab-content .tab-pane').forEach(p => p.style.display = 'none');
+
+      // Set active tab
+      const type = btn.getAttribute('data-type');
+      btn.className = `btn btn-${type} tab-btn active`;
+      btn.style.flexShrink = '0';
+      btn.style.display = 'flex';
+      btn.style.alignItems = 'center';
+      btn.style.gap = '0.5rem';
+      btn.style.padding = '0.6rem 1.25rem';
+      btn.style.fontSize = '1rem';
+      btn.style.fontWeight = '600';
+
+      const badge = btn.querySelector('.badge');
+      if (badge) badge.className = 'badge badge-light';
+
+      // Update Dynamic Title
+      const tabTitles = {
+        'tab-due': '<span><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-danger); margin-right: 8px;"></i> GÜNÜ GELEN / TARİHİ GEÇENLER (ACİL BAŞLAYIŞ YAZISI GEREKLİ)</span>',
+        'tab-upcoming': '<span><i class="fa-solid fa-calendar-days" style="color: var(--accent-primary); margin-right: 8px;"></i> DEVAM EDEN İZİNLER (Gelecek Başlayışlar)</span>',
+        'tab-completed': '<span><i class="fa-solid fa-circle-check" style="color: var(--accent-success); margin-right: 8px;"></i> BAŞLAYIŞI YAPILAN VE TAMAMLANAN İZİNLER</span>'
+      };
+      const titleEl = pendingContainer.querySelector('#dynamic-tab-title');
+      if (titleEl) titleEl.innerHTML = tabTitles[targetId] || '';
+
+      // Show active pane
+      const targetPane = pendingContainer.querySelector('#' + targetId);
+      if (targetPane) targetPane.style.display = 'block';
     });
   });
 
