@@ -546,6 +546,108 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1786699435818",
+      "personnelId": "1786451046538",
+      "personnelName": "Oğuzhan ARDIÇ",
+      "sicil": "250990",
+      "unvan": "Teknisyen",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 12,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-08-31",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1786698591221",
+      "personnelId": "1786450186953",
+      "personnelName": "Hasan KARAKOÇLAR",
+      "sicil": "183579",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 19,
+      "isYolIzniDahil": true,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-09-07",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1786696576674",
+      "personnelId": "1786451266659",
+      "personnelName": "Ahmet Remzi SARIKAYA",
+      "sicil": "141985",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-08-24",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1786695428838",
+      "personnelId": "1786451448169",
+      "personnelName": "Zelal KAZAN GÜRPINAR",
+      "sicil": "123312",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 12,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-08-31",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1786615888487",
+      "personnelId": "1786451007330",
+      "personnelName": "İsa AKGÜN",
+      "sicil": "303766",
+      "unvan": "Hizmetli",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 19,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-10",
+      "expectedReturnDate": "2026-08-31",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1786539932818",
+      "personnelId": "1786449940891",
+      "personnelName": "Engin GÖÇEROĞLU",
+      "sicil": "304771",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-07-27",
+      "expectedReturnDate": "2026-08-03",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-12"
+    },
+    {
       "id": "rec-1786529588219",
       "personnelId": "1786450753562",
       "personnelName": "Muhammed ÇAMURDAŞ",
@@ -1425,9 +1527,9 @@
       "ayrilisDate": "2026-08-10",
       "expectedReturnDate": "2026-08-14",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-14"
     },
     {
       "id": "rec-1786519794885",
@@ -1709,10 +1811,10 @@
       "unvan": "Zabıt Katibi",
       "leaveType": "yillik",
       "leaveTypeName": "Yıllık İzin",
-      "days": 24,
-      "isYolIzniDahil": false,
+      "days": 26,
+      "isYolIzniDahil": true,
       "ayrilisDate": "2026-07-20",
-      "expectedReturnDate": "2026-08-13",
+      "expectedReturnDate": "2026-08-17",
       "aliciMakam": "Komisyon ",
       "status": "ayrilis_yapildi",
       "baslayisEvrakNo": null,
@@ -2612,5 +2714,23 @@
       "id": "Bakanlık Muhabere",
       "name": "ANKARA CUMHURİYET BAŞSAVCILIĞI\nBakanlık Muhabere Bürosu'na"
     }
-  ]
+  ],
+  "mesaiData": {
+    "mesaiShifts": {},
+    "pastMesaiHours": {},
+    "signatories": {
+      "duzenleyen": {
+        "ad": "",
+        "unvan": ""
+      },
+      "tasvip": {
+        "ad": "",
+        "unvan": ""
+      },
+      "tasdik": {
+        "ad": "",
+        "unvan": ""
+      }
+    }
+  }
 }
