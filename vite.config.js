@@ -27,15 +27,25 @@ function localJsonStoragePlugin() {
       return;
     }
 
+    // Quick version check endpoint
+    if (req.url === '/api/db-version' && req.method === 'GET') {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('X-DB-Version', String(dbVersion));
+      return res.end(JSON.stringify({ version: dbVersion }));
+    }
+
     // Read JSON File from Disk
     if (req.url === '/api/db' && req.method === 'GET') {
       try {
         if (!fs.existsSync(DB_FILE)) {
           res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('X-DB-Version', String(dbVersion));
           return res.end(JSON.stringify({}));
         }
         const data = fs.readFileSync(DB_FILE, 'utf-8');
         res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.setHeader('X-DB-Version', String(dbVersion));
         return res.end(data);
       } catch (err) {
         res.statusCode = 500;
@@ -72,7 +82,8 @@ function localJsonStoragePlugin() {
           }
 
           res.setHeader('Content-Type', 'application/json; charset=utf-8');
-          return res.end(JSON.stringify({ success: true, message: 'db.json dosyasına yazıldı' }));
+          res.setHeader('X-DB-Version', String(dbVersion));
+          return res.end(JSON.stringify({ success: true, version: dbVersion, message: 'db.json dosyasına yazıldı' }));
         } catch (err) {
           res.statusCode = 500;
           res.setHeader('Content-Type', 'application/json; charset=utf-8');

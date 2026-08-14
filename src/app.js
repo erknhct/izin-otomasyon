@@ -94,6 +94,8 @@ let completedLeavesState = {
   pageSize: 10
 };
 
+let dashboardActiveTab = 'due';
+
 // =============================================
 // GÜVENLİK & ROL TABANLI GİRİŞ SİSTEMİ
 // =============================================
@@ -661,22 +663,23 @@ function renderDashboard(forceResetTab = false) {
     return;
   }
 
-  let currentActiveTab = null;
-  if (!forceResetTab) {
-    const existingActiveBtn = pendingContainer.querySelector('.dashboard-tabs .tab-btn.active');
-    if (existingActiveBtn) {
-      const targetId = existingActiveBtn.getAttribute('data-target');
-      if (targetId === 'tab-due') currentActiveTab = 'due';
-      else if (targetId === 'tab-upcoming') currentActiveTab = 'upcoming';
-      else if (targetId === 'tab-completed') currentActiveTab = 'completed';
-    }
+  if (forceResetTab) {
+    dashboardActiveTab = 'due';
   }
-  // Fallbacks in case the list for the currently active tab becomes empty
-  if (currentActiveTab === 'due' && dueList.length === 0) currentActiveTab = null;
-  if (currentActiveTab === 'upcoming' && upcomingList.length === 0) currentActiveTab = null;
-  if (currentActiveTab === 'completed' && completedList.length === 0) currentActiveTab = null;
 
-  const activeTab = currentActiveTab || 'due';
+  // Fallbacks in case the list for the currently active tab becomes empty
+  if (dashboardActiveTab === 'due' && dueList.length === 0) {
+    if (upcomingList.length > 0) dashboardActiveTab = 'upcoming';
+    else if (completedList.length > 0) dashboardActiveTab = 'completed';
+  } else if (dashboardActiveTab === 'upcoming' && upcomingList.length === 0) {
+    if (dueList.length > 0) dashboardActiveTab = 'due';
+    else if (completedList.length > 0) dashboardActiveTab = 'completed';
+  } else if (dashboardActiveTab === 'completed' && completedList.length === 0) {
+    if (dueList.length > 0) dashboardActiveTab = 'due';
+    else if (upcomingList.length > 0) dashboardActiveTab = 'upcoming';
+  }
+
+  const activeTab = dashboardActiveTab;
 
   const titles = {
     'due': '<span><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-danger); margin-right: 8px;"></i> GÜNÜ GELEN / TARİHİ GEÇENLER (ACİL BAŞLAYIŞ YAZISI GEREKLİ)</span>',
@@ -689,13 +692,13 @@ function renderDashboard(forceResetTab = false) {
   let html = `
     <div class="dashboard-tabs-container">
       <div class="dashboard-tabs" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; overflow-x: auto;">
-        <button class="btn ${activeTab === 'due' ? 'btn-danger' : 'btn-secondary'} tab-btn" data-target="tab-due" data-type="danger" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 1rem; font-weight: 600;">
+        <button class="btn ${activeTab === 'due' ? 'btn-danger active' : 'btn-secondary'} tab-btn" data-target="tab-due" data-type="danger" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 1rem; font-weight: 600;">
           🚨 Günü Gelenler <span class="badge ${activeTab === 'due' ? 'badge-light' : 'badge-danger'}">${dueList.length}</span>
         </button>
-        <button class="btn ${activeTab === 'upcoming' ? 'btn-primary' : 'btn-secondary'} tab-btn" data-target="tab-upcoming" data-type="primary" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 1rem; font-weight: 600;">
+        <button class="btn ${activeTab === 'upcoming' ? 'btn-primary active' : 'btn-secondary'} tab-btn" data-target="tab-upcoming" data-type="primary" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 1rem; font-weight: 600;">
           ⏳ Devam Edenler <span class="badge ${activeTab === 'upcoming' ? 'badge-light' : 'badge-info'}">${upcomingList.length}</span>
         </button>
-        <button class="btn ${activeTab === 'completed' ? 'btn-success' : 'btn-secondary'} tab-btn" data-target="tab-completed" data-type="success" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 1rem; font-weight: 600;">
+        <button class="btn ${activeTab === 'completed' ? 'btn-success active' : 'btn-secondary'} tab-btn" data-target="tab-completed" data-type="success" style="flex-shrink: 0; display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.25rem; font-size: 1rem; font-weight: 600;">
           ✅ Tamamlananlar <span class="badge ${activeTab === 'completed' ? 'badge-light' : 'badge-success'}">${completedList.length}</span>
         </button>
       </div>
@@ -972,50 +975,12 @@ function renderDashboard(forceResetTab = false) {
   // Add click listeners for tabs
   pendingContainer.querySelectorAll('.dashboard-tabs .tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      // Reset all tabs
-      pendingContainer.querySelectorAll('.dashboard-tabs .tab-btn').forEach(b => {
-        b.className = 'btn btn-secondary tab-btn';
-        b.style.flexShrink = '0';
-        b.style.display = 'flex';
-        b.style.alignItems = 'center';
-        b.style.gap = '0.5rem';
-        b.style.padding = '0.6rem 1.25rem';
-        b.style.fontSize = '1rem';
-        b.style.fontWeight = '600';
-
-        const badge = b.querySelector('.badge');
-        if (b.getAttribute('data-type') === 'danger') badge.className = 'badge badge-danger';
-        if (b.getAttribute('data-type') === 'primary') badge.className = 'badge badge-info';
-        if (b.getAttribute('data-type') === 'success') badge.className = 'badge badge-success';
-      });
-      // Hide all panes
-      pendingContainer.querySelectorAll('.tab-content .tab-pane').forEach(p => p.style.display = 'none');
-
-      // Set active tab
       const targetId = btn.getAttribute('data-target');
-      const type = btn.getAttribute('data-type');
-      btn.className = `btn btn-${type} tab-btn active`;
-      btn.style.flexShrink = '0';
-      btn.style.display = 'flex';
-      btn.style.alignItems = 'center';
-      btn.style.gap = '0.5rem';
-      btn.style.padding = '0.6rem 1.25rem';
-      btn.style.fontSize = '1rem';
-      btn.style.fontWeight = '600';
+      if (targetId === 'tab-due') dashboardActiveTab = 'due';
+      else if (targetId === 'tab-upcoming') dashboardActiveTab = 'upcoming';
+      else if (targetId === 'tab-completed') dashboardActiveTab = 'completed';
 
-      const badge = btn.querySelector('.badge');
-      badge.className = 'badge badge-light';
-
-      // Update Dynamic Title
-      const tabTitles = {
-        'tab-due': '<span><i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-danger); margin-right: 8px;"></i> GÜNÜ GELEN / TARİHİ GEÇENLER (ACİL BAŞLAYIŞ YAZISI GEREKLİ)</span>',
-        'tab-upcoming': '<span><i class="fa-solid fa-calendar-days" style="color: var(--accent-primary); margin-right: 8px;"></i> DEVAM EDEN İZİNLER (Gelecek Başlayışlar)</span>',
-        'tab-completed': '<span><i class="fa-solid fa-circle-check" style="color: var(--accent-success); margin-right: 8px;"></i> BAŞLAYIŞI YAPILAN VE TAMAMLANAN İZİNLER</span>'
-      };
-      pendingContainer.querySelector('#dynamic-tab-title').innerHTML = tabTitles[targetId];
-
-      // Show active pane
-      pendingContainer.querySelector('#' + targetId).style.display = 'block';
+      renderDashboard();
     });
   });
 
@@ -2114,6 +2079,8 @@ function renderPersonnelTable() {
   if (sidebarCount) sidebarCount.textContent = `(${list.length})`;
 
   const tbody = document.querySelector('#table-personnel tbody');
+  if (!tbody) return;
+  const searchInput = document.getElementById('search-personnel');
   const query = (searchInput?.value || '').trim();
 
   const filtered = list.filter(p => {

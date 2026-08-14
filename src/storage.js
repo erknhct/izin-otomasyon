@@ -31,14 +31,7 @@ let dbCache = {
 
 // Unique Client Identifier for LAN real-time synchronization
 export const CLIENT_ID = Math.random().toString(36).substring(2) + Date.now().toString(36);
-
-function getDbHash(obj) {
-  try {
-    return JSON.stringify(obj).length + '_' + (obj.personnel ? obj.personnel.length : 0) + '_' + (obj.leaveRecords ? obj.leaveRecords.length : 0);
-  } catch (e) {
-    return '';
-  }
-}
+let currentDbVersion = 0;
 
 function sanitizeDbData(cache) {
   if (!cache) return;
@@ -100,6 +93,12 @@ export async function initStorage() {
   try {
     const res = await fetch(DB_API_URL, { cache: 'no-store' });
     if (res.ok) {
+      const versionHeader = res.headers.get('X-DB-Version');
+      if (versionHeader) {
+        const v = parseInt(versionHeader, 10);
+        if (v) currentDbVersion = v;
+      }
+
       const data = await res.json();
       if (data.personnel && Array.isArray(data.personnel)) {
         dbCache = data;
@@ -178,7 +177,7 @@ export async function syncToDiskFile() {
 
   // Write to data/db.json file
   try {
-    await fetch(DB_API_URL, {
+    const res = await fetch(DB_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -186,6 +185,12 @@ export async function syncToDiskFile() {
       },
       body: JSON.stringify(dbCache, null, 2)
     });
+    if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (data && data.version) {
+        currentDbVersion = data.version;
+      }
+    }
   } catch (err) {
     console.error('db.json dosyasına yazılırken hata oluştu:', err);
   }
@@ -206,7 +211,14 @@ export function initLiveSync(onRemoteUpdate) {
       eventSource.onmessage = (e) => {
         try {
           const data = JSON.parse(e.data);
-          if (data.type === 'db-updated') {
+          if (data.type === 'connected') {
+            if (data.version) {
+              currentDbVersion = data.version;
+            }
+          } else if (data.type === 'db-updated') {
+            if (data.version) {
+              currentDbVersion = data.version;
+            }
             if (data.sender !== CLIENT_ID) {
               onRemoteUpdate(true);
             }
@@ -227,32 +239,30 @@ export function initLiveSync(onRemoteUpdate) {
 
   connectSSE();
 
-  // Polling fallback (every 5s check if db structure changed remotely)
-  setInterval(async () => {
+  async function checkRemoteVersion() {
     try {
-      const res = await fetch(DB_API_URL, { cache: 'no-store' });
+      const res = await fetch('/api/db-version', { cache: 'no-store' });
       if (res.ok) {
-        const remoteData = await res.json();
-        if (getDbHash(remoteData) !== getDbHash(dbCache)) {
-          console.log('Periyodik kontrol ile uzaktan veri değişikliği algılandı, yenileniyor...');
+        const data = await res.json();
+        const serverVersion = parseInt(data.version, 10);
+        if (serverVersion && currentDbVersion && serverVersion > currentDbVersion) {
+          currentDbVersion = serverVersion;
+          console.log('Uzaktan veri güncellemesi tespit edildi, arayüz yenileniyor...');
           onRemoteUpdate(true);
+        } else if (serverVersion && !currentDbVersion) {
+          currentDbVersion = serverVersion;
         }
       }
     } catch (e) {}
-  }, 5000);
+  }
+
+  // Polling fallback (every 10s check if db version increased on server)
+  setInterval(checkRemoteVersion, 10000);
 
   // Tab visibility fallback
-  document.addEventListener('visibilitychange', async () => {
+  document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      try {
-        const res = await fetch(DB_API_URL, { cache: 'no-store' });
-        if (res.ok) {
-          const remoteData = await res.json();
-          if (getDbHash(remoteData) !== getDbHash(dbCache)) {
-            onRemoteUpdate(true);
-          }
-        }
-      } catch (e) {}
+      checkRemoteVersion();
     }
   });
 }
