@@ -14,29 +14,29 @@
 </head>
 <body>
   <!-- LOGIN SCREEN -->
-  <div id="login-screen" style="display:none; position:fixed; inset:0; z-index:9999; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); align-items:center; justify-content:center; font-family:'Inter',sans-serif;">
-    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 2.5rem 3rem; width: 100%; max-width: 400px; box-shadow: 0 25px 60px rgba(0,0,0,0.6); backdrop-filter: blur(20px);">
-      <div style="text-align:center; margin-bottom: 2rem;">
-        <div style="width: 80px; height: 80px; margin: 0 auto 1.25rem auto; border-radius: 50%; padding: 3px; background: linear-gradient(135deg, rgba(225, 29, 72, 0.5), rgba(99, 102, 241, 0.5)); box-shadow: 0 0 25px rgba(99, 102, 241, 0.35); overflow: hidden;">
+  <div id="login-screen" style="display:none; position:fixed; inset:0; z-index:9999; background: #060911; align-items:center; justify-content:center; font-family:'Inter',sans-serif;">
+    <div style="background: rgba(15,23,42,0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 2.5rem 2.5rem; width: 100%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); backdrop-filter: blur(16px);">
+      <div style="text-align:center; margin-bottom: 1.75rem;">
+        <div style="width: 80px; height: 80px; margin: 0 auto 1.25rem auto; border-radius: 50%; padding: 3px; background: linear-gradient(135deg, rgba(225, 29, 72, 0.4), rgba(99, 102, 241, 0.4)); box-shadow: 0 0 20px rgba(99, 102, 241, 0.25); overflow: hidden;">
           <img src="/logo.png" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block;" />
         </div>
-        <h2 style="color:#fff; margin:0; font-size:1.3rem; font-weight:800;">İZİN TAKİP OTOMASYONU</h2>
-        <p style="color:rgba(255,255,255,0.5); font-size:0.82rem; margin:0.3rem 0 0 0;">Ankara Adliyesi Bilgi İşlem Müdürlüğü</p>
+        <h2 style="color:#f8fafc; margin:0; font-size:1.25rem; font-weight:800; letter-spacing:-0.01em;">İZİN TAKİP OTOMASYONU</h2>
+        <p style="color:#94a3b8; font-size:0.8rem; margin:0.3rem 0 0 0; font-weight:500;">Ankara Adliyesi Bilgi İşlem Müdürlüğü</p>
       </div>
-      <div id="login-error" style="display:none; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:#f87171; border-radius:8px; padding:0.6rem 1rem; margin-bottom:1rem; font-size:0.85rem; text-align:center;">
+      <div id="login-error" style="display:none; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#f87171; border-radius:8px; padding:0.6rem 1rem; margin-bottom:1rem; font-size:0.85rem; text-align:center; font-weight:600;">
         ❌ Hatalı şifre! Lütfen tekrar deneyin.
       </div>
-      <div style="margin-bottom:1rem;">
-        <label style="color:rgba(255,255,255,0.7); font-size:0.82rem; font-weight:600; display:block; margin-bottom:0.4rem;">SİSTEM ŞİFRESİ</label>
+      <div style="margin-bottom:1.25rem;">
+        <label style="color:#94a3b8; font-size:0.8rem; font-weight:600; display:block; margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:0.04em;">SİSTEM ŞİFRESİ</label>
         <input id="login-password-input" type="password" placeholder="Şifrenizi girin..." autocomplete="current-password"
-          style="width:100%; padding:0.75rem 1rem; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:10px; color:#fff; font-size:1rem; outline:none; box-sizing:border-box;"
+          style="width:100%; padding:0.7rem 1rem; background:rgba(9,13,22,0.6); border:1px solid rgba(255,255,255,0.12); border-radius:10px; color:#fff; font-size:0.95rem; outline:none; box-sizing:border-box; transition: all 0.15s ease;"
           onkeydown="if(event.key==='Enter') document.getElementById('login-btn').click()" />
       </div>
       <button id="login-btn" onclick="handleLogin()"
-        style="width:100%; padding:0.85rem; background:linear-gradient(135deg,#6366f1,#4338ca); color:#fff; border:none; border-radius:10px; font-size:1rem; font-weight:700; cursor:pointer; transition:all 0.2s;">
-        <i class="fa-solid fa-right-to-bracket"></i> Giriş Yap
+        style="width:100%; padding:0.75rem; background:#6366f1; color:#fff; border:1px solid #6366f1; border-radius:10px; font-size:0.95rem; font-weight:700; cursor:pointer; transition:all 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        <i class="fa-solid fa-right-to-bracket" style="margin-right:0.4rem;"></i> Giriş Yap
       </button>
-      <p style="color:rgba(255,255,255,0.3); font-size:0.72rem; text-align:center; margin-top:1.5rem;">Bu sistem Ankara Adliyesi Bilgi İşlem Müdürlüğü&#39;ne özeldir.</p>
+      <p style="color:#64748b; font-size:0.72rem; text-align:center; margin-top:1.5rem; font-weight:500;">Bu sistem Ankara Adliyesi Bilgi İşlem Müdürlüğü&#39;ne özeldir.</p>
     </div>
   </div>
 
