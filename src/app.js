@@ -3600,8 +3600,8 @@ function exportReportsPdf() {
             <div class="title-date">Rapor Tarihi: ${todayStr} | Toplam Personel Sayısı: ${personnelList.length}</div>
             <div class="title-date" style="color: #4f46e5; font-weight: 600; margin-top: 4px;">${filterText}</div>
           </td>
-          <td width="100" style="text-align: right; font-size: 9pt; color: #64748b;">
-            T.C.<br>ANKARA ADLİYESİ
+          <td width="100" style="text-align: right;">
+            <img src="${window.location.origin}/logo.png" class="logo-img" style="display: inline-block;" />
           </td>
         </tr>
       </table>
