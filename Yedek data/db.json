@@ -11,7 +11,7 @@
     },
     {
       "id": "1786449471523",
-      "name": "Erdal  ŞİMŞEK",
+      "name": "Erdal ŞİMŞEK",
       "sicil": "96214",
       "tcNo": "",
       "title": "Bilgisayar İşletmeni",
@@ -546,6 +546,193 @@
   ],
   "leaveRecords": [
     {
+      "id": "rec-1788343345164",
+      "personnelId": "1786451629994",
+      "personnelName": "Volkan ÖZKAN",
+      "sicil": "269665",
+      "unvan": "Teknisyen",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 19,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-09-07",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1788343319554",
+      "personnelId": "1786450293331",
+      "personnelName": "Onur ÜSTÜNDAĞ",
+      "sicil": "222501",
+      "unvan": "Hizmetli",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 19,
+      "isYolIzniDahil": true,
+      "ayrilisDate": "2026-08-31",
+      "expectedReturnDate": "2026-09-21",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1788343296492",
+      "personnelId": "1786451219532",
+      "personnelName": "Ali YILDIZ",
+      "sicil": "185845",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-31",
+      "expectedReturnDate": "2026-09-07",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1788249423913",
+      "personnelId": "1786450162147",
+      "personnelName": "Sedat ÜLGER",
+      "sicil": "155196",
+      "unvan": "Bilgisayar Teknikeri",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 12,
+      "isYolIzniDahil": true,
+      "ayrilisDate": "2026-08-31",
+      "expectedReturnDate": "2026-09-14",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1788181250558",
+      "personnelId": "1786451050650",
+      "personnelName": "Osman ÖNAL",
+      "sicil": "204218",
+      "unvan": "Teknisyen",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 11,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-09-01",
+      "expectedReturnDate": "2026-09-14",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1788160376413",
+      "personnelId": "1786449471523",
+      "personnelName": "Erdal ŞİMŞEK",
+      "sicil": "96214",
+      "unvan": "Bilgisayar İşletmeni",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 12,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-31",
+      "expectedReturnDate": "2026-09-14",
+      "aliciMakam": "Bakanlık Muhabere",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1788160292356",
+      "personnelId": "1786450457315",
+      "personnelName": "Öznur YILDIRIM",
+      "sicil": "125768",
+      "unvan": "Teknisyen",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": true,
+      "ayrilisDate": "2026-08-31",
+      "expectedReturnDate": "2026-09-07",
+      "aliciMakam": "Komisyon ",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1787646587387",
+      "personnelId": "1786451968720",
+      "personnelName": "Bircan ARDİÇ",
+      "sicil": "221992",
+      "unvan": "Bilgisayar Teknisyeni",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 17,
+      "isYolIzniDahil": true,
+      "ayrilisDate": "2026-08-25",
+      "expectedReturnDate": "2026-09-11",
+      "aliciMakam": "Bakanlık Muhabere",
+      "status": "ayrilis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": null
+    },
+    {
+      "id": "rec-1787553190460",
+      "personnelId": "1786451654033",
+      "personnelName": "Duran BABUR",
+      "sicil": "221247",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-24",
+      "expectedReturnDate": "2026-08-31",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-31"
+    },
+    {
+      "id": "rec-1787553176672",
+      "personnelId": "1786449962867",
+      "personnelName": "Burak ATAK",
+      "sicil": "221230",
+      "unvan": "Zabıt Katibi",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 5,
+      "isYolIzniDahil": false,
+      "ayrilisDate": "2026-08-24",
+      "expectedReturnDate": "2026-08-31",
+      "aliciMakam": "Komisyon ",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-31"
+    },
+    {
+      "id": "rec-1786974661876",
+      "personnelId": "1786144743643",
+      "personnelName": "Erkan HACAT",
+      "sicil": "155118",
+      "unvan": "Bilgi İşlem Müdürü",
+      "leaveType": "yillik",
+      "leaveTypeName": "Yıllık İzin",
+      "days": 12,
+      "isYolIzniDahil": true,
+      "ayrilisDate": "2026-08-17",
+      "expectedReturnDate": "2026-08-31",
+      "aliciMakam": "Bakanlık Muhabere",
+      "status": "baslayis_yapildi",
+      "baslayisEvrakNo": null,
+      "baslayisDate": "2026-08-31"
+    },
+    {
       "id": "rec-1786699435818",
       "personnelId": "1786451046538",
       "personnelName": "Oğuzhan ARDIÇ",
@@ -558,9 +745,9 @@
       "ayrilisDate": "2026-08-17",
       "expectedReturnDate": "2026-08-31",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-31"
     },
     {
       "id": "rec-1786698591221",
@@ -592,9 +779,9 @@
       "ayrilisDate": "2026-08-17",
       "expectedReturnDate": "2026-08-24",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-25"
     },
     {
       "id": "rec-1786695428838",
@@ -609,9 +796,9 @@
       "ayrilisDate": "2026-08-17",
       "expectedReturnDate": "2026-08-31",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-31"
     },
     {
       "id": "rec-1786615888487",
@@ -626,9 +813,9 @@
       "ayrilisDate": "2026-08-10",
       "expectedReturnDate": "2026-08-31",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-31"
     },
     {
       "id": "rec-1786539932818",
@@ -1391,9 +1578,9 @@
       "ayrilisDate": "2026-08-17",
       "expectedReturnDate": "2026-08-31",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-31"
     },
     {
       "id": "rec-1786520286287",
@@ -1459,9 +1646,9 @@
       "ayrilisDate": "2026-08-03",
       "expectedReturnDate": "2026-08-17",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-17"
     },
     {
       "id": "rec-1786519976181",
@@ -1578,9 +1765,9 @@
       "ayrilisDate": "2026-08-10",
       "expectedReturnDate": "2026-08-17",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-17"
     },
     {
       "id": "rec-1786519710993",
@@ -1595,9 +1782,9 @@
       "ayrilisDate": "2026-08-10",
       "expectedReturnDate": "2026-08-24",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-24"
     },
     {
       "id": "rec-1786519680849",
@@ -1612,9 +1799,9 @@
       "ayrilisDate": "2026-08-10",
       "expectedReturnDate": "2026-08-24",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-24"
     },
     {
       "id": "rec-1786519671008",
@@ -1646,9 +1833,9 @@
       "ayrilisDate": "2026-08-10",
       "expectedReturnDate": "2026-08-24",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-25"
     },
     {
       "id": "rec-1786519471898",
@@ -1680,9 +1867,9 @@
       "ayrilisDate": "2026-08-03",
       "expectedReturnDate": "2026-08-17",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-17"
     },
     {
       "id": "rec-1786519362314",
@@ -1697,9 +1884,9 @@
       "ayrilisDate": "2026-08-03",
       "expectedReturnDate": "2026-08-17",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-17"
     },
     {
       "id": "rec-1786519346656",
@@ -1765,9 +1952,9 @@
       "ayrilisDate": "2026-08-03",
       "expectedReturnDate": "2026-08-17",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-17"
     },
     {
       "id": "rec-1786519150526",
@@ -1799,9 +1986,9 @@
       "ayrilisDate": "2026-07-27",
       "expectedReturnDate": "2026-08-17",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-17"
     },
     {
       "id": "rec-1786519022882",
@@ -1816,9 +2003,9 @@
       "ayrilisDate": "2026-07-20",
       "expectedReturnDate": "2026-08-17",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-17"
     },
     {
       "id": "rec-1786518978641",
@@ -2207,9 +2394,9 @@
       "ayrilisDate": "2026-07-27",
       "expectedReturnDate": "2026-08-17",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-17"
     },
     {
       "id": "rec-1786517425582",
@@ -2299,7 +2486,7 @@
     {
       "id": "rec-1786517221244",
       "personnelId": "1786449471523",
-      "personnelName": "Erdal  ŞİMŞEK",
+      "personnelName": "Erdal ŞİMŞEK",
       "sicil": "96214",
       "unvan": "Bilgisayar İşletmeni",
       "leaveType": "rapor",
@@ -2666,9 +2853,9 @@
       "ayrilisDate": "2026-08-17",
       "expectedReturnDate": "2026-08-24",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-25"
     },
     {
       "id": "rec-1786455228556",
@@ -2683,9 +2870,9 @@
       "ayrilisDate": "2026-08-17",
       "expectedReturnDate": "2026-08-31",
       "aliciMakam": "Komisyon ",
-      "status": "ayrilis_yapildi",
+      "status": "baslayis_yapildi",
       "baslayisEvrakNo": null,
-      "baslayisDate": null
+      "baslayisDate": "2026-08-31"
     }
   ],
   "adminPassword": "Tuna3342",
